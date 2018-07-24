@@ -6,12 +6,13 @@
 \usage{
 mix.samples.Jitter(sample.names, special.samples, nMixtures = 1000,
   datamatrix, indicator, verbose = F, singleSpecial = F, add_jitter = F,
-  chosen.mean = 1, chosen.sd = 0.05, min.amount.samples = 1)
+  chosen.mean = 1, chosen.sd = 0.05, min.amount.samples = 1,
+  included.in.X)
 }
 \arguments{
 \item{sample.names}{vector of strings, have to match colnames(datamatrix).}
 
-\item{special.samples}{vector of strings, have to match colnames(datamatrix), these samples will 
+\item{special.samples}{vector of strings, have to match colnames(datamatrix), these samples will
 occur with higher quantites within the mix data.}
 
 \item{nMixtures}{integer, how many mixtures should be drawn}
@@ -29,30 +30,32 @@ occur with higher quantites within the mix data.}
 \item{chosen.mean}{numeric, mean of jitter}
 
 \item{chosen.sd}{numeric, standard deviation of jitter}
+
+\item{inlcuded.in.X}{}
 }
 \value{
-list with two entries. "quantities" matrix (nrow = ncol(datamatrix), ncol = nMixtures) and "mixture" 
+list with two entries. "quantities" matrix (nrow = ncol(datamatrix), ncol = nMixtures) and "mixture"
 matrix (nrow = nrow(datamatrix), ncol = nMixtures)
 }
 \description{
-"mix.samples.jitter" takes pheno information (sample.names, special.names) and a expression matrix. 
-Its output is a expression and a quantity matrix. 
+"mix.samples.jitter" takes pheno information (sample.names, special.names) and a expression matrix.
+Its output is a expression and a quantity matrix.
 Each sample of the output is a mixture of input samples, multiplied with Jitter vector.
-"mix.samples.Jitter" mixes samples in a way that they look similar to biological data. 
-For example, in a tumor tissue there are several cells included, but we expect that 
-most of them are tumor cells. Therefore, the mix.samples.Jitter function expects a 
-list of samples which represent immune cells (and occur in minor fractions) and a 
+"mix.samples.Jitter" mixes samples in a way that they look similar to biological data.
+For example, in a tumor tissue there are several cells included, but we expect that
+most of them are tumor cells. Therefore, the mix.samples.Jitter function expects a
+list of samples which represent immune cells (and occur in minor fractions) and a
 list of special samples (which occur in major fractions)
 }
 \examples{
 library(DTD)
-random.data <- generate.random.data(nTypes = 5, 
-                                    nSamples.perType = 10, 
-                                    nFeatures = 100, 
-                                    sample.type = "Cell", 
+random.data <- generate.random.data(nTypes = 5,
+                                    nSamples.perType = 10,
+                                    nFeatures = 100,
+                                    sample.type = "Cell",
                                     feature.type = "gene")
 
-# extract indicator list. 
+# extract indicator list.
 # This list contains the Type of the sample as value, and the sample name as name
 indicator.list <- gsub("^Cell([0-9])*.", "", colnames(random.data))
 names(indicator.list) <- colnames(random.data)
@@ -62,15 +65,15 @@ names(indicator.list) <- colnames(random.data)
 special.samples <- c("Type1")
 all.samples <- unique(indicator.list)
 sample.names <- all.samples[- which(all.samples \%in\% special.samples)]
- 
-training.data <- mix.samples.Jitter(sample.names = sample.names, 
-                                     special.samples = special.samples, 
-                                     nMixtures = 1e3, 
-                                     datamatrix = random.data, 
+
+training.data <- mix.samples.Jitter(sample.names = sample.names,
+                                     special.samples = special.samples,
+                                     nMixtures = 1e3,
+                                     datamatrix = random.data,
                                      indicator = indicator.list,
                                      singleSpecial = F,
-                                     add_jitter = T, 
-                                     chosen.mean = 1, 
-                                     chosen.sd = 0.05, 
+                                     add_jitter = T,
+                                     chosen.mean = 1,
+                                     chosen.sd = 0.05,
                                      min.amount.samples = 1)
 }
