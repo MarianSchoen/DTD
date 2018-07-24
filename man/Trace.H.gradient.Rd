@@ -7,12 +7,6 @@
 Trace.H.gradient(X = x_mat, Y = y_mat, C = c_mat, gamma.vec = v_vec)
 }
 \arguments{
-\item{X}{}
-
-\item{Y}{}
-
-\item{C}{}
-
 \item{gamma.vec}{}
 }
 \value{
