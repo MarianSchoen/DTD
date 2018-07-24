@@ -2,7 +2,10 @@
 
 export(Trace.H.gradient)
 export(descent_generalized_fista)
+export(est.cs)
 export(evaluate_cor)
 export(generate.random.data)
 export(mix.samples.Jitter)
+export(nesterov_faktor)
 export(normalizeToCount)
+export(soft_thresholding)
