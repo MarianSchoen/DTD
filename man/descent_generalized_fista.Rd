@@ -6,9 +6,9 @@
 (fast iterative shrinkage thresholding algorithm)}
 \usage{
 descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 100,
-  learning.rate = NA, F.GRAD.FUN = Trace.H.gradient,
+  learning.rate = NA, F.GRAD.FUN = DTD.grad.wrapper,
   ST.FUN = soft_thresholding, FACTOR.FUN = nesterov_faktor,
-  EVAL.FUN = cor_evaluation, line_search_speed = 1.01, tol = 1e-05,
+  EVAL.FUN = DTD.evCor.wrapper, line_search_speed = 1.01, tol = 1e-05,
   verbose = T)
 }
 \arguments{
@@ -58,23 +58,23 @@ the following equations are used:
 }
 \examples{
 library(DTD)
-random.data <- generate.random.data(nTypes = 5, 
-                                    nSamples.perType = 10, 
-                                    nFeatures = 100, 
-                                    sample.type = "Cell", 
+random.data <- generate.random.data(nTypes = 5,
+                                    nSamples.perType = 10,
+                                    nFeatures = 100,
+                                    sample.type = "Cell",
                                     feature.type = "gene")
 
-# normalize all samples to the same amount of counts:                                      
+# normalize all samples to the same amount of counts:
 random.data <- normalizeToCount(random.data)
 
-# extract indicator list. 
+# extract indicator list.
 # This list contains the Type of the sample as value, and the sample name as name
 indicator.list <- gsub("^Cell([0-9])*.", "", colnames(random.data))
 names(indicator.list) <- colnames(random.data)
-                                                                                                              
+
 # extract reference matrix X
-# First, decide which cells should be deconvoluted. 
-# Notice, in the mixtures there can be more cells than in the reference matrix. 
+# First, decide which cells should be deconvoluted.
+# Notice, in the mixtures there can be more cells than in the reference matrix.
 include.in.X <- c("Type2", "Type3", "Type4", "Type5")
 
 X.matrix <- matrix(NA, nrow=nrow(random.data), ncol=length(include.in.X))
@@ -88,11 +88,11 @@ samples.to.remove <- c()
 
 for(l.type in include.in.X){
   all.of.type <- names(indicator.list)[which(indicator.list == l.type)]
-  chosen.for.X <- sample(x = all.of.type, 
-                         size = length(all.of.type) * percentage.of.all.cells, 
+  chosen.for.X <- sample(x = all.of.type,
+                         size = length(all.of.type) * percentage.of.all.cells,
                          replace = FALSE)
   samples.to.remove <- c(samples.to.remove, chosen.for.X)
-  
+
   average <- rowSums(random.data[, samples.to.remove])
   X.matrix[, l.type] <- average
 }
@@ -101,21 +101,21 @@ for(l.type in include.in.X){
 special.samples <- c("Type1")
 all.samples <- unique(indicator.list)
 sample.names <- all.samples[- which(all.samples \%in\% special.samples)]
- 
-training.data <- mix.samples.Jitter(sample.names = sample.names, 
-                                     special.samples = special.samples, 
-                                     nMixtures = 1e3, 
-                                     datamatrix = random.data, 
+
+training.data <- mix.samples.Jitter(sample.names = sample.names,
+                                     special.samples = special.samples,
+                                     nMixtures = 1e3,
+                                     datamatrix = random.data,
                                      indicator = indicator.list,
                                      singleSpecial = F,
-                                     add_jitter = T, 
-                                     chosen.mean = 1, 
-                                     chosen.sd = 0.05, 
-                                     min.amount.samples = 1, 
-                                     verbose = FALSE)
-                             
+                                     add_jitter = T,
+                                     chosen.mean = 1,
+                                     chosen.sd = 0.05,
+                                     min.amount.samples = 1,
+                                     verbose = FALSE,
+                                     included.in.X = include.in.X)
 
-# wrapper for gradient: 
+# wrapper for gradient:
 DTD.grad.wrapper <- function(tweak){
    X <- X.matrix
    Y <- training.data$mixtures
@@ -123,11 +123,25 @@ DTD.grad.wrapper <- function(tweak){
    grad <- Trace.H.gradient(X = X, Y = Y, C = C, gamma.vec = tweak)
    return(grad)
 }
+# wrapper for evaluate corelation:
+DTD.evCor.wrapper <- function(tweak){
+   X <- X.matrix
+   Y <- training.data$mixtures
+   C <- training.data$quantities
+   loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+}
 
-# wrapper for loss function evaluation: 
+start_tweak <- rep(1, nrow(X.matrix))
+start_cor <- 1 - DTD.evCor.wrapper(start_tweak)
+cat("Starting correlation: ", start_cor, "\\n")
+
+catch <- descent_generalized_fista(tweak_vec = start_tweak,
+                                   F.GRAD.FUN = DTD.grad.wrapper,
+                                   ST.FUN = soft_thresholding,
+                                   FACTOR.FUN = nesterov_faktor,
+                                   EVAL.FUN = DTD.evCor.wrapper)
 
 
-                                 
 
 
 }
