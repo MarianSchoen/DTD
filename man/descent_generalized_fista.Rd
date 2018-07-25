@@ -5,10 +5,10 @@
 \title{Descent generalized FISTA \cr
 (fast iterative shrinkage thresholding algorithm)}
 \usage{
-descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 100,
+descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 1000,
   learning.rate = NA, F.GRAD.FUN = DTD.grad.wrapper,
   ST.FUN = soft_thresholding, FACTOR.FUN = nesterov_faktor,
-  EVAL.FUN = DTD.evCor.wrapper, line_search_speed = 1.01, tol = 1e-05,
+  EVAL.FUN = DTD.evCor.wrapper, line_search_speed = 2, cycles = 50,
   verbose = T)
 }
 \arguments{
@@ -38,9 +38,8 @@ extrapolates.}
 tweak_vec, and a single float as return. This function evaluates the loss
 function.}
 
-\item{line_search_speed}{???}
-
-\item{tol}{???}
+\item{line_search_speed}{numeric, factor with which the learning rate changes,
+if the optimium has not been found}
 
 \item{verbose}{boolean, should information be printed to console}
 }
@@ -54,7 +53,9 @@ iteratively minimizes the tweak vector via the FISTA algorithms. Basically,
 the following equations are used:
 }
 \details{
-# wrapper are needed
+The gradient and evaluation function both take only one argument, the soft thresholding function two.
+If your gradient, evaluation or soft thresholding function require more arguments, please write a wrapper.
+Exemplary wrapper functions can be found in the examples.
 }
 \examples{
 library(DTD)
@@ -101,7 +102,6 @@ for(l.type in include.in.X){
 special.samples <- c("Type1")
 all.samples <- unique(indicator.list)
 sample.names <- all.samples[- which(all.samples \%in\% special.samples)]
-
 training.data <- mix.samples.Jitter(sample.names = sample.names,
                                      special.samples = special.samples,
                                      nMixtures = 1e3,
@@ -139,7 +139,9 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                    F.GRAD.FUN = DTD.grad.wrapper,
                                    ST.FUN = soft_thresholding,
                                    FACTOR.FUN = nesterov_faktor,
-                                   EVAL.FUN = DTD.evCor.wrapper)
+                                   EVAL.FUN = DTD.evCor.wrapper,
+                                   line_search_speed = 2,
+                                   maxit = 1e3)
 
 
 

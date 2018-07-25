@@ -25,7 +25,7 @@ The loss-function learning digital tissue deconvolution finds a vector g which m
 \deqn{L(g) = 1 - \sum cor(true_C, estimatd_C(g))}
 This minimization is equal to a maximization of the summed/averaged correlation
 \deqn{ \sum cor(true_C, estimatd_C(g))}
-The evaluate_cor function returns the value of the Loss functio
+The evaluate_cor function returns the value of the Loss function.
 }
 \examples{
 library(DTD)

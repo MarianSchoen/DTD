@@ -10,7 +10,7 @@ generate.random.data(nTypes = 5, nSamples.perType = 10, nFeatures = 1000,
 \arguments{
 \item{nTypes}{integer, how many different types should be included in the data set}
 
-\item{nSamples.perType}{integer, how many samples should be generated per type. 
+\item{nSamples.perType}{integer, how many samples should be generated per type.
 Notice, for each type, the number of samples will be randomized a bit.}
 
 \item{nFeatures}{integer, how many features should be included}
@@ -25,8 +25,20 @@ Notice, for each type, the number of samples will be randomized a bit.}
 matrix with ~ (nTypes * nSamples.perType) columns, and nFeatures rows
 }
 \description{
-generate.random.data simulates data which can be used for digital tissue deconvolution
+generate.random.data simulates data which can be used for digital tissue deconvolution.
+It will generate a numeric matrix with "nFeatures" rows, and "nTypes" * "nSamples.perType"
+columns. Each column represents a sample of special type. The function will generate "nTypes",
+and for each type "nSamples.perType". Notice, that "nSamples.perType" will be randomised,
+such that the number of sampler per type differ between the types.
 }
 \examples{
-generate.random.data()
+#' library(DTD)
+random.data <- generate.random.data(nTypes = 5,
+                                    nSamples.perType = 10,
+                                    nFeatures = 100,
+                                    sample.type = "Cell",
+                                    feature.type = "gene")
+
+# normalize all samples to the same amount of counts:
+random.data <- normalizeToCount(random.data)
 }

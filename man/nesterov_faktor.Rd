@@ -9,6 +9,9 @@ nesterov_faktor(k)
 \arguments{
 \item{k}{}
 }
+\value{
+
+}
 \description{
 DOCUMENTATION
 }

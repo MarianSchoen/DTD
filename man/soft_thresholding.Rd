@@ -9,6 +9,9 @@ soft_thresholding(x, lambda)
 \arguments{
 \item{lambda}{}
 }
+\value{
+
+}
 \description{
 DOCUMENTATION
 }

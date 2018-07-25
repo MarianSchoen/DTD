@@ -13,6 +13,9 @@ est.cs(X, Y, gamma.vec)
 
 \item{gamma.vec}{numeric vector with length of nrow(X). In the equation above the gamma.vec is denotated as g.}
 }
+\value{
+numeric matrix with ncol(X) rows, and ncol(Y) columns
+}
 \description{
 Given a reference matrix X, a matrix of bulks and a g-vector, est.cs finds the solution of
 \deqn{arg min || diag(g) (Y - XC) ||_2}
