@@ -8,8 +8,7 @@
 #' @param Y numeric matrix with samples as columns, and features as rows.
 #' @param gamma.vec numeric vector with length of nrow(X). In the equation above the gamma.vec is denotated as g.
 #'
-#' @return
-#' @export
+#' @return numeric matrix with ncol(X) rows, and ncol(Y) columns
 #'
 #' @examples
 #' library(DTD)

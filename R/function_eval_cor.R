@@ -4,7 +4,7 @@
 #' \deqn{L(g) = 1 - \sum cor(true_C, estimatd_C(g))}
 #' This minimization is equal to a maximization of the summed/averaged correlation
 #' \deqn{ \sum cor(true_C, estimatd_C(g))}
-#' The evaluate_cor function returns the value of the Loss functio
+#' The evaluate_cor function returns the value of the Loss function.
 #'
 #' @param X numeric matrix with cells as columns, and features as rows. Reference matrix X of the DTD problem.
 #' @param Y numeric matrix with samples as columns, and features as rows. Each sample in Y is a bulk measurement,
@@ -14,7 +14,6 @@
 #' @param tweak numeric vector with length of nrow(X).
 #'
 #' @return float, value of the Loss function
-#' @export
 #'
 #' @examples
 #' library(DTD)

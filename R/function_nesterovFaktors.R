@@ -3,7 +3,6 @@
 #' @param k
 #'
 #' @return
-#' @export
 #'
 #' @examples
 nesterov_faktor <- function(k){
