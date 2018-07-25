@@ -6,8 +6,9 @@
 #' iteratively minimizes the tweak vector via the FISTA algorithms. Basically,
 #' the following equations are used:
 #'
-#'
-#' # wrapper are needed
+#' The gradient and evaluation function both take only one argument, the soft thresholding function two.
+#' If your gradient, evaluation or soft thresholding function require more arguments, please write a wrapper.
+#' Exemplary wrapper functions can be found in the examples.
 #'
 #' @param tweak_vec numeric vector, with which the minimization algorithm starts
 #' @param lambda float, regularization factor for ST.FUN function
@@ -27,12 +28,11 @@
 #' @param EVAL.FUN fucntion, with one parameter: vector with same length as
 #'   tweak_vec, and a single float as return. This function evaluates the loss
 #'   function.
-#' @param line_search_speed ???
-#' @param tol ???
+#' @param line_search_speed numeric, factor with which the learning rate changes,
+#'  if the optimium has not been found
 #' @param verbose boolean, should information be printed to console
 #'
 #' @return list, including [["Converge"]] and [["Tweak"]]
-#' @export
 #'
 #' @examples
 #' library(DTD)

@@ -1,30 +1,28 @@
-#' Title
+#' Gradient of \eqn{L(g) = \sum cor(true_C, estimated_C(g) }
 #'
-#' @param X
-#' @param Y
-#' @param C
-#' @param gamma.vec
+#' This function returns the value of the gradient of our Loss-function L.
+#'
+#' @param X numeric matrix with features as rows, and reference samples as columns
+#' @param Y numeric matrix with features as rows, and samples as columns
+#' @param C numeric matrix with reference samples as rows, and samples as columns
+#' @param gamma.vec numeric vector with length of nrow(X).
+#' In the Loss function above gamma.vec is named "g"
 #'
 #' @import matrixStats
 #' @import Matrix
 #'
 #' @return numeric list, same length as "gamma.vec"
-#' @export
 #'
-#' @examples Trace.H.gradient(tweak)
+#' @examples
 #'
-
-library(matrixStats)
-library(Matrix)
-
 Trace.H.gradient <- function(X = x_mat, Y = y_mat, C = c_mat, gamma.vec = v_vec){
 
-  Gamma <- Matrix(diag(gamma.vec))
+  Gamma <- Matrix::Matrix(diag(gamma.vec))
   estimates.cs <- est.cs(X, Y, gamma.vec)
-  hat.sigmas <- rowSds(estimates.cs, na.rm = T)
-  sigmas <- rowSds(C, na.rm = T)
-  mean.hat.cs <- rowMeans(estimates.cs)
-  mean.cs <- rowMeans(C)
+  hat.sigmas <- matrixStats::rowSds(estimates.cs, na.rm = T)
+  sigmas <- matrixStats::rowSds(C, na.rm = T)
+  mean.hat.cs <- Matrix::rowMeans(estimates.cs)
+  mean.cs <- Matrix::rowMeans(C)
   N <- ncol(C)
   cov.cs.hat.cs <- NULL
   for(j in 1:nrow(C)){
