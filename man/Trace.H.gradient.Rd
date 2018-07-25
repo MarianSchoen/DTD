@@ -21,7 +21,5 @@ numeric list, same length as "gamma.vec"
 }
 \description{
 This function returns the value of the gradient of our Loss-function L.
-}
-\examples{
-
+For example see wrapper in \code{\link{descent_generalized_fista}}
 }

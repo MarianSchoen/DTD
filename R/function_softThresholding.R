@@ -1,11 +1,12 @@
-#' DOCUMENTATION
+#' Soft thresholding
 #'
-#' @param x
-#' @param lambda
+#' implementation of the proximal operator for l1 penalty
+#'
+#' @param x list of numerics, x = g - step.size * gradient(g)
+#' @param lambda float or list of floats, regularization parameter
 #'
 #' @return
 #'
-#' @examples
 soft_thresholding <- function(x, lambda){
   if(length(lambda) == length(x)){
     x <- sign(x) * pmax(abs(x) - lambda, 0)

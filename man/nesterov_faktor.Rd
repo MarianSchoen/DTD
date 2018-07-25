@@ -2,16 +2,20 @@
 % Please edit documentation in R/function_nesterovFaktors.R
 \name{nesterov_faktor}
 \alias{nesterov_faktor}
-\title{DOCUMENTATION}
+\title{Nesterov Faktor 1/k}
 \usage{
 nesterov_faktor(k)
 }
 \arguments{
-\item{k}{}
+\item{k}{integer, iteration step of the FISTA algorithm}
 }
 \value{
 
 }
 \description{
-DOCUMENTATION
+The FISTA algorithm extrapolates/correctes after the gradient step. The "nesterov_faktor" function
+ returns how far the FISTA will exptrapolate in a given step "k"
+}
+\examples{
+nesterov_faktor(2)
 }

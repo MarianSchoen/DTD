@@ -1,6 +1,7 @@
 #' Gradient of \eqn{L(g) = \sum cor(true_C, estimated_C(g) }
 #'
 #' This function returns the value of the gradient of our Loss-function L.
+#' For example see wrapper in \code{\link{descent_generalized_fista}}
 #'
 #' @param X numeric matrix with features as rows, and reference samples as columns
 #' @param Y numeric matrix with features as rows, and samples as columns
@@ -8,13 +9,12 @@
 #' @param gamma.vec numeric vector with length of nrow(X).
 #' In the Loss function above gamma.vec is named "g"
 #'
+#'
 #' @import matrixStats
 #' @import Matrix
 #'
 #' @return numeric list, same length as "gamma.vec"
-#'
-#' @examples
-#'
+
 Trace.H.gradient <- function(X = x_mat, Y = y_mat, C = c_mat, gamma.vec = v_vec){
 
   Gamma <- Matrix::Matrix(diag(gamma.vec))

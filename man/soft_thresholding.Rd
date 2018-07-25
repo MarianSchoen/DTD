@@ -2,16 +2,18 @@
 % Please edit documentation in R/function_softThresholding.R
 \name{soft_thresholding}
 \alias{soft_thresholding}
-\title{DOCUMENTATION}
+\title{Soft thresholding}
 \usage{
 soft_thresholding(x, lambda)
 }
 \arguments{
-\item{lambda}{}
+\item{x}{list of numerics, x = g - step.size * gradient(g)}
+
+\item{lambda}{float or list of floats, regularization parameter}
 }
 \value{
 
 }
 \description{
-DOCUMENTATION
+implementation of the proximal operator for l1 penalty
 }
