@@ -20,8 +20,11 @@
 #' @param indicator named list of characters, indicates which of the samples in datamatrix belongs to which type in sample.names/special.names
 #' @param chosen.mean numeric, mean of jitter
 #' @param chosen.sd numeric, standard deviation of jitter
-#' @param min.amount.samples
-#' @param included.in.X
+#' @param min.amount.samples integer, how many samples have to be present such that it averages over them,
+#'  instead of taking only 1
+#' @param included.in.X list of strings, which cell types are included in the reference matrix.
+#' The mix function will mix all samples in the data set, but will only return the quantity matrix
+#' for the types included in X (and in the right ordering)
 #'
 #' @return list with two entries. "quantities" matrix (nrow = ncol(datamatrix), ncol = nMixtures) and "mixture"
 #' matrix (nrow = nrow(datamatrix), ncol = nMixtures)
