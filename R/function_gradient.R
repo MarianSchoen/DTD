@@ -1,6 +1,3 @@
-library(matrixStats)
-library(Matrix)
-
 #' Title
 #'
 #' @param X
@@ -8,10 +5,18 @@ library(Matrix)
 #' @param C
 #' @param gamma.vec
 #'
+#' @import matrixStats
+#' @import Matrix
+#'
 #' @return numeric list, same length as "gamma.vec"
 #' @export
 #'
 #' @examples Trace.H.gradient(tweak)
+#'
+
+library(matrixStats)
+library(Matrix)
+
 Trace.H.gradient <- function(X = x_mat, Y = y_mat, C = c_mat, gamma.vec = v_vec){
 
   Gamma <- Matrix(diag(gamma.vec))
