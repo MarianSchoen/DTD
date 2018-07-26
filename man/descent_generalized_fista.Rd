@@ -9,7 +9,7 @@ descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 1000,
   learning.rate = NA, F.GRAD.FUN = DTD.grad.wrapper,
   ST.FUN = soft_thresholding, FACTOR.FUN = nesterov_faktor,
   EVAL.FUN = DTD.evCor.wrapper, line_search_speed = 2, cycles = 50,
-  verbose = T)
+  save_all_tweaks = F, verbose = T)
 }
 \arguments{
 \item{tweak_vec}{numeric vector, with which the minimization algorithm starts}
@@ -40,6 +40,11 @@ function.}
 
 \item{line_search_speed}{numeric, factor with which the learning rate changes,
 if the optimium has not been found}
+
+\item{cycles}{integer, in each iteration one gradient is calculated. To find the
+best step size, with "cycles" different step sizes}
+
+\item{save_all_tweaks}{boolean, should all tweak vectores during all iterations be stored}
 
 \item{verbose}{boolean, should information be printed to console}
 }
@@ -102,10 +107,15 @@ for(l.type in include.in.X){
 special.samples <- c("Type1")
 all.samples <- unique(indicator.list)
 sample.names <- all.samples[- which(all.samples \%in\% special.samples)]
+
+train.mat <- random.data[, -which(colnames(random.data) \%in\% samples.to.remove)]
+indicator.list <- indicator.list[-which(!names(indicator.list) \%in\% colnames(train.mat))]
+
+
 training.data <- mix.samples.Jitter(sample.names = sample.names,
                                      special.samples = special.samples,
                                      nMixtures = 1e3,
-                                     datamatrix = random.data,
+                                     datamatrix = train.mat,
                                      indicator = indicator.list,
                                      singleSpecial = F,
                                      add_jitter = T,
@@ -141,7 +151,8 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                    FACTOR.FUN = nesterov_faktor,
                                    EVAL.FUN = DTD.evCor.wrapper,
                                    line_search_speed = 2,
-                                   maxit = 1e3)
+                                   maxit = 1e3,
+                                   save_all_tweaks = T)
 
 
 
