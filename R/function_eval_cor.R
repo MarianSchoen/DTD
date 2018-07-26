@@ -15,6 +15,7 @@
 #'
 #' @return float, value of the Loss function
 #'
+#' @export
 #' @examples
 #' library(DTD)
 #' random.data <- generate.random.data(nTypes = 5,

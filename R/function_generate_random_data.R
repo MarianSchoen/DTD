@@ -15,6 +15,7 @@
 #' @param seed integer, to which the seed will be set
 #'
 #' @return matrix with ~ (nTypes * nSamples.perType) columns, and nFeatures rows
+#' @export
 #'
 #' @examples
 #' #' library(DTD)
@@ -91,7 +92,6 @@ generate.random.data <- function(nTypes = 5,
     sample.means <- c(sample.means, rep(means[l.sample], cells.perType[l.sample]))
     sample.sds <- c(sample.sds, rep(sds[l.sample], cells.perType[l.sample]))
   }
-
 
   # Here, the actual data generation starts.
   # Each sample will be simulated iteratively:

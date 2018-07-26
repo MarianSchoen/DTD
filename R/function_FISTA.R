@@ -31,6 +31,11 @@
 #' @param line_search_speed numeric, factor with which the learning rate changes,
 #'  if the optimium has not been found
 #' @param verbose boolean, should information be printed to console
+#' @param cycles integer, in each iteration one gradient is calculated. To find the
+#'  best step size, with "cycles" different step sizes
+#' @param save_all_tweaks boolean, should all tweak vectores during all iterations be stored
+#'
+#' @export
 #'
 #' @return list, including [["Converge"]] and [["Tweak"]]
 #'
@@ -79,10 +84,15 @@
 #' special.samples <- c("Type1")
 #' all.samples <- unique(indicator.list)
 #' sample.names <- all.samples[- which(all.samples %in% special.samples)]
+#'
+#' train.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+#' indicator.list <- indicator.list[-which(!names(indicator.list) %in% colnames(train.mat))]
+#'
+#'
 #' training.data <- mix.samples.Jitter(sample.names = sample.names,
 #'                                      special.samples = special.samples,
 #'                                      nMixtures = 1e3,
-#'                                      datamatrix = random.data,
+#'                                      datamatrix = train.mat,
 #'                                      indicator = indicator.list,
 #'                                      singleSpecial = F,
 #'                                      add_jitter = T,
@@ -118,8 +128,8 @@
 #'                                    FACTOR.FUN = nesterov_faktor,
 #'                                    EVAL.FUN = DTD.evCor.wrapper,
 #'                                    line_search_speed = 2,
-#'                                    maxit = 1e3)
-#'
+#'                                    maxit = 1e3,
+#'                                    save_all_tweaks = T)
 #'
 #'
 #'
@@ -133,7 +143,10 @@ descent_generalized_fista <- function(tweak_vec = NA,
                                       EVAL.FUN = DTD.evCor.wrapper,
                                       line_search_speed = 2,
                                       cycles=50,
+                                      save_all_tweaks=F,
                                       verbose=T){
+
+
   if(is.na(learning.rate)){
     # estimating best step size using barzilai borwein initialization
     # adapted from apgpy !
@@ -147,10 +160,13 @@ descent_generalized_fista <- function(tweak_vec = NA,
     learning.rate <- as.numeric(learning.rate)
   }
 
+
+
   # safety check.
   if(any(is.na(tweak_vec))){
     stop("Tweak vector includes NAs")
   }
+
 
   tweak_old <- tweak_vec
   converge_vec <- EVAL.FUN(tweak_vec)
@@ -158,6 +174,11 @@ descent_generalized_fista <- function(tweak_vec = NA,
   factor <- FACTOR.FUN(2)
   if(verbose){
     cat("starting to optimize \n")
+  }
+
+  if(save_all_tweaks){
+    tweak.history <- matrix(NA, nrow = length(tweak_vec), ncol = maxit)
+    tweak.history[, 1] <- tweak_vec
   }
 
   # step size sequence:
@@ -195,6 +216,10 @@ descent_generalized_fista <- function(tweak_vec = NA,
 
     tweak_vec <- u_vec
 
+    if(save_all_tweaks){
+      tweak.history[, iter] <- tweak_vec
+    }
+
     v_vec <- tweak_old + 1/factor * (tweak_vec - tweak_old)
 
     # now factor ---> iter + 1
@@ -213,5 +238,8 @@ descent_generalized_fista <- function(tweak_vec = NA,
     }
   }
   ret <- list("Tweak"=tweak_vec, "Convergence"=converge_vec)
+  if(save_all_tweaks){
+    ret$History <- tweak.history
+  }
   return(ret)
 }

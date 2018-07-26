@@ -29,6 +29,8 @@
 #' @return list with two entries. "quantities" matrix (nrow = ncol(datamatrix), ncol = nMixtures) and "mixture"
 #' matrix (nrow = nrow(datamatrix), ncol = nMixtures)
 #'
+#' @export
+#'
 #' @examples
 #' library(DTD)
 #' random.data <- generate.random.data(nTypes = 5,

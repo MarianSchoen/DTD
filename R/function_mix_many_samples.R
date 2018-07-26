@@ -14,6 +14,8 @@
 #'
 #' @return list with random profiles, and their quantity matrix
 #'
+#' @export
+#'
 #' @examples
 #' library(DTD)
 #' random.data <- generate.random.data(nTypes = 10,

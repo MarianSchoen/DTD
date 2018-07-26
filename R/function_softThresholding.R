@@ -5,6 +5,7 @@
 #' @param x list of numerics, x = g - step.size * gradient(g)
 #' @param lambda float or list of floats, regularization parameter
 #'
+#' @export
 #' @return
 #'
 soft_thresholding <- function(x, lambda){

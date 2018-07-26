@@ -7,6 +7,8 @@
 #'
 #' @return
 #'
+#' @export
+#'
 #' @examples
 #' nesterov_faktor(2)
 nesterov_faktor <- function(k){

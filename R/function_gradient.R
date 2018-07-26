@@ -9,6 +9,7 @@
 #' @param gamma.vec numeric vector with length of nrow(X).
 #' In the Loss function above gamma.vec is named "g"
 #'
+#' @export
 #'
 #' @import matrixStats
 #' @import Matrix
