@@ -9,21 +9,23 @@ normalizeToCount(mat, count = 1e+06)
 \arguments{
 \item{mat}{numeric matrix, with samples as columns and features as columns}
 
-\item{count}{float}
+\item{count}{float , to which every sample of mat will be scaled}
 }
 \value{
-: "ret", matrix with same dimension as "mat"
+"ret", matrix with same dimension as "mat"
 }
 \description{
-'normalizeToCount' takes a numeric matrix mat and normalizes each column (=> sample) to fix number of counts
+'normalizeToCount' takes a numeric matrix mat and normalizes each column (=> sample) to fix number of counts.\cr
+For every sample i, each feature j gets scaled to
+ \deqn{mat[j, i] = (count * mat[j, i]) / sum(mat[, i])}
 }
 \examples{
 someMatrix <- matrix(rnorm(1000*5), ncol=5, nrow=1000)
-# each sample (=column) has different sum: 
+# each sample (=column) has different sum:
 apply(someMatrix, 2, sum)
 
 normalizedMatrix <- normalizeToCount(someMatrix)
 
-# check: 
+# check:
 apply(normalizedMatrix, 2, sum)
 }
