@@ -65,9 +65,9 @@
 #'
 mix.samples <- function(gene.mat,
                        pheno,
+                       included.in.X,
                        nSamples = 1e3,
                        nPerMixture = 100,
-                       included.in.X,
                        verbose = FALSE){
 
   geneExpression <- matrix(NA, nrow=nrow(gene.mat), ncol=nSamples)
@@ -94,7 +94,7 @@ mix.samples <- function(gene.mat,
     # if there are any missing types, add those with quantity 0
     if(length(missing.types) != 0){
       add_0 <- rep(0, length(missing.types))
-      names(add_0) <- missing
+      names(add_0) <- missing.types
       table.chosen.pheno <- c(table.chosen.pheno, add_0)
     }
 
