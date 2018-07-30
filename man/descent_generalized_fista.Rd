@@ -156,5 +156,4 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
 
 
 
-
 }
