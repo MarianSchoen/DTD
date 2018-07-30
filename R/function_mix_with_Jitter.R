@@ -12,12 +12,12 @@
 #' @param sample.names vector of strings, have to match colnames(datamatrix).
 #' @param special.samples vector of strings, have to match colnames(datamatrix), these samples will
 #' occur with higher quantites within the mix data.
-#' @param nMixtures integer, how many mixtures should be drawn
+#' @param nSamples integer, how many mixtures should be drawn
 #' @param datamatrix numeric matrix, with samples as columns, and features as rows
 #' @param singleSpecial boolean, should all special names be used? or only a single one
 #' @param add_jitter boolean, should the mixtures be mulitplied with a vector of normally distributed numbers? (JITTER)
 #' @param verbose boolean, should function tell about progression?
-#' @param indicator named list of characters, indicates which of the samples in datamatrix belongs to which type in sample.names/special.names
+#' @param pheno named list of characters, indicates which of the samples in datamatrix belongs to which type in sample.names/special.names
 #' @param chosen.mean numeric, mean of jitter
 #' @param chosen.sd numeric, standard deviation of jitter
 #' @param min.amount.samples integer, how many samples have to be present such that it averages over them,
@@ -79,21 +79,21 @@
 #'
 #' training.data <- random.data[ , -which(colnames(random.data) %in% samples.to.remove)]
 #'
-#' training.data <- mix.samples.Jitter(sample.names = sample.names,
+#' training.data <- mix.samples.jitter(sample.names = sample.names,
 #'                                      special.samples = special.samples,
-#'                                      nMixtures = 1e3,
+#'                                      nSamples = 1e3,
 #'                                      datamatrix = random.data,
-#'                                      indicator = indicator.list,
+#'                                      pheno = indicator.list,
 #'                                      singleSpecial = F,
 #'                                      add_jitter = T,
 #'                                      chosen.mean = 1,
 #'                                      chosen.sd = 0.05,
 #'                                      min.amount.samples = 1)
-mix.samples.Jitter <- function(sample.names,
+mix.samples.jitter <- function(sample.names,
                                special.samples,
-                               nMixtures=1e3,
+                               nSamples=1e3,
                                datamatrix,
-                               indicator,
+                               pheno,
                                verbose=F,
                                singleSpecial = F,
                                add_jitter = F,
@@ -102,9 +102,8 @@ mix.samples.Jitter <- function(sample.names,
                                min.amount.samples = 1,
                                included.in.X){
 
-  # copy n pasted from: source("../../R-functions/function_mixIdeals.R")
   # Safety check
-  if(any(!names(indicator) %in% colnames(datamatrix))){
+  if(any(!names(pheno) %in% colnames(datamatrix))){
     stop("not all names provided are within the data matrix")
   }
   len <- length(c(sample.names, special.samples))
@@ -117,9 +116,9 @@ mix.samples.Jitter <- function(sample.names,
   rownames(quant.matrix) <- c(sample.names, special.samples)
 
 
-  for(lrun in 1:nMixtures){
+  for(lrun in 1:nSamples){
     if(verbose){
-      cat("doing ", lrun, " or ", 100*lrun/nMixtures, "%\n" )
+      cat("doing ", lrun, " or ", 100*lrun/nSamples, "%\n" )
     }
     quant.tumors  <- runif(n = 1, min = 0.5, max = 0.7)
     if(singleSpecial){
@@ -161,7 +160,7 @@ mix.samples.Jitter <- function(sample.names,
     mixture <- rep(0, nrow(datamatrix))
     for(l1 in c(sample.names, special.samples)){
       #### get one of the samples
-      potentialCells <- names(indicator[indicator == l1])
+      potentialCells <- names(pheno[pheno == l1])
       if(length(potentialCells) == 0){# this cell type can not be found in the mixture ...
         # i am totally unsure what to do now ...
         next_quant <- quant.matrix[l1, lrun] *
@@ -171,7 +170,7 @@ mix.samples.Jitter <- function(sample.names,
       if(length(potentialCells) < min.amount.samples){ # only a view cells are within the pool => average over all of them
         next_quant <- rowSums(datamatrix[, potentialCells, drop = FALSE])
       }else{ # there are enough cells in here, such that sampling is possible
-        chosen.sample <-  sample(x = names(indicator[indicator == l1]), size = 1)
+        chosen.sample <-  sample(x = names(pheno[pheno == l1]), size = 1)
         next_quant <- (quant.matrix[l1, lrun] * datamatrix[, chosen.sample])
       }
       if(add_jitter){

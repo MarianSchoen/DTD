@@ -4,20 +4,20 @@
 \alias{mix.samples}
 \title{Mix samples for loss-function learning DTD}
 \usage{
-mix.samples(gene.mat, pheno, nSamples = 1000, nPerMixture = 100,
-  included.in.X, verbose = FALSE)
+mix.samples(gene.mat, pheno, included.in.X, nSamples = 1000,
+  nPerMixture = 100, verbose = FALSE)
 }
 \arguments{
 \item{gene.mat}{numeric matrix, with features as rows and samples as columns}
 
 \item{pheno}{matrix, with pheno information for each sample in gene.mat}
 
+\item{included.in.X}{list of strings, types that are in the reference matrix.
+Only those, and sorted like that, must be included in the quantity matrix}
+
 \item{nSamples}{integer, numbers of samples to be drawn}
 
 \item{nPerMixture}{integer, how many samples should be included per mixutre}
-
-\item{included.in.X}{list of strings, types that are in the reference matrix.
-Only those, and sorted like that, must be included in the quantity matrix}
 
 \item{verbose}{boolean, should information be printed}
 }

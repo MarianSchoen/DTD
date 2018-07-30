@@ -109,7 +109,7 @@ mix.samples <- function(gene.mat,
   quantities <- quantities[included.in.X, ]
 
   geneExpression <- normalizeToCount(geneExpression)
-  ret <- list("Y"= geneExpression, "C" = quantities)
+  ret <- list("mixtures"= geneExpression, "quantities" = quantities)
   return(ret)
 }
 

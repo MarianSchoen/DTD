@@ -72,11 +72,11 @@
 #' for(l.type in include.in.X){
 #'   all.of.type <- names(indicator.list)[which(indicator.list == l.type)]
 #'   chosen.for.X <- sample(x = all.of.type,
-#'                          size = length(all.of.type) * percentage.of.all.cells,
+#'                          size = ceiling(length(all.of.type) * percentage.of.all.cells),
 #'                          replace = FALSE)
 #'   samples.to.remove <- c(samples.to.remove, chosen.for.X)
 #'
-#'   average <- rowSums(random.data[, samples.to.remove])
+#'   average <- rowSums(random.data[, chosen.for.X, drop = F])
 #'   X.matrix[, l.type] <- average
 #' }
 #'
