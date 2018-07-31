@@ -4,21 +4,23 @@
 \alias{ggplot_correlation}
 \title{Plot loss curve}
 \usage{
-ggplot_correlation(fista.output, test.set)
+ggplot_correlation(fista.output, test.set = NA, X.matrix = NA)
 }
 \arguments{
-\item{test.set}{}
+\item{fista.output}{list, with "Convergence" entry as return by the descent_generalized_fista function}
+
+\item{test.set}{list with "mixtures" matrix, and "quantity" matrix as returned by mix.samples or mix.samples.jitter function}
+
+\item{X.matrix}{numeric matrix, reference matrix of the DTD problem}
 }
 \description{
-The "ggplot_correlation" function uses ggplot2 and reshape to visualize the decrease of the loss-function.
+The "ggplot_correlation" function uses ggplot2 and reshape to visualize the decrease of the loss-function after
+a model has been trained.
 }
 \details{
 As input parameter it needs the output of \code{\link{descent_generalized_fista}}. If fista has been evoked
 with save_all_tweaks = T, and a test set is available, the loss-function can be evaluated for all tweak vectors,
 and both training and test loss curves will be plotted (=> detect overfitting).\cr
 The following example needs data generation, and evoking the FISTA algorithm as shown in
-\code{\link{descent_generalized_fista}}.
-}
-\examples{
-ggplot_correlation(fista.output = catch, test.set = NA)
+\code{\link{descent_generalized_fista}}
 }
