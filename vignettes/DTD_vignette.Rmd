@@ -1,13 +1,15 @@
 ---
-title: "Loss-function learning for digital tissue deconvolution"
-author: "Marian Schön"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-bibliography: bibliography.bib
-vignette: >
-  %\VignetteIndexEntry{Vignette Title}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  title: "Loss-function learning for digital tissue deconvolution"
+  author: "Marian Schön"
+  date: "`r Sys.Date()`"
+  output: 
+    rmarkdown::html_vignette: 
+      toc: TRUE
+  bibliography: bibliography.bib
+  vignette: >
+    %\VignetteIndexEntry{Vignette Title}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
 ---
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
@@ -15,7 +17,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
-# What is DTD?  
+# What is DTD?
 The name of the "DTD" package is an acronym for Digital Tissue Deconvolution. Here, we provide functions and routines with which a DTD model can be trained. 
 
 # How to use? 
@@ -122,8 +124,10 @@ The loss-function learning DTD algorithm trains a g-vector on a trainig set. Bas
 - Y, or mixtures matrix. Y has as many rows (=features) as `X.matrix` or `normalized.data`. Every column y of Y is a mixture of the cells in the data set.
 - C, or quantities matrix. C has as many rows as there are cells in `X.matrix`. Every column of C holds the distribution of the cells in each mixture of Y. 
 
-In this package we provide two methods to generate the training set. One method randomly samples many cells of the complete data set, and averages over them. This is the prefered method. However, if there are only a few samples per cell type (in average below 10 samples per type) we recommend to mix samples using jitter. For both methods we provide functions within the DTD package. 
+In this package we provide two methods to generate the training set. One method randomly samples many cells of the complete data set, and averages over them. This is the prefered method. However, if there are only a few samples per cell type (in average below 10 samples per type) we recommend to mix samples using jitter. For both methods we provide functions within the DTD package.
+
 ### Many samples --> directly
+
 The `mix.samples` function needs the following arguments:
 
 - gene.mat: numeric matrix, here `train.mat`
@@ -138,7 +142,7 @@ The `mix.samples` function needs the following arguments:
                                pheno = indicator.list,
                                included.in.X = include.in.X, 
                                nSamples = 1e3, 
-                               nPerMixture = 2, 
+                               nPerMixture = 5, 
                                verbose = F)
   str(training.data)
 ```
@@ -153,7 +157,7 @@ It takes the following arguments:
 
 The idea behind splitting all samples in the data set into `special.names` and `sample.names` is: 
 In a tumor tissue malignant cells make up ~75% of all cells. In contrast to that, certain immune cells (e.g. a macrophage subtype) make up only ~5 % of all cells. 
-In the training set imbalanced quantities should be reflected.
+In the training set imbalanced quantities should be reflected. 
 
 - nSamples: integer, how many in-silicio mixtures should be generated. 
 - datamatrix: numeric matrix, here `train.mat`
@@ -166,8 +170,74 @@ In the training set imbalanced quantities should be reflected.
 - min.amount.samples: integer, how many samples have to be present such that it averages over them, instad of taking only 1. 
 - included.in.X: list of strings, here include.in.X
 
+```{r}
+  # Here, we set "Type1" to be special:
+  special.samples <- c("Type1")
+  # and all other to be normal: 
+  all.samples <- unique(indicator.list)
+  sample.names <- all.samples[- which(all.samples %in% special.samples)]
+  
+  # reduce indicator list to those samples included in training: 
+  indicator.list <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
+  
+  training.data.jitter <- mix.samples.jitter(sample.names = sample.names,
+                                             special.samples = special.samples, 
+                                             nSamples = 1e3, 
+                                             datamatrix = train.mat, 
+                                             pheno = indicator.list, 
+                                             verbose = F, 
+                                             add_jitter = T, 
+                                             included.in.X = include.in.X)
+```
 
 ## Train g vector
+
+Now we generated a training set, and are nearly set to start the optimizing procedure. 
+~~~In this package we implemented a adjusted FISTA algorithm to minimize our Loss-function. FISTA (fast iterative shrinkage thresholding algorithm) is a iterative proximal gradient method with Nesterov acceleration. Basically, the FISTA algorithm can be described as a extrapolation/correction/nesterov step after a proximal gradient descen step. In the loss-function learning DTD context the computational expensive part is the calculation of the gradient.~~~ 
+
+
+We provide a function with the following arguments: 
+
+- tweak_vec: numeric vector, with which the minimization starts. 
+- maxit: integer, maximum number of iterations. 
+- learning.rate: float, initial step size while learning. During the algorithm it may in or decreased. 
+- F.GRAD.FUN: function with one parameter: a vector with same length as tweak_vec, and one return value with the same length. For a given vector, it returns the gradient of the loss function. 
+- EVAL.FUN: function with one parameter: a vector with same length as tweak_vec, and a float as return value. For a given vector, it returns the value of the loss function. 
+
+Both functions take only one list as input argument, which is the `tweak_vec`. If the gradient function takes more than one argument, a wrapper function is needed: 
+```{r}
+  DTD.grad.wrapper <- function(tweak){
+      X <- X.matrix
+      Y <- training.data$mixtures
+      C <- training.data$quantities
+      grad <- Trace.H.gradient(X = X, Y = Y, C = C, gamma.vec = tweak)
+      return(grad)
+  }
+  DTD.evCor.wrapper <- function(tweak){
+      X <- X.matrix
+      Y <- training.data$mixtures
+      C <- training.data$quantities
+      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+  }
+```
+
+Now, the optimization procedure can be started: 
+
+```{r}
+  start_tweak <- rep(1, nrow(X.matrix))
+  catch <- descent_generalized_fista(tweak_vec = start_tweak,
+                                      F.GRAD.FUN = DTD.grad.wrapper,
+                                      ST.FUN = soft_thresholding,
+                                      FACTOR.FUN = nesterov_faktor,
+                                      EVAL.FUN = DTD.evCor.wrapper,
+                                      line_search_speed = 2,
+                                      maxit = 1e2,
+                                      save_all_tweaks = T, 
+                                      verbose = F)
+```
+
+
+
 ## Visualize results
 
 # References
