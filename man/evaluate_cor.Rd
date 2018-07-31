@@ -23,9 +23,10 @@ float, value of the Loss function
 \description{
 The loss-function learning digital tissue deconvolution finds a vector g which minimizes the Loss function L\cr
 \deqn{L(g) = 1 - \sum cor(true_C, estimatd_C(g))}
-This minimization is equal to a maximization of the summed/averaged correlation
-\deqn{ \sum cor(true_C, estimatd_C(g))}
 The evaluate_cor function returns the value of the Loss function.
+The evaluate_cor function takes 4 arguments. However, we wrote the FISTA implementation in a way that both the
+gradient and the evaluation function only take one argument, which is the g vector. In order to use this function
+within the `descent_generalized_fista` function, you need a wrapper function (see \code\link{descent_generalized_fista})
 }
 \examples{
 library(DTD)
@@ -73,11 +74,11 @@ special.samples <- c("Type1")
 all.samples <- unique(indicator.list)
 sample.names <- all.samples[- which(all.samples \%in\% special.samples)]
 
-training.data <- mix.samples.Jitter(sample.names = sample.names,
+training.data <- mix.samples.jitter(sample.names = sample.names,
                                      special.samples = special.samples,
-                                     nMixtures = 1e3,
+                                     nSamples = 1e3,
                                      datamatrix = random.data,
-                                     indicator = indicator.list,
+                                     pheno = indicator.list,
                                      singleSpecial = F,
                                      add_jitter = T,
                                      chosen.mean = 1,

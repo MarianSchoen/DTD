@@ -2,9 +2,10 @@
 #'
 #' The loss-function learning digital tissue deconvolution finds a vector g which minimizes the Loss function L\cr
 #' \deqn{L(g) = 1 - \sum cor(true_C, estimatd_C(g))}
-#' This minimization is equal to a maximization of the summed/averaged correlation
-#' \deqn{ \sum cor(true_C, estimatd_C(g))}
 #' The evaluate_cor function returns the value of the Loss function.
+#' The evaluate_cor function takes 4 arguments. However, we wrote the FISTA implementation in a way that both the
+#' gradient and the evaluation function only take one argument, which is the g vector. In order to use this function
+#' within the `descent_generalized_fista` function, you need a wrapper function (see \code\link{descent_generalized_fista})
 #'
 #' @param X numeric matrix with cells as columns, and features as rows. Reference matrix X of the DTD problem.
 #' @param Y numeric matrix with samples as columns, and features as rows. Each sample in Y is a bulk measurement,
@@ -62,11 +63,11 @@
 #' all.samples <- unique(indicator.list)
 #' sample.names <- all.samples[- which(all.samples %in% special.samples)]
 #'
-#' training.data <- mix.samples.Jitter(sample.names = sample.names,
+#' training.data <- mix.samples.jitter(sample.names = sample.names,
 #'                                      special.samples = special.samples,
-#'                                      nMixtures = 1e3,
+#'                                      nSamples = 1e3,
 #'                                      datamatrix = random.data,
-#'                                      indicator = indicator.list,
+#'                                      pheno = indicator.list,
 #'                                      singleSpecial = F,
 #'                                      add_jitter = T,
 #'                                      chosen.mean = 1,
@@ -85,10 +86,21 @@
 #' cor <- 1 - loss
 #'
 evaluate_cor <- function(X, Y, C, tweak){
+  # estimate C using reference matrix, bulks and the tweak vector:
   esti.cs <- est.cs(X, Y, tweak)
+
+  if(any(dim(esti.cs) != dim(C))){
+    stop("evaluate_cor: dimension of estimated C do not fit")
+  }
+
+  # initialise cor_per_cType:
   cor_per_cType <- rep(NA, nrow(C))
   for(l1 in 1:nrow(C)){
+    # calculate the correlation per Type:
     cor_per_cType[l1] <- cor(C[l1, ], esti.cs[l1, ])
   }
-  return(1 - mean(cor_per_cType))
+
+  # The value of loss-function is 1 - the averaged correlation:
+  loss <- 1 - mean(cor_per_cType)
+  return(loss)
 }
