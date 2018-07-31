@@ -12,7 +12,7 @@
 #'
 #' @param tweak_vec numeric vector, with which the minimization algorithm starts
 #' @param lambda float, regularization factor for ST.FUN function
-#' @param maxit integer, maximal number of iterations for the iterative
+#' @param maxit integer, maximum number of iterations for the iterative
 #'   minimization
 #' @param learning.rate float, step size while learning
 #' @param F.GRAD.FUN function with one parameter: vector with same length as
@@ -25,7 +25,7 @@
 #' @param FACTOR.FUN function, with a integer as input, and a float as return
 #'   value. This function returns the factor the nesterov correction
 #'   extrapolates.
-#' @param EVAL.FUN fucntion, with one parameter: vector with same length as
+#' @param EVAL.FUN function, with one parameter: vector with same length as
 #'   tweak_vec, and a single float as return. This function evaluates the loss
 #'   function.
 #' @param line_search_speed numeric, factor with which the learning rate changes,
