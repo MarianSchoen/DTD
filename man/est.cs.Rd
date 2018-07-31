@@ -7,19 +7,22 @@
 est.cs(X, Y, gamma.vec)
 }
 \arguments{
-\item{X}{numeric matrix with cells as columns, and features as rows. Reference matrix X of the DTD problem.}
+\item{X}{numeric matrix with cells as columns, and features as rows.
+Reference matrix X of the DTD problem.}
 
 \item{Y}{numeric matrix with samples as columns, and features as rows.}
 
-\item{gamma.vec}{numeric vector with length of nrow(X). In the equation above the gamma.vec is denotated as g.}
+\item{gamma.vec}{numeric vector with length of nrow(X). In the equation above
+the gamma.vec is denotated as g.}
 }
 \value{
 numeric matrix with ncol(X) rows, and ncol(Y) columns
 }
 \description{
-Given a reference matrix X, a matrix of bulks and a g-vector, est.cs finds the solution of
-\deqn{arg min || diag(g) (Y - XC) ||_2}
-over all C using direct analytical solution
+Given a reference matrix X, a matrix of bulks and a g-vector, "est.cs" finds
+the solution of \deqn{arg min || diag(g) (Y - XC) ||_2} over all C using
+direct analytical solution:
+\deqn{ C(g) = (X^T \Gamma X )^(-1) X^T \Gamma Y}
 }
 \examples{
 library(DTD)
@@ -43,4 +46,5 @@ estimated.c <- est.cs(X = random.data,
 
 # visualize that the estimated c are close to the true c
 plot(true.c, estimated.c)
+
 }
