@@ -42,7 +42,7 @@
 #' @examples
 #' library(DTD)
 #' random.data <- generate.random.data(nTypes = 5,
-#'                                     nSamples.perType = 10,
+#'                                     nSamples.perType = 20,
 #'                                     nFeatures = 100,
 #'                                     sample.type = "Cell",
 #'                                     feature.type = "gene")
@@ -85,15 +85,36 @@
 #' all.samples <- unique(indicator.list)
 #' sample.names <- all.samples[- which(all.samples %in% special.samples)]
 #'
-#' train.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
-#' indicator.list <- indicator.list[-which(!names(indicator.list) %in% colnames(train.mat))]
+#' # all samples that have been used in the reference matrix, must not be included in the test/training set
+#' reduced.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+#' # all remaining samples will be equally split into test and training:
+#' test.samples <- sample(x = colnames(reduced.mat), size = ceiling(ncol(reduced.mat)/2), replace = FALSE)
+#' test.mat <- random.data[, test.samples]
+#' indicator.list.test <- indicator.list[-which(!names(indicator.list) %in% colnames(test.mat))]
+#'
+#' train.samples <- colnames(reduced.mat)[which(!colnames(reduced.mat) %in% test.samples)]
+#' train.mat <- random.data[, train.samples]
+#' indicator.list.train <- indicator.list[-which(!names(indicator.list) %in% colnames(train.mat))]
 #'
 #'
-#' training.data <- mix.samples.Jitter(sample.names = sample.names,
+#' training.data <- mix.samples.jitter(sample.names = sample.names,
 #'                                      special.samples = special.samples,
-#'                                      nMixtures = 1e3,
+#'                                      nSamples = 1e3,
 #'                                      datamatrix = train.mat,
-#'                                      indicator = indicator.list,
+#'                                      pheno = indicator.list.train,
+#'                                      singleSpecial = F,
+#'                                      add_jitter = T,
+#'                                      chosen.mean = 1,
+#'                                      chosen.sd = 0.05,
+#'                                      min.amount.samples = 1,
+#'                                      verbose = FALSE,
+#'                                      included.in.X = include.in.X)
+#'
+#' test.data <-  mix.samples.jitter(sample.names = sample.names,
+#'                                      special.samples = special.samples,
+#'                                      nSamples = 1e3,
+#'                                      datamatrix = test.mat,
+#'                                      pheno = indicator.list.test,
 #'                                      singleSpecial = F,
 #'                                      add_jitter = T,
 #'                                      chosen.mean = 1,
@@ -131,6 +152,9 @@
 #'                                    maxit = 1e3,
 #'                                    save_all_tweaks = T)
 #'
+#' print(ggplot_correlation(fista.output = catch,
+#'                          test.set = test.data,
+#'                          X.matrix = X.matrix))
 #'
 #'
 descent_generalized_fista <- function(tweak_vec = NA,
