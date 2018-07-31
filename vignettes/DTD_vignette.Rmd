@@ -18,7 +18,17 @@ knitr::opts_chunk$set(
 )
 ```
 # What is DTD?
-The name of the "DTD" package is an acronym for Digital Tissue Deconvolution. Here, we provide functions and routines with which a DTD model can be trained. 
+The gene expression profile of a tissue averages the expression profiles of all cells in this tissue. Digital tissue deconvolution (DTD) addresses the following inverse problem: Given the expression profile y of a tissue, what is the cellular composition c of that tissue? 
+@Goertler2018
+
+
+In our Digital Tissue Deconvolution (DTD) package we provide functions and routines to deconvolute a bulk sample. 
+The underlying idea of our DTD approach is to use loss-function learning. Based on a training sample we use a modified FISTA implementation to minimize 
+\[ 
+L(g) = 1 - \sum_{celltypes} cor(C_{true}, C_{estimated} (g)) 
+\]
+After training a g-vector we can use it on knew data set. 
+
 
 # How to use? 
 In the following examples, I demonstrate how data has to look like, in order to be used for loss-function learning digital tissue deconvolution. After that, I give examples on how to process the data, how to generate a test and training set, how to train the g vector, and finally, how to visualize the result. 
@@ -231,13 +241,12 @@ Now, the optimization procedure can be started:
                                       FACTOR.FUN = nesterov_faktor,
                                       EVAL.FUN = DTD.evCor.wrapper,
                                       line_search_speed = 2,
-                                      maxit = 1e2,
+                                      maxit = 50,
                                       save_all_tweaks = T, 
                                       verbose = F)
+  str(catch)
 ```
-
-
-
+The output of the `descent_generalized_fista` algorithm is a list. It returns the `tweak_vec` after the last iterations, and a convergence vector. Within the convergence vector there are stored the evaluations of the `EVAL.FUN` in every step. 
 ## Visualize results
 
 # References
