@@ -36,7 +36,7 @@ generate.random.data <- function(nTypes = 5,
 
   # Check if input is valid:
   if(!is.numeric(nTypes) || !is.numeric(nSamples.perType) || !is.numeric(nFeatures)){
-    stop("Set input parameters (nTypes, nSamples.perType, nFeatures) to valid values")
+    stop("Set input parameters (nTypes, nSamples.perType, nFeatures) to valid numeric values")
   }
 
   if(!is.character(sample.type)){
