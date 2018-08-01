@@ -17,21 +17,36 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+
+```{r include=FALSE}
+  # for fast testing 
+  maxit <- 2
+  nSamples <- 5
+```
+
 # What is DTD?
-The gene expression profile of a tissue averages the expression profiles of all cells in this tissue. Digital tissue deconvolution (DTD) addresses the following inverse problem: Given the expression profile y of a tissue, what is the cellular composition c of that tissue? 
-@Goertler2018
+The gene expression profile of a tissue averages the expression profiles of all cells in this tissue. Digital tissue deconvolution (DTD) addresses the following inverse problem: Given the expression profile y of a tissue, what is the cellular composition c of that tissue? The theory and mathematical background of a DTD model that uses 
+loss-function learning has been published by @Goertler2018. With this package we provide all necessary R functions and routines to train and use a loss-function learning digital tissue deconvolution model. 
 
+Let's start with the notation used in the article. The reference matrix is denoted as X. Every column $X_{.,k}$ is a cellular reference profile. The expression matrix of bulk profiles is named Y. Every column $Y_{.,k}$ is a mixtures of cells, for which the quantities of the cells in X should be estimated. 
+The standard decovnolution formula is given by 
+\begin{equation}
+  arg~ min_c ~|| Y_{.,k} - Xc||
+\end{equation}
+@Goertler2018 improve this formula by introducing a vector g 
+\begin{equation}
+  arg~ min_c ~|| diag(g) (Y_{.,k} - Xc)||
+\end{equation}
+Every entry $g_i$ of g holds the information how important gene i is for the deconvolution process. The underlying idea of loss-function learning DTD is to gain the vector g by minimizing a loss function L on a training set. 
+\begin{equation}
+  L = - \sum_{j=1}^g cor(C_{j,.}, \widehat{C_{j,.}} (g))
+\end{equation}
+The training set consists of a matrix Y with bulk profiles, for which the quantities of the cells in X should be estimated. Additionally there is a matrix C. In the composition or quantity matrix C every column $C_{.,k}$ holds the distribution of the reference cells X in the bulk profile $Y_{.,k}$. For the loss function L the correlation between the known quantities $C_{j,.}$ and the estimated quantities $\widehat{C_{j,.}}(g)$ is calculated per reference profile j. 
 
-In our Digital Tissue Deconvolution (DTD) package we provide functions and routines to deconvolute a bulk sample. 
-The underlying idea of our DTD approach is to use loss-function learning. Based on a training sample we use a modified FISTA implementation to minimize 
-\[ 
-L(g) = 1 - \sum_{celltypes} cor(C_{true}, C_{estimated} (g)) 
-\]
-After training a g-vector we can use it on knew data set. 
-
+In the package DTD we provide functions to generate a trainings and test set, and a FISTA implementation to minimize the loss function iteratively. 
 
 # How to use? 
-In the following examples, I demonstrate how data has to look like, in order to be used for loss-function learning digital tissue deconvolution. After that, I give examples on how to process the data, how to generate a test and training set, how to train the g vector, and finally, how to visualize the result. 
+In the following examples, we demonstrate how data has to look like, in order to be used for loss-function learning digital tissue deconvolution. After that, we give examples on how to process the data, how to generate a test and training set, how to train the g vector, and finally, how to visualize the result. 
 First of all, load the library: 
 ```{r}
   library(DTD)
@@ -151,7 +166,7 @@ The `mix.samples` function needs the following arguments:
   training.data <- mix.samples(gene.mat = train.mat,
                                pheno = indicator.list,
                                included.in.X = include.in.X, 
-                               nSamples = 1e3, 
+                               nSamples = nSamples, 
                                nPerMixture = 5, 
                                verbose = F)
   str(training.data)
@@ -192,7 +207,7 @@ In the training set imbalanced quantities should be reflected.
   
   training.data.jitter <- mix.samples.jitter(sample.names = sample.names,
                                              special.samples = special.samples, 
-                                             nSamples = 1e3, 
+                                             nSamples = nSamples, 
                                              datamatrix = train.mat, 
                                              pheno = indicator.list, 
                                              verbose = F, 
@@ -241,7 +256,7 @@ Now, the optimization procedure can be started:
                                       FACTOR.FUN = nesterov_faktor,
                                       EVAL.FUN = DTD.evCor.wrapper,
                                       line_search_speed = 2,
-                                      maxit = 50,
+                                      maxit = maxit,
                                       save_all_tweaks = T, 
                                       verbose = F)
   str(catch)
