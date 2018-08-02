@@ -54,8 +54,24 @@ list, including [["Converge"]] and [["Tweak"]]
 \description{
 descent_generalized_fista takes as input a vector, a gradient function and an
 evaluation function (and some additional parameters/functions). Then, it
-iteratively minimizes the tweak vector via the FISTA algorithms. Basically,
-the following equations are used:
+iteratively minimizes the tweak vector via FISTA (Beck and Teboulle 2009). Basically,
+the following equations are used:\cr
+# INITIALIZATIONSTEP\cr
+for k = 2,..., maxit:\cr
+\itemize{
+    \item grad = F.GRAD.FUN(y_vec)\cr
+    \item# find best step size between 0 and learning.rate\cr
+    \item for step.size = 0,..., learning.rate:\cr
+    \itemize{
+        \item u = ST.FUN(y_vec - step.size * grad, step.size * lambda)\cr
+        \item eval = EVAL.FUN(u)
+    }
+    \item# only keep u with minimal eval\cr
+    \item tweak.old = tweak.vec\cr
+    \item tweak.vec = u\cr
+    \item v_vec = tweak.old + 1/FACTOR.FUN(k) * (tweak.vec - tweak.old)\cr
+    \item y_vec = (1 - FACTOR.FUN(k+1)) * tweak_vec + FACTOR.FUN(k+1) * v_vec\cr
+}
 }
 \details{
 The gradient and evaluation function both take only one argument, the soft thresholding function two.
@@ -160,6 +176,7 @@ DTD.evCor.wrapper <- function(tweak){
    Y <- training.data$mixtures
    C <- training.data$quantities
    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+   return(loss)
 }
 
 start_tweak <- rep(1, nrow(X.matrix))
@@ -172,7 +189,8 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                    FACTOR.FUN = nesterov_faktor,
                                    EVAL.FUN = DTD.evCor.wrapper,
                                    line_search_speed = 2,
-                                   maxit = 1e3,
+                                   maxit = 200,
+                                   verbose = F,
                                    save_all_tweaks = T)
 
 print(ggplot_correlation(fista.output = catch,

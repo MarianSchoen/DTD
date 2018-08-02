@@ -3,8 +3,24 @@
 #'
 #' descent_generalized_fista takes as input a vector, a gradient function and an
 #' evaluation function (and some additional parameters/functions). Then, it
-#' iteratively minimizes the tweak vector via the FISTA algorithms. Basically,
-#' the following equations are used:
+#' iteratively minimizes the tweak vector via FISTA (Beck and Teboulle 2009). Basically,
+#' the following equations are used:\cr
+#' # INITIALIZATIONSTEP\cr
+#' for k = 2,..., maxit:\cr
+#' \itemize{
+#'     \item grad = F.GRAD.FUN(y_vec)\cr
+#'     \item# find best step size between 0 and learning.rate\cr
+#'     \item for step.size = 0,..., learning.rate:\cr
+#'     \itemize{
+#'         \item u = ST.FUN(y_vec - step.size * grad, step.size * lambda)\cr
+#'         \item eval = EVAL.FUN(u)
+#'     }
+#'     \item# only keep u with minimal eval\cr
+#'     \item tweak.old = tweak.vec\cr
+#'     \item tweak.vec = u\cr
+#'     \item v_vec = tweak.old + 1/FACTOR.FUN(k) * (tweak.vec - tweak.old)\cr
+#'     \item y_vec = (1 - FACTOR.FUN(k+1)) * tweak_vec + FACTOR.FUN(k+1) * v_vec\cr
+#'}
 #'
 #' The gradient and evaluation function both take only one argument, the soft thresholding function two.
 #' If your gradient, evaluation or soft thresholding function require more arguments, please write a wrapper.
@@ -137,6 +153,7 @@
 #'    Y <- training.data$mixtures
 #'    C <- training.data$quantities
 #'    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+#'    return(loss)
 #' }
 #'
 #' start_tweak <- rep(1, nrow(X.matrix))
@@ -149,7 +166,8 @@
 #'                                    FACTOR.FUN = nesterov_faktor,
 #'                                    EVAL.FUN = DTD.evCor.wrapper,
 #'                                    line_search_speed = 2,
-#'                                    maxit = 1e3,
+#'                                    maxit = 200,
+#'                                    verbose = F,
 #'                                    save_all_tweaks = T)
 #'
 #' print(ggplot_correlation(fista.output = catch,
@@ -169,11 +187,22 @@ descent_generalized_fista <- function(tweak_vec = NA,
                                       cycles=50,
                                       save_all_tweaks=F,
                                       verbose=T){
+  # safety check:
+  if(any(is.na(tweak_vec))){
+    stop("Tweak vector includes NAs")
+  }
+  if(!(is.numeric(lambda) || is.numeric(maxit) || is.numeric(line_search_speed) || is.numeric(cycles))){
+    stop("Set lambda, maxit, line_search_speed and cycles to numeric values")
+  }
+  if(!(is.logical(save_all_tweaks) || is.logical(verbose))){
+    stop("Set save_all_tweaks and verbose to logicals")
+  }
 
 
+  # If no learning.rate is set, the initial learning rate will be initialized according to:
+  #
   if(is.na(learning.rate)){
     # estimating best step size using barzilai borwein initialization
-    # adapted from apgpy !
     grad <- F.GRAD.FUN(tweak_vec)
     norm2 <- sqrt(sum(grad**2))
     t <- 1/norm2
@@ -184,22 +213,18 @@ descent_generalized_fista <- function(tweak_vec = NA,
     learning.rate <- as.numeric(learning.rate)
   }
 
-
-
-  # safety check.
-  if(any(is.na(tweak_vec))){
-    stop("Tweak vector includes NAs")
-  }
-
-
+  # initialise required variables:
   tweak_old <- tweak_vec
   converge_vec <- EVAL.FUN(tweak_vec)
   y_vec <- tweak_vec
-  factor <- FACTOR.FUN(2)
+  nesterov.counter <- 2
+  factor <- FACTOR.FUN(nesterov.counter)
+
   if(verbose){
     cat("starting to optimize \n")
   }
 
+  # Notice, if save_all_tweaks is FALSE only the last tweak_vec will be stored, and returned after optimization
   if(save_all_tweaks){
     tweak.history <- matrix(NA, nrow = length(tweak_vec), ncol = maxit)
     tweak.history[, 1] <- tweak_vec
@@ -208,10 +233,8 @@ descent_generalized_fista <- function(tweak_vec = NA,
   # step size sequence:
   sequence <- seq(from = 0, to = learning.rate, length.out = cycles)
 
-
   for(iter in 2:maxit){
     grad <- F.GRAD.FUN(y_vec)
-
 
     # u_mat will be a matrix with new u_vecs in each row
     u_mat <- matrix(unlist(lapply(sequence,
@@ -235,10 +258,17 @@ descent_generalized_fista <- function(tweak_vec = NA,
     u_vec <- u_mat[winner.pos, ]
     eval <- eval.vec[winner.pos]
 
-    converge_vec <- c(converge_vec, eval)
-    tweak_old <- tweak_vec
 
-    tweak_vec <- u_vec
+    tweak_old <- tweak_vec
+    if(rev(converge_vec)[1] > eval){
+      tweak_vec <- u_vec
+      # function scheme restart from (odonoghue and candes 2012)
+      nesterov.counter <- 2
+    }else{
+      eval <- EVAL.FUN(tweak_vec)
+    }
+
+    converge_vec <- c(converge_vec, eval)
 
     if(save_all_tweaks){
       tweak.history[, iter] <- tweak_vec
@@ -247,7 +277,8 @@ descent_generalized_fista <- function(tweak_vec = NA,
     v_vec <- tweak_old + 1/factor * (tweak_vec - tweak_old)
 
     # now factor ---> iter + 1
-    factor <- FACTOR.FUN(iter)
+    factor <- FACTOR.FUN(nesterov.counter)
+    nesterov.counter <- nesterov.counter + 1
     y_vec <- (1-factor) * tweak_vec + factor * v_vec
 
     # user can set if the algorithm prints out information in each step
@@ -267,3 +298,4 @@ descent_generalized_fista <- function(tweak_vec = NA,
   }
   return(ret)
 }
+
