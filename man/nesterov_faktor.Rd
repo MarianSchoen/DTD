@@ -2,7 +2,7 @@
 % Please edit documentation in R/function_nesterovFaktors.R
 \name{nesterov_faktor}
 \alias{nesterov_faktor}
-\title{Nesterov Faktor 1/k}
+\title{Nesterov Faktor 2/(k+1)}
 \usage{
 nesterov_faktor(k)
 }

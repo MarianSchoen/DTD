@@ -43,8 +43,10 @@ Trace.H.gradient <- function(X = x_mat, Y = y_mat, C = c_mat, gamma.vec = v_vec)
   alpha <- solve(t(X)%*%Gamma%*%X)%*%t(X)
   beta <- (diag(1, nrow=nrow(Y), ncol=nrow(Y)) - X %*% alpha %*% Gamma) %*% Y
 
-  B <- beta %*% t(A) %*% alpha
+  B <- as.matrix(beta %*% t(A) %*% alpha)
+
   d.elems <- diag(B)
 
   return(d.elems)
 }
+

@@ -20,7 +20,6 @@
 #' @import reshape2
 #'
 ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA){
-  browser()
   # correlation can be plotted for training and test set, if:
   #   - a test set is provided
   #   - the X.matrix is provided

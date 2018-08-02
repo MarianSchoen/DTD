@@ -5,7 +5,7 @@
 #' The evaluate_cor function returns the value of the Loss function.
 #' The evaluate_cor function takes 4 arguments. However, we wrote the FISTA implementation in a way that both the
 #' gradient and the evaluation function only take one argument, which is the g vector. In order to use this function
-#' within the `descent_generalized_fista` function, you need a wrapper function (see \code\link{descent_generalized_fista})
+#' within the `descent_generalized_fista` function, you need a wrapper function (see \code{\link{descent_generalized_fista}})
 #'
 #' @param X numeric matrix with cells as columns, and features as rows. Reference matrix X of the DTD problem.
 #' @param Y numeric matrix with samples as columns, and features as rows. Each sample in Y is a bulk measurement,
