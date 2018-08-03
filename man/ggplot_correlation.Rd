@@ -4,7 +4,7 @@
 \alias{ggplot_correlation}
 \title{Plot loss curve}
 \usage{
-ggplot_correlation(fista.output, test.set = NA, X.matrix = NA)
+ggplot_correlation(fista.output, test.set = NA, X.matrix = NA, main = "")
 }
 \arguments{
 \item{fista.output}{list, with "Convergence" entry as return by the descent_generalized_fista function}
@@ -12,6 +12,8 @@ ggplot_correlation(fista.output, test.set = NA, X.matrix = NA)
 \item{test.set}{list with "mixtures" matrix, and "quantity" matrix as returned by mix.samples or mix.samples.jitter function}
 
 \item{X.matrix}{numeric matrix, reference matrix of the DTD problem}
+
+\item{main}{string, additionally title}
 }
 \description{
 The "ggplot_correlation" function uses ggplot2 and reshape to visualize the decrease of the loss-function after

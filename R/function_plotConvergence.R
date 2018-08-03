@@ -12,6 +12,7 @@
 #' @param fista.output list, with "Convergence" entry as return by the descent_generalized_fista function
 #' @param test.set list with "mixtures" matrix, and "quantity" matrix as returned by mix.samples or mix.samples.jitter function
 #' @param X.matrix numeric matrix, reference matrix of the DTD problem
+#' @param main string, additionally title
 #'
 #' @return
 #' @export
@@ -19,13 +20,14 @@
 #' @import ggplot2
 #' @import reshape2
 #'
-ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA){
+ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA, main = ""){
   # correlation can be plotted for training and test set, if:
   #   - a test set is provided
   #   - the X.matrix is provided
   #   - fista.output has "History" entry
   # otherwise only trainings correlation will be plotted
   if(! (is.na(test.set) || is.na(X.matrix) || is.null(fista.output$History))){
+    # calculate correlation for every saved tweak_vec:
     cor.in.test <- c()
     for(l.iteration in 1:length(fista.output$Convergence)){
     cor.in.test <- c(cor.in.test, evaluate_cor(X = X.matrix,
@@ -34,21 +36,27 @@ ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA){
                                                 tweak = fista.output$History[, l.iteration])
                       )
     }
+    # build a data.frame holding training, test and iter
     convergence <- data.frame("trainig" = fista.output$Convergence,
                               "test" = cor.in.test,
                               "iter" = 1:length(fista.output$Convergence))
 
-    convergence.melt <- melt(convergence, id.var = "iter")
+
   }else{
+    # if the correlation can not be calculated on the test set,
+    # the data.frame only holds training and iter:
     convergence <- data.frame("trainig" = fista.output$Convergence,
                               "iter" = 1:length(fista.output$Convergence))
-
-    convergence.melt <- melt(convergence, id.var = "iter")
   }
+  # melt convergence:
+  convergence.melt <- melt(convergence, id.var = "iter")
+  # set title:
+  tit <- paste0("Loss-function curve during FISTA optimization \n", main)
 
+  # build the ggplot object
   pic <- ggplot(convergence.melt, aes(x=iter, y = value, col = variable)) +
                 geom_point() + xlab("Iteration") + ylab("Loss-Function") +
-                ggtitle("Loss-function curve during FISTA optimization")
+                ggtitle(tit)
 
   return(pic)
 }
