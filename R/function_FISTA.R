@@ -5,7 +5,7 @@
 #' evaluation function (and some additional parameters/functions). Then, it
 #' iteratively minimizes the tweak vector via FISTA (Beck and Teboulle 2009). Basically,
 #' the following equations are used:\cr
-#' # INITIALIZATIONSTEP\cr
+#' # prelimary initializationstep\cr
 #' for k = 2,..., maxit:\cr
 #' \itemize{
 #'     \item grad = F.GRAD.FUN(y_vec)\cr
@@ -46,10 +46,11 @@
 #'   function.
 #' @param line_search_speed numeric, factor with which the learning rate changes,
 #'  if the optimium has not been found
-#' @param verbose boolean, should information be printed to console
 #' @param cycles integer, in each iteration one gradient is calculated. To find the
 #'  best step size, with "cycles" different step sizes
 #' @param save_all_tweaks boolean, should all tweak vectores during all iterations be stored
+#' @param use_restarts boolean, restart the algorithm if the update was not a descent step
+#' @param verbose boolean, should information be printed to console
 #'
 #' @export
 #'
@@ -167,8 +168,9 @@
 #'                                    EVAL.FUN = DTD.evCor.wrapper,
 #'                                    line_search_speed = 2,
 #'                                    maxit = 200,
-#'                                    verbose = F,
-#'                                    save_all_tweaks = T)
+#'                                    save_all_tweaks = T,
+#'                                    use_restarts = F,
+#'                                    verbose = F)
 #'
 #' print(ggplot_correlation(fista.output = catch,
 #'                          test.set = test.data,
@@ -186,29 +188,33 @@ descent_generalized_fista <- function(tweak_vec = NA,
                                       line_search_speed = 2,
                                       cycles=50,
                                       save_all_tweaks=F,
+                                      use_restarts=T,
                                       verbose=T){
-  # safety check:
+  # safety checks:
   if(any(is.na(tweak_vec))){
     stop("Tweak vector includes NAs")
   }
   if(!(is.numeric(lambda) || is.numeric(maxit) || is.numeric(line_search_speed) || is.numeric(cycles))){
     stop("Set lambda, maxit, line_search_speed and cycles to numeric values")
   }
-  if(!(is.logical(save_all_tweaks) || is.logical(verbose))){
-    stop("Set save_all_tweaks and verbose to logicals")
+  if(!(is.logical(save_all_tweaks) || is.logical(verbose) || is.logical(use_restarts))){
+    stop("Set save_all_tweaks, use_restarts and verbose to logicals")
   }
 
 
   # If no learning.rate is set, the initial learning rate will be initialized according to:
-  #
+  # Barzali & Borwein 1988
+  # It estimates via:
+  # learning.rate <- <delta(tweak), delta(g)> / <delta(g), delta(g)>
+  # here, < , > denotes the scalar product.
+  # delta(x) := x_(k) - x_(k-1)
   if(is.na(learning.rate)){
-    # estimating best step size using barzilai borwein initialization
     grad <- F.GRAD.FUN(tweak_vec)
     norm2 <- sqrt(sum(grad**2))
     t <- 1/norm2
-    x_hat <- tweak_vec - t * grad
-    g_hat <- F.GRAD.FUN(x_hat)
-    learning.rate <- abs((tweak_vec - x_hat) %*% (grad - g_hat) / sum((grad - g_hat)**2))
+    tweak_hat <- tweak_vec - t * grad
+    g_hat <- F.GRAD.FUN(tweak_hat)
+    learning.rate <- abs((tweak_vec - tweak_hat) %*% (grad - g_hat) / sum((grad - g_hat)**2))
     # learning rate is a matrix => make it a numeric:
     learning.rate <- as.numeric(learning.rate)
   }
@@ -224,78 +230,114 @@ descent_generalized_fista <- function(tweak_vec = NA,
     cat("starting to optimize \n")
   }
 
-  # Notice, if save_all_tweaks is FALSE only the last tweak_vec will be stored, and returned after optimization
+  # Notice, if save_all_tweaks is FALSE only the last tweak_vec will be stored,
+  # and returned after optimization. if save_all_tweaks is true all tweak_vec will be stored
+  # in tweak.history, and returned after optimization:
   if(save_all_tweaks){
     tweak.history <- matrix(NA, nrow = length(tweak_vec), ncol = maxit)
     tweak.history[, 1] <- tweak_vec
   }
 
-  # step size sequence:
+  # Every gradient step is done multiple times with different step sizes larging from 0 to learning.rate
+  # sequence holds the different learning rates:
   sequence <- seq(from = 0, to = learning.rate, length.out = cycles)
 
+  # Notice that the for loop starts at 2, due to the extrapolation/correction step of the FISTA algorithm
   for(iter in 2:maxit){
+    # calculate gradient at the current position:
     grad <- F.GRAD.FUN(y_vec)
 
-    # u_mat will be a matrix with new u_vecs in each row
-    u_mat <- matrix(unlist(lapply(sequence,
-                           function(x){ST.FUN(y_vec - x * grad, x*lambda)}),
-                    use.names = FALSE), nrow = cycles, byrow = T )
+    # The following code junk is hard to understand.
+    # In the end, u_mat will be a matrix with new u_vecs in each row.
+    # This is done by applying the ST.FUN on the sequence of step sizes.
+    # The return of lapply needs to be unlisted and converted to a matrix.
+    u_mat <- matrix(
+                unlist(
+                  lapply(
+                    sequence,
+                    function(x){ST.FUN(y_vec - x * grad, x*lambda)}),
+                  use.names = FALSE),
+                nrow = cycles,
+                byrow = T)
 
-    # use evaluation function on each row => eval.vec is a vector with Loss-function values
+    # every row of u_mat holds a u_vec with another step.size.
+    # In order to find the best of them, we use the EVAL.FUN on all of them:
     eval.vec <- apply(u_mat, 1, EVAL.FUN)
 
+    # and find the winner, which is the minimum:
     winner.pos <- which.min(eval.vec)
 
+    # Now we found the best step size between 0 and learning.rate.
+    # If the u_vec with step.size = learning.rate (so the last entry) is the winner,
+    # the step size needs to be increased.
     if(winner.pos == cycles){
       learning.rate <- learning.rate * line_search_speed
+      # calculate new sequence, as learning.rate has changed
       sequence <- seq(from = 0, to = learning.rate, length.out = cycles)
     }
+    # If the u_vec with step.size = 0 (so the first entry) is the winner,
+    # the step size needs to be decreased.
     if(winner.pos == 1){
       learning.rate <- learning.rate / line_search_speed
+      # calculate new sequence, as learning.rate has changed
       sequence <- seq(from = 0, to = learning.rate, length.out = cycles)
     }
 
+    # set the winning u_vec, and eval:
     u_vec <- u_mat[winner.pos, ]
     eval <- eval.vec[winner.pos]
 
-
+    # update tweak_old (tweak of last iteration)
     tweak_old <- tweak_vec
+
+    # check if the last step was a descent step:
     if(rev(converge_vec)[1] > eval){
+      # if it was a descent step, update tweak_vec
       tweak_vec <- u_vec
-      # function scheme restart from (odonoghue and candes 2012)
-      nesterov.counter <- 2
     }else{
+      # if not, tweak_vec get's not updated, but eval
       eval <- EVAL.FUN(tweak_vec)
+      # according to (O'Donoghue and Candes 2012) restart the nesterov.counter (=> restart)
+      if(use_restarts){
+        nesterov.counter <- 2
+      }
     }
 
+    # add the last eval to the convergence_vec:
     converge_vec <- c(converge_vec, eval)
 
+    # and if set, update tweak.history
     if(save_all_tweaks){
       tweak.history[, iter] <- tweak_vec
     }
 
+    # calculate the new v_vec:
     v_vec <- tweak_old + 1/factor * (tweak_vec - tweak_old)
 
-    # now factor ---> iter + 1
+    # and the new y_vec:
     factor <- FACTOR.FUN(nesterov.counter)
     nesterov.counter <- nesterov.counter + 1
     y_vec <- (1-factor) * tweak_vec + factor * v_vec
 
-    # user can set if the algorithm prints out information in each step
+    # if verbose = TRUE, print information to the screen
     if(verbose){
       cat("###############################################\n")
       cat("iter: ", iter, "\n")
       cat("Loss: ", rev(converge_vec)[1], "\n")
       cat("factor: ", factor, "\n")
+      # plot converge_vec:
       if(iter %% 100 == 0){
         plot(1:iter, converge_vec)
       }
     }
   }
+
+  # build a list to return:
   ret <- list("Tweak"=tweak_vec, "Convergence"=converge_vec)
+
+  # if save_all_tweaks is TRUE add the tweak.history
   if(save_all_tweaks){
     ret$History <- tweak.history
   }
   return(ret)
 }
-
