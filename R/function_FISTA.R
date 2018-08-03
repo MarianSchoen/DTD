@@ -174,7 +174,9 @@
 #'
 #' print(ggplot_correlation(fista.output = catch,
 #'                          test.set = test.data,
-#'                          X.matrix = X.matrix))
+#'                          X.matrix = X.matrix,
+#'                          main="additional title")
+#'                          )
 #'
 #'
 descent_generalized_fista <- function(tweak_vec = NA,

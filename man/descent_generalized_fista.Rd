@@ -9,7 +9,7 @@ descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 1000,
   learning.rate = NA, F.GRAD.FUN = DTD.grad.wrapper,
   ST.FUN = soft_thresholding, FACTOR.FUN = nesterov_faktor,
   EVAL.FUN = DTD.evCor.wrapper, line_search_speed = 2, cycles = 50,
-  save_all_tweaks = F, verbose = T)
+  save_all_tweaks = F, use_restarts = T, verbose = T)
 }
 \arguments{
 \item{tweak_vec}{numeric vector, with which the minimization algorithm starts}
@@ -46,6 +46,8 @@ best step size, with "cycles" different step sizes}
 
 \item{save_all_tweaks}{boolean, should all tweak vectores during all iterations be stored}
 
+\item{use_restarts}{boolean, restart the algorithm if the update was not a descent step}
+
 \item{verbose}{boolean, should information be printed to console}
 }
 \value{
@@ -56,7 +58,7 @@ descent_generalized_fista takes as input a vector, a gradient function and an
 evaluation function (and some additional parameters/functions). Then, it
 iteratively minimizes the tweak vector via FISTA (Beck and Teboulle 2009). Basically,
 the following equations are used:\cr
-# INITIALIZATIONSTEP\cr
+# prelimary initializationstep\cr
 for k = 2,..., maxit:\cr
 \itemize{
     \item grad = F.GRAD.FUN(y_vec)\cr
@@ -190,12 +192,15 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                    EVAL.FUN = DTD.evCor.wrapper,
                                    line_search_speed = 2,
                                    maxit = 200,
-                                   verbose = F,
-                                   save_all_tweaks = T)
+                                   save_all_tweaks = T,
+                                   use_restarts = F,
+                                   verbose = F)
 
 print(ggplot_correlation(fista.output = catch,
                          test.set = test.data,
-                         X.matrix = X.matrix))
+                         X.matrix = X.matrix,
+                         main="additional title")
+                         )
 
 
 }
