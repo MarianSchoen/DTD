@@ -6,8 +6,8 @@ knitr::opts_chunk$set(
 
 ## ----include=FALSE-------------------------------------------------------
   # for fast testing 
-  maxit <- 2
-  nSamples <- 5
+  maxit <- 1e3
+  nSamples <- 200
 
 ## ------------------------------------------------------------------------
   library(DTD)
@@ -67,21 +67,37 @@ knitr::opts_chunk$set(
     samples.to.remove <- c(samples.to.remove, chosen.for.X)
 
     # for each gene average over the selected 
-    average <- rowSums(normalized.data[, chosen.for.X, drop = F])
+    average <- rowSums(normalized.data[, chosen.for.X, drop = FALSE])
     X.matrix[, l.type] <- average
  }
 
 ## ------------------------------------------------------------------------
-  train.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+  remaining.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+  train.samples <- sample(x = colnames(remaining.mat), 
+                          size = ceiling(ncol(remaining.mat)/2))
+  test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
+  
+  train.mat <- remaining.mat[, train.samples]
+  test.mat <- remaining.mat[, test.samples]
 
 ## ------------------------------------------------------------------------
+  indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
   training.data <- mix.samples(gene.mat = train.mat,
-                               pheno = indicator.list,
+                               pheno = indicator.train,
                                included.in.X = include.in.X, 
                                nSamples = nSamples, 
                                nPerMixture = 5, 
                                verbose = F)
   str(training.data)
+
+## ------------------------------------------------------------------------
+  indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
+  test.data <- mix.samples(gene.mat = train.mat,
+                           pheno = indicator.train,
+                           included.in.X = include.in.X, 
+                           nSamples = nSamples, 
+                           nPerMixture = 5, 
+                           verbose = F)
 
 ## ------------------------------------------------------------------------
   # Here, we set "Type1" to be special:
@@ -116,17 +132,4 @@ knitr::opts_chunk$set(
       C <- training.data$quantities
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
   }
-
-## ------------------------------------------------------------------------
-  start_tweak <- rep(1, nrow(X.matrix))
-  catch <- descent_generalized_fista(tweak_vec = start_tweak,
-                                      F.GRAD.FUN = DTD.grad.wrapper,
-                                      ST.FUN = soft_thresholding,
-                                      FACTOR.FUN = nesterov_faktor,
-                                      EVAL.FUN = DTD.evCor.wrapper,
-                                      line_search_speed = 2,
-                                      maxit = maxit,
-                                      save_all_tweaks = T, 
-                                      verbose = F)
-  str(catch)
 
