@@ -59,7 +59,7 @@
 #' @examples
 #' library(DTD)
 #' random.data <- generate.random.data(nTypes = 5,
-#'                                     nSamples.perType = 20,
+#'                                     nSamples.perType = 10,
 #'                                     nFeatures = 100,
 #'                                     sample.type = "Cell",
 #'                                     feature.type = "gene")
@@ -97,13 +97,8 @@
 #'   X.matrix[, l.type] <- average
 #' }
 #'
-#' # here, I declare "Type1" as Tumor cells, and all other as immune cells
-#' special.samples <- c("Type1")
-#' all.samples <- unique(indicator.list)
-#' sample.names <- all.samples[- which(all.samples %in% special.samples)]
-#'
 #' # all samples that have been used in the reference matrix, must not be included in
-#'  the test/training set
+#' # the test/training set
 #' reduced.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
 #' # all remaining samples will be equally split into test and training:
 #' test.samples <- sample(x = colnames(reduced.mat),
@@ -117,31 +112,19 @@
 #' indicator.list.train <- indicator.list[-which(!names(indicator.list) %in% colnames(train.mat))]
 #'
 #'
-#' training.data <- mix.samples.jitter(sample.names = sample.names,
-#'                                      special.samples = special.samples,
-#'                                      nSamples = 1e3,
-#'                                      datamatrix = train.mat,
-#'                                      pheno = indicator.list.train,
-#'                                      singleSpecial = F,
-#'                                      add_jitter = T,
-#'                                      chosen.mean = 1,
-#'                                      chosen.sd = 0.05,
-#'                                      min.amount.samples = 1,
-#'                                      verbose = FALSE,
-#'                                      included.in.X = include.in.X)
+#' training.data <- mix.samples(gene.mat = train.mat,
+#'                              pheno = indicator.list.train,
+#'                              included.in.X = include.in.X,
+#'                              nSamples = 200,
+#'                              nPerMixture = 10,
+#'                              verbose = F)
 #'
-#' test.data <-  mix.samples.jitter(sample.names = sample.names,
-#'                                      special.samples = special.samples,
-#'                                      nSamples = 1e3,
-#'                                      datamatrix = test.mat,
-#'                                      pheno = indicator.list.test,
-#'                                      singleSpecial = F,
-#'                                      add_jitter = T,
-#'                                      chosen.mean = 1,
-#'                                      chosen.sd = 0.05,
-#'                                      min.amount.samples = 1,
-#'                                      verbose = FALSE,
-#'                                      included.in.X = include.in.X)
+#' test.data <-  mix.samples(gene.mat = test.mat,
+#'                           pheno = indicator.list.test,
+#'                           included.in.X = include.in.X,
+#'                           nSamples = 100,
+#'                           nPerMixture = 10,
+#'                           verbose = F)
 #'
 #' # wrapper for gradient:
 #' DTD.grad.wrapper <- function(tweak){
@@ -179,7 +162,7 @@
 #'                          test.set = test.data,
 #'                          X.matrix = X.matrix,
 #'                          main="additional title")
-#'                          )
+#'      )
 #'
 #'
 descent_generalized_fista <- function(tweak_vec = NA,

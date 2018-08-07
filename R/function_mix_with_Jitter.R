@@ -100,10 +100,14 @@ mix.samples.jitter <- function(sample.names,
                                chosen.mean=1,
                                chosen.sd=0.05,
                                min.amount.samples = 1,
+                               per.type = 1,
                                included.in.X){
   # Safety check
   if(any(!names(pheno) %in% colnames(datamatrix))){
     stop("not all names provided are within the data matrix")
+  }
+  if(any(!c(sample.names, special.samples) %in% pheno)){
+    stop("sample.names and special.samples do not match pheno")
   }
   len <- length(c(sample.names, special.samples))
 
@@ -119,10 +123,16 @@ mix.samples.jitter <- function(sample.names,
     if(verbose){
       cat("doing ", lrun, " or ", 100*lrun/nSamples, "%\n" )
     }
+    # get quantities for the special samples:
+    # The special samples (e.g. malignant cells) dominate the cells (=> high quants)
     quant.special  <- runif(n = 1, min = 0.5, max = 0.7)
+
+    # singleSpecial indicates if there is only one special sample present in the mixtures:
     if(singleSpecial){
       special <- c(quant.special, rep(0, length(special.samples)-1))
     }else{
+      # if there are more than one special samples, the quant.special gets split,
+      # such that the sum over all special samples equals quant.special:
       remaining <- quant.special
       count <- 1
       special <- c()
@@ -135,10 +145,11 @@ mix.samples.jitter <- function(sample.names,
       # fill last one, such that sum(tumors) equals quant.tumors
       special[count-1] <- special[count-1] + quant.special - sum(special)
     }
-    special <- sample(special) # shuffle it, so every special sample can be the biggest one
+    # shuffle it, so every special sample can be the biggest one
+    special <- sample(special)
     names(special) <- special.samples
 
-    ### mixture quantities:
+    # next, the normal samples get random quantities:
     remaining <- 1 - quant.special
     count <- 1
     other <- c()
@@ -148,36 +159,45 @@ mix.samples.jitter <- function(sample.names,
       remaining <- remaining - tmp
       count <- count + 1
     }
+    # sum of quant.special + sum of other = 1:
     other[count-1] <- other[count-1] + (1 - quant.special) - sum(other)
+    # sample "others" to be not sorted:
     other <- sample(other)
     names(other) <- sample.names
 
+    # add quantities to quant.matrix:
     quant.matrix <- cbind(quant.matrix, c(other, special))
     colnames(quant.matrix)[lrun] <- paste0("mix", lrun)
 
-    ### mixture: initialise with zero for each gene
+    # Now, using the sampled quantities, calculated the expression profiles of the mixtures.
+    # Initialise a numerc vector with zeros:
     mixture <- rep(0, nrow(datamatrix))
-    for(l1 in c(sample.names, special.samples)){
-      #### get one of the samples
-      potentialCells <- names(pheno[pheno == l1])
-      if(length(potentialCells) == 0){# this cell type can not be found in the mixture ...
-        # i am totally unsure what to do now ...
-        next_quant <- quant.matrix[l1, lrun] *
-          apply(datamatrix, 1, mean) *
-          abs(rnorm(nrow(datamatrix), mean=chosen.mean, sd=chosen.sd))
+    # Go through all samples:
+    for(lsample in c(sample.names, special.samples)){
+      # Find all cells in the pheno which match to "lsample"
+      potentialCells <- names(pheno[pheno == lsample])
+      # if there are many samples of type "lsample" in the set:
+      if(length(potentialCells) >= min.amount.samples){
+        # sample a subset of the potentiallCells:
+        chosen.sample <-  sample(x = potentialCells, size = per.type)
+        # and multiple these with their quantity:
+        next_quant <- quant.matrix[lsample, lrun] * rowSums(datamatrix[, chosen.sample, drop = FALSE])
+      }else{
+        # fi there are only a few samples present, we do not sample some of the.
+        # The expression is the rowSum over all potentialCells, which gets multiplied with its quantity:
+        next_quant <- quant.matrix[lsample, lrun] * rowSums(datamatrix[, potentialCells, drop = FALSE])
       }
-      if(length(potentialCells) < min.amount.samples){ # only a view cells are within the pool => average over all of them
-        next_quant <- rowSums(datamatrix[, potentialCells, drop = FALSE])
-      }else{ # there are enough cells in here, such that sampling is possible
-        chosen.sample <-  sample(x = names(pheno[pheno == l1]), size = 1)
-        next_quant <- (quant.matrix[l1, lrun] * datamatrix[, chosen.sample])
-      }
+      # jitter means to multply every entry of every "next_quant" with a random number close to 1:
       if(add_jitter){
+        # get a vector of random numbers:
         factors <- rnorm(n=length(next_quant), mean=chosen.mean, sd=chosen.sd)
+        # elementwise multiply next_quant with it
         next_quant <- next_quant * factors
       }
+      # add the new "next_quant" vector to the mixture:
       mixture <- mixture + next_quant
     }
+    # add the mixture to the mix.matrix, and add the colname:
     mix.matrix <- cbind(mix.matrix, mixture)
     colnames(mix.matrix)[lrun] <- paste0("mix", lrun)
   }
@@ -185,6 +205,7 @@ mix.samples.jitter <- function(sample.names,
   # only keep the quantity information of cells that are included in X
   quant.matrix <- quant.matrix[included.in.X, ]
 
+  # build a return list, and add both matrices:
   rets <- vector(mode="list")
   rets[["mixtures"]] <- mix.matrix
   rets[["quantities"]] <- quant.matrix

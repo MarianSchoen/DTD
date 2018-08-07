@@ -71,9 +71,10 @@ for(l.type in include.in.X){
 }
 
 train.mat <- random.data[, -which(colnames(random.data) \%in\% samples.to.remove)]
+indicator.train <- indicator.list[names(indicator.list) \%in\% colnames(train.mat)]
 
 training.data <- mix.samples(gene.mat = train.mat,
-                             pheno = indicator.list,
+                             pheno = indicator.train,
                              included.in.X = include.in.X)
 
 }

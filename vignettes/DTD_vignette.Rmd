@@ -20,8 +20,8 @@ knitr::opts_chunk$set(
 
 ```{r include=FALSE}
   # for fast testing 
-  maxit <- 2
-  nSamples <- 5
+  maxit <- 1e3
+  nSamples <- 200
 ```
 
 # What is DTD?
@@ -132,13 +132,19 @@ For each cell type its reference profil will be calculated as the average over a
     samples.to.remove <- c(samples.to.remove, chosen.for.X)
 
     # for each gene average over the selected 
-    average <- rowSums(normalized.data[, chosen.for.X, drop = F])
+    average <- rowSums(normalized.data[, chosen.for.X, drop = FALSE])
     X.matrix[, l.type] <- average
  }
 ```
 Notice that every sample which has been used in the reference matrix X must not be included in the training or test set! In order to keep track of samples which must not be used furthermore we introduced the variable `samples.to.remove`.
 ```{r}
-  train.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+  remaining.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+  train.samples <- sample(x = colnames(remaining.mat), 
+                          size = ceiling(ncol(remaining.mat)/2))
+  test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
+  
+  train.mat <- remaining.mat[, train.samples]
+  test.mat <- remaining.mat[, test.samples]
 ```
 
 
@@ -163,8 +169,9 @@ The `mix.samples` function needs the following arguments:
 - verbose: boolean, should output be printed. 
 
 ```{r}
+  indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
   training.data <- mix.samples(gene.mat = train.mat,
-                               pheno = indicator.list,
+                               pheno = indicator.train,
                                included.in.X = include.in.X, 
                                nSamples = nSamples, 
                                nPerMixture = 5, 
@@ -172,6 +179,17 @@ The `mix.samples` function needs the following arguments:
   str(training.data)
 ```
 Remark that all types are included in the mixtures, but only the distributions of the cell within the X matrix are reported in the quantities matrix. 
+With the same function we generate a test set. Notice that a sample is only used once, either in the reference matrix X, in the test set or in the training set. 
+
+```{r}
+  indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
+  test.data <- mix.samples(gene.mat = train.mat,
+                           pheno = indicator.train,
+                           included.in.X = include.in.X, 
+                           nSamples = nSamples, 
+                           nPerMixture = 5, 
+                           verbose = F)
+```
 
 ### Less samples --> with jitter
 The `mix.samples.jitter` function needs a bit more preliminary work. 
@@ -217,8 +235,8 @@ In the training set imbalanced quantities should be reflected.
 
 ## Train g vector
 
-Now we generated a training set, and are nearly set to start the optimizing procedure. 
-~~~In this package we implemented a adjusted FISTA algorithm to minimize our Loss-function. FISTA (fast iterative shrinkage thresholding algorithm) is a iterative proximal gradient method with Nesterov acceleration. Basically, the FISTA algorithm can be described as a extrapolation/correction/nesterov step after a proximal gradient descen step. In the loss-function learning DTD context the computational expensive part is the calculation of the gradient.~~~ 
+After generating a training set, we are nearly set to start the optimizing procedure. 
+~~~In this package we implemented an adjusted FISTA algorithm to minimize our Loss-function. FISTA (fast iterative shrinkage thresholding algorithm) is a iterative proximal gradient method with Nesterov acceleration. Basically, the FISTA algorithm can be described as a extrapolation/correction/nesterov step after a proximal gradient descen step. In the loss-function learning DTD context the computational expensive part is the calculation of the gradient.~~~ 
 
 
 We provide a function with the following arguments: 
@@ -263,5 +281,12 @@ Now, the optimization procedure can be started:
 ```
 The output of the `descent_generalized_fista` algorithm is a list. It returns the `tweak_vec` after the last iterations, and a convergence vector. Within the convergence vector there are the evaluations of the `EVAL.FUN` in every step. 
 ## Visualize results
+```{r}
+  print(ggplot_correlation(fista.output = catch, 
+                           test.set = test.data, 
+                           X.matrix = X.matrix, 
+                           main = "DTD Vignette"))
+```
+
 
 # References

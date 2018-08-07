@@ -14,7 +14,7 @@ nesterov_faktor(k)
 }
 \description{
 The FISTA algorithm extrapolates/correctes after the gradient step. The "nesterov_faktor" function
- returns how far the FISTA will exptrapolate in a given step "k"
+returns how far the FISTA will exptrapolate in a given step "k"
 }
 \examples{
 nesterov_faktor(2)

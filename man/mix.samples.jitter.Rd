@@ -7,7 +7,7 @@
 mix.samples.jitter(sample.names, special.samples, nSamples = 1000, datamatrix,
   pheno, verbose = F, singleSpecial = F, add_jitter = F,
   chosen.mean = 1, chosen.sd = 0.05, min.amount.samples = 1,
-  included.in.X)
+  per.type = 1, included.in.X)
 }
 \arguments{
 \item{sample.names}{vector of strings, have to match colnames(datamatrix).}

@@ -58,9 +58,10 @@
 #' }
 #'
 #' train.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+#' indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
 #'
 #' training.data <- mix.samples(gene.mat = train.mat,
-#'                              pheno = indicator.list,
+#'                              pheno = indicator.train,
 #'                              included.in.X = include.in.X)
 #'
 mix.samples <- function(gene.mat,
@@ -70,26 +71,38 @@ mix.samples <- function(gene.mat,
                        nPerMixture = 100,
                        verbose = FALSE){
 
+  if(any(!names(pheno) %in% colnames(gene.mat))){
+    stop("pheno does not match colnames of gene mat")
+  }
+
+  # initialise geneExpression matrix (here, the mixtures will be stored)
   geneExpression <- matrix(NA, nrow=nrow(gene.mat), ncol=nSamples)
   rownames(geneExpression) <- rownames(gene.mat)
   colnames(geneExpression) <- paste0("mixtures", 1:nSamples)
 
-  types <- unique(indicator.list)
+  # which types are within the pheno?
+  types <- unique(pheno)
+  # how many types?
   nTypes <- length(types)
 
+  # initialise quantities matrix (here, the quantities for each cell type in every mixture will be stored)
   quantities <- matrix(NA, nrow = nTypes, ncol=nSamples)
   rownames(quantities) <- types
   colnames(quantities) <- colnames(geneExpression)
 
   for(lsample in 1:nSamples){
+    # randomly select 'nPerMixture' samples (without replacing!)
     randomSamples <- sample(x = colnames(gene.mat), size = nPerMixture, replace = FALSE)
+    # average over the selected samples ...
     avg <- rowSums(gene.mat[, randomSamples])
+    # ... store the result in the geneExpression matrix:
     geneExpression[,lsample] <- avg
 
+    # Next, we extract how often each cell type has been selected in this mixture:
     chosen.pheno <- pheno[which(names(pheno) %in% randomSamples)]
     table.chosen.pheno <- table(chosen.pheno)
 
-    # due to the randomness some types may not be added to this sample:
+    # due to the randomness some types may not be included in this sample:
     missing.types <- rownames(quantities)[which(!rownames(quantities) %in% names(table.chosen.pheno))]
     # if there are any missing types, add those with quantity 0
     if(length(missing.types) != 0){
@@ -98,18 +111,23 @@ mix.samples <- function(gene.mat,
       table.chosen.pheno <- c(table.chosen.pheno, add_0)
     }
 
+    # divide quants by the number of used samples:
     quants <- table.chosen.pheno/nPerMixture
+    # order quants by the rownames of quantities ...
     quants <- quants[rownames(quantities)]
+    # ... and add them to the quantities matrix
     quantities[, lsample] <- quants
     if(verbose){
       cat("done ", 100 * lsample/nSamples, " %\n")
     }
   }
 
+  # only the information about  cells "included in X" should be stored in quantities:
   quantities <- quantities[included.in.X, ]
 
+  # normalize the expression matrix
   geneExpression <- normalizeToCount(geneExpression)
+  # and return both matrices as a list:
   ret <- list("mixtures"= geneExpression, "quantities" = quantities)
   return(ret)
 }
-
