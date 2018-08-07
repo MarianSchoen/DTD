@@ -25,6 +25,10 @@
 #'                                     sample.type = "Cell",
 #'                                     feature.type = "gene")
 #'
+#' # undo log transformation to have counts:
+#'
+#' random.data <- (2^random.data) - 1
+#'
 #' # normalize all samples to the same amount of counts:
 #' random.data <- normalizeToCount(random.data)
 generate.random.data <- function(nTypes = 5,
@@ -38,7 +42,6 @@ generate.random.data <- function(nTypes = 5,
   if(!is.numeric(nTypes) || !is.numeric(nSamples.perType) || !is.numeric(nFeatures)){
     stop("Set input parameters (nTypes, nSamples.perType, nFeatures) to valid numeric values")
   }
-
   if(!is.character(sample.type)){
     sample.type <- "Cell"
   }
@@ -54,21 +57,13 @@ generate.random.data <- function(nTypes = 5,
     set.seed(1310)
   }
 
-
-
-  # fluctuate number of samples per Type
-  cells.perType <- abs(round(rnorm(n=nTypes, mean = nSamples.perType, sd = 1)))
-
-  # calculate total number of samples
-  n.totalSamples <- sum(cells.perType)
-
-  # initalising the expression matrix with names:
+  n.totalSamples <- nTypes * nSamples.perType
   expression.matrix <- matrix(NA, nrow = nFeatures, ncol=n.totalSamples)
 
-  # calculate column names ...
+  # get column names ...
   type.names <- c()
   for(l.name in 1:nTypes){
-    type.names <- c(type.names, rep(paste0("Type", l.name), cells.perType[l.name]))
+    type.names <- c(type.names, rep(paste0("Type", l.name), nSamples.perType))
   }
   sample.names <- paste0(sample.type, 1:n.totalSamples, ".", type.names)
 
@@ -77,36 +72,24 @@ generate.random.data <- function(nTypes = 5,
   rownames(expression.matrix) <- paste0(feature.type, 1:nFeatures)
 
 
-  # Data is generated via rnorm.
-  # For each cell type the mean and standard deviation changes.
-  # Therefore, for each cell type a mean and a sd is randomly generated
-  means <- abs(rnorm(n = nTypes, mean = 5, sd=25))
-  sds <- abs(rnorm(n = nTypes, mean = 5, sd=50))
+  # Expression will be generated randomly using a poisson distribution.
+  # Therefore, we sample for every gene in every type a lambda.
+  lambda.mat <- matrix(data = abs(rnorm(nTypes*nFeatures, mean = 5, sd = 2)),
+                       nrow = nFeatures,
+                       ncol = nTypes)
+  rownames(lambda.mat) <- rownames(expression.matrix)
+  colnames(lambda.mat) <- paste0("Type", 1:nTypes)
 
-  # means and sds are a list of length nTypes.
-  # To have the same mean/sds for each sample of the same type each entry
-  # of means will be replicated as often as there are cells.perType
-  sample.means <- c()
-  sample.sds <- c()
-  for(l.sample in 1:nTypes){
-    sample.means <- c(sample.means, rep(means[l.sample], cells.perType[l.sample]))
-    sample.sds <- c(sample.sds, rep(sds[l.sample], cells.perType[l.sample]))
+
+  # maybe fasten this !
+  for(l.type in colnames(lambda.mat)){
+    for(l.gene in rownames(lambda.mat)){
+      pos <- which(grepl(x = colnames(expression.matrix),
+                         pattern = l.type))
+      expression.matrix[l.gene, pos] <- rpois(n = nSamples.perType,
+                                              lambda = lambda.mat[l.gene, l.type])
+    }
   }
 
-  # Here, the actual data generation starts.
-  # Each sample will be simulated iteratively:
-  for(l.sample in 1:n.totalSamples){
-    # expression will be a positive value --> abs
-    # all values are drawn from a normal distribution with already generated means and sd:
-    simulated.expression <- abs(
-                            rnorm(n = nFeatures,
-                                  mean=sample.means[l.sample],
-                                  sd = sample.sds[l.sample]
-                                  )
-                                )
-    # replace column of expression matrix with the simulated.expression
-    expression.matrix[, l.sample] <- simulated.expression
-  }
-  # return expression matrix
   return(expression.matrix)
 }

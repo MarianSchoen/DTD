@@ -39,6 +39,10 @@ random.data <- generate.random.data(nTypes = 5,
                                     sample.type = "Cell",
                                     feature.type = "gene")
 
+# undo log transformation to have counts:
+
+random.data <- (2^random.data) - 1
+
 # normalize all samples to the same amount of counts:
 random.data <- normalizeToCount(random.data)
 }
