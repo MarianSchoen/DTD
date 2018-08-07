@@ -14,7 +14,7 @@
 #' @param X.matrix numeric matrix, reference matrix of the DTD problem
 #' @param main string, additionally title
 #'
-#' @return
+#' @return ggplot object
 #' @export
 #'
 #' @import ggplot2

@@ -20,6 +20,7 @@ In the Loss function above gamma.vec is named "g"}
 numeric list, same length as "gamma.vec"
 }
 \description{
-This function returns the value of the gradient of our Loss-function L.
-For example see wrapper in \code{\link{descent_generalized_fista}}
+This function returns the value of the gradient of our Loss-function L.\cr
+For the mathematical theory see
+For examples see wrapper in \code{\link{descent_generalized_fista}}
 }

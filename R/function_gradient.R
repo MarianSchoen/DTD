@@ -1,7 +1,8 @@
 #' Gradient of \eqn{L(g) = \sum cor(true_C, estimated_C(g) }
 #'
-#' This function returns the value of the gradient of our Loss-function L.
-#' For example see wrapper in \code{\link{descent_generalized_fista}}
+#' This function returns the value of the gradient of our Loss-function L.\cr
+#' For the mathematical theory see
+#' For examples see wrapper in \code{\link{descent_generalized_fista}}
 #'
 #' @param X numeric matrix with features as rows, and reference samples as columns
 #' @param Y numeric matrix with features as rows, and samples as columns

@@ -15,6 +15,9 @@ ggplot_correlation(fista.output, test.set = NA, X.matrix = NA, main = "")
 
 \item{main}{string, additionally title}
 }
+\value{
+ggplot object
+}
 \description{
 The "ggplot_correlation" function uses ggplot2 and reshape to visualize the decrease of the loss-function after
 a model has been trained.

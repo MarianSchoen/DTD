@@ -93,7 +93,7 @@
 #'                          replace = FALSE)
 #'   samples.to.remove <- c(samples.to.remove, chosen.for.X)
 #'
-#'   average <- rowSums(random.data[, chosen.for.X, drop = F])
+#'   average <- rowSums(random.data[, chosen.for.X, drop = FALSE])
 #'   X.matrix[, l.type] <- average
 #' }
 #'
@@ -102,10 +102,13 @@
 #' all.samples <- unique(indicator.list)
 #' sample.names <- all.samples[- which(all.samples %in% special.samples)]
 #'
-#' # all samples that have been used in the reference matrix, must not be included in the test/training set
+#' # all samples that have been used in the reference matrix, must not be included in
+#'  the test/training set
 #' reduced.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
 #' # all remaining samples will be equally split into test and training:
-#' test.samples <- sample(x = colnames(reduced.mat), size = ceiling(ncol(reduced.mat)/2), replace = FALSE)
+#' test.samples <- sample(x = colnames(reduced.mat),
+#'                        size = ceiling(ncol(reduced.mat)/2),
+#'                        replace = FALSE)
 #' test.mat <- random.data[, test.samples]
 #' indicator.list.test <- indicator.list[-which(!names(indicator.list) %in% colnames(test.mat))]
 #'

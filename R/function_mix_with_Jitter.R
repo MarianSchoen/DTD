@@ -101,7 +101,6 @@ mix.samples.jitter <- function(sample.names,
                                chosen.sd=0.05,
                                min.amount.samples = 1,
                                included.in.X){
-
   # Safety check
   if(any(!names(pheno) %in% colnames(datamatrix))){
     stop("not all names provided are within the data matrix")
@@ -120,40 +119,40 @@ mix.samples.jitter <- function(sample.names,
     if(verbose){
       cat("doing ", lrun, " or ", 100*lrun/nSamples, "%\n" )
     }
-    quant.tumors  <- runif(n = 1, min = 0.5, max = 0.7)
+    quant.special  <- runif(n = 1, min = 0.5, max = 0.7)
     if(singleSpecial){
-      tumors <- c(quant.tumors, rep(0, length(special.samples)-1))
+      special <- c(quant.special, rep(0, length(special.samples)-1))
     }else{
-      remaining <- quant.tumors
+      remaining <- quant.special
       count <- 1
-      tumors <- c()
+      special <- c()
       while(count <= length(special.samples)){
-        tmp.tumors <- runif(n=1, min=0, max=remaining)
-        tumors <- c(tumors, tmp.tumors)
-        remaining <- remaining - tmp.tumors
+        tmp.special <- runif(n=1, min=0, max=remaining)
+        special <- c(special, tmp.special)
+        remaining <- remaining - tmp.special
         count <- count + 1
       }
       # fill last one, such that sum(tumors) equals quant.tumors
-      tumors[count-1] <- tumors[count-1] + quant.tumors - sum(tumors)
+      special[count-1] <- special[count-1] + quant.special - sum(special)
     }
-    tumors <- sample(tumors) # shuffle it, so every special sample can be the biggest one
-    names(tumors) <- special.samples
+    special <- sample(special) # shuffle it, so every special sample can be the biggest one
+    names(special) <- special.samples
 
     ### mixture quantities:
-    remaining <- 1 - quant.tumors
+    remaining <- 1 - quant.special
     count <- 1
-    macros <- c()
+    other <- c()
     while(count <= length(sample.names)){
       tmp <- runif(n=1, min=0, max=remaining)
-      macros <- c(macros, tmp)
+      other <- c(other, tmp)
       remaining <- remaining - tmp
       count <- count + 1
     }
-    macros[count-1] <- macros[count-1] + (1 - quant.tumors) - sum(macros)
-    macros <- sample(macros)
-    names(macros) <- sample.names
+    other[count-1] <- other[count-1] + (1 - quant.special) - sum(other)
+    other <- sample(other)
+    names(other) <- sample.names
 
-    quant.matrix <- cbind(quant.matrix, c(macros, tumors))
+    quant.matrix <- cbind(quant.matrix, c(other, special))
     colnames(quant.matrix)[lrun] <- paste0("mix", lrun)
 
     ### mixture: initialise with zero for each gene

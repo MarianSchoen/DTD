@@ -261,7 +261,7 @@ Now, the optimization procedure can be started:
                                       verbose = F)
   str(catch)
 ```
-The output of the `descent_generalized_fista` algorithm is a list. It returns the `tweak_vec` after the last iterations, and a convergence vector. Within the convergence vector there are stored the evaluations of the `EVAL.FUN` in every step. 
+The output of the `descent_generalized_fista` algorithm is a list. It returns the `tweak_vec` after the last iterations, and a convergence vector. Within the convergence vector there are the evaluations of the `EVAL.FUN` in every step. 
 ## Visualize results
 
 # References
