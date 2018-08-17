@@ -6,30 +6,29 @@ knitr::opts_chunk$set(
 
 ## ----include=FALSE-------------------------------------------------------
   # for fast testing 
-  maxit <- 1e3
-  nSamples <- 200
+  maxit <- 20
+  nSamples <- 500
 
 ## ------------------------------------------------------------------------
   library(DTD)
 
 ## ------------------------------------------------------------------------
-  number.types <- 5
-  number.samples.per.type <- 10
+  number.types <- 10
   random.data <- generate.random.data(nTypes = number.types, 
-                                      nSamples.perType = number.samples.per.type, 
-                                      nFeatures = 100)
+                                      nSamples.perType = 150, 
+                                      nFeatures = 250)
+
+## ------------------------------------------------------------------------
   print(random.data[1:5, 1:5])
   
   # for further exemplary visualization 
-  example.index <- c(1, 12, 23, 34, 44)
+  example.index <- c(1, 151, 301, 451)
 
 ## ------------------------------------------------------------------------
   print(colnames(random.data)[example.index])
 
 ## ------------------------------------------------------------------------
-  if(max(random.data) < 25){ 
-    random.data <- 2^random.data
-  }
+    random.data <- 2^random.data - 1
 
 ## ------------------------------------------------------------------------
   # In random.data the number of counts differs over all samples: 
@@ -39,12 +38,13 @@ knitr::opts_chunk$set(
   apply(normalized.data, 2, sum)[example.index]
 
 ## ------------------------------------------------------------------------
- indicator.list <- gsub("^Cell([0-9])*.", "", colnames(normalized.data))
+ indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
  names(indicator.list) <- colnames(normalized.data)
  print(indicator.list[example.index])
 
 ## ------------------------------------------------------------------------
-  include.in.X <- c("Type2", "Type3", "Type4", "Type5")
+  include.in.X <- paste0("Type", 2:7)
+  print(include.in.X)
 
 ## ------------------------------------------------------------------------
   X.matrix <- matrix(NA, nrow=nrow(normalized.data), ncol=length(include.in.X))
@@ -72,9 +72,10 @@ knitr::opts_chunk$set(
  }
 
 ## ------------------------------------------------------------------------
-  remaining.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+  remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
   train.samples <- sample(x = colnames(remaining.mat), 
-                          size = ceiling(ncol(remaining.mat)/2))
+                          size = ceiling(ncol(remaining.mat)/2), 
+                          replace = FALSE)
   test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
   
   train.mat <- remaining.mat[, train.samples]
@@ -86,7 +87,7 @@ knitr::opts_chunk$set(
                                pheno = indicator.train,
                                included.in.X = include.in.X, 
                                nSamples = nSamples, 
-                               nPerMixture = 5, 
+                               nPerMixture = 100, 
                                verbose = F)
   str(training.data)
 
@@ -96,7 +97,7 @@ knitr::opts_chunk$set(
                            pheno = indicator.train,
                            included.in.X = include.in.X, 
                            nSamples = nSamples, 
-                           nPerMixture = 5, 
+                           nPerMixture = 100, 
                            verbose = F)
 
 ## ------------------------------------------------------------------------
@@ -119,17 +120,39 @@ knitr::opts_chunk$set(
                                              included.in.X = include.in.X)
 
 ## ------------------------------------------------------------------------
-  DTD.grad.wrapper <- function(tweak){
+   # wrapper for gradient:
+   DTD.grad.wrapper <- function(tweak){
       X <- X.matrix
       Y <- training.data$mixtures
       C <- training.data$quantities
-      grad <- Trace.H.gradient(X = X, Y = Y, C = C, gamma.vec = tweak)
+      grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
       return(grad)
-  }
+   }
+  # wrapper for evaluation:
   DTD.evCor.wrapper <- function(tweak){
       X <- X.matrix
       Y <- training.data$mixtures
       C <- training.data$quantities
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+      return(loss)
   }
+
+## ------------------------------------------------------------------------
+  start_tweak <- rep(1, nrow(X.matrix))
+  catch <- descent_generalized_fista(tweak_vec = start_tweak,
+                                     F.GRAD.FUN = DTD.grad.wrapper,
+                                     ST.FUN = soft_thresholding,
+                                     FACTOR.FUN = nesterov_faktor,
+                                     EVAL.FUN = DTD.evCor.wrapper,
+                                     line_search_speed = 2,
+                                     maxit = maxit,
+                                     save_all_tweaks = T, 
+                                     verbose = F)
+  str(catch)
+
+## ---- fig.width=5--------------------------------------------------------
+  print(ggplot_correlation(fista.output = catch, 
+                           test.set = test.data, 
+                           X.matrix = X.matrix, 
+                           main = "DTD Vignette"))
 
