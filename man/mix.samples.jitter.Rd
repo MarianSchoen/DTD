@@ -5,7 +5,7 @@
 \title{Mix samples with Jitter}
 \usage{
 mix.samples.jitter(sample.names, special.samples, nSamples = 1000, datamatrix,
-  pheno, verbose = F, singleSpecial = F, add_jitter = F,
+  pheno, verbose = FALSE, singleSpecial = FALSE, add_jitter = FALSE,
   chosen.mean = 1, chosen.sd = 0.05, min.amount.samples = 1,
   per.type = 1, included.in.X)
 }
@@ -33,6 +33,8 @@ occur with higher quantites within the mix data.}
 
 \item{min.amount.samples}{integer, how many samples have to be present such that it averages over them,
 instead of taking only 1}
+
+\item{per.type}{integer, how many samples "per type" should be used for each mixture}
 
 \item{included.in.X}{list of strings, which cell types are included in the reference matrix.
 The mix function will mix all samples in the data set, but will only return the quantity matrix
@@ -105,8 +107,8 @@ training.data <- mix.samples.jitter(sample.names = sample.names,
                                      nSamples = 1e3,
                                      datamatrix = random.data,
                                      pheno = indicator.list,
-                                     singleSpecial = F,
-                                     add_jitter = T,
+                                     singleSpecial = FALSE,
+                                     add_jitter = TRUE,
                                      chosen.mean = 1,
                                      chosen.sd = 0.05,
                                      min.amount.samples = 1)

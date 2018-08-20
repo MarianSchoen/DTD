@@ -5,7 +5,7 @@
 #'
 #' @param k integer, iteration step of the FISTA algorithm
 #'
-#' @return
+#' @return integer
 #'
 #' @export
 #'

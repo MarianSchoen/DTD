@@ -156,3 +156,13 @@ knitr::opts_chunk$set(
                            X.matrix = X.matrix, 
                            main = "DTD Vignette"))
 
+## ------------------------------------------------------------------------
+  test.estimations <- est.cs(X = X.matrix, 
+                             Y = test.data$mixtures, 
+                             gamma.vec = catch$Tweak
+                            )
+ print(ggplot_true_vs_esti(estimatedC = test.estimations,
+                           trueC = test.data$quantities, 
+                           norm.columnwise = FALSE)
+       )
+

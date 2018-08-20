@@ -26,6 +26,6 @@ a model has been trained.
 As input parameter it needs the output of \code{\link{descent_generalized_fista}}. If fista has been evoked
 with save_all_tweaks = T, and a test set is available, the loss-function can be evaluated for all tweak vectors,
 and both training and test loss curves will be plotted (=> detect overfitting).\cr
-The following example needs data generation, and evoking the FISTA algorithm as shown in
+For an example see
 \code{\link{descent_generalized_fista}}
 }

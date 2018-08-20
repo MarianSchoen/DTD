@@ -9,7 +9,7 @@ descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 1000,
   learning.rate = NA, F.GRAD.FUN = DTD.grad.wrapper,
   ST.FUN = soft_thresholding, FACTOR.FUN = nesterov_faktor,
   EVAL.FUN = DTD.evCor.wrapper, line_search_speed = 2, cycles = 50,
-  save_all_tweaks = F, use_restarts = T, verbose = T)
+  save_all_tweaks = FALSE, use_restarts = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{tweak_vec}{numeric vector, with which the minimization algorithm starts}
@@ -142,7 +142,7 @@ training.data <- mix.samples(gene.mat = train.mat,
                              included.in.X = include.in.X,
                              nSamples = 500,
                              nPerMixture = 100,
-                             verbose = F)
+                             verbose = FALSE)
 
 indicator.test <- indicator.list[names(indicator.list) \%in\% colnames(test.mat)]
 test.data <-  mix.samples(gene.mat = test.mat,
@@ -150,7 +150,7 @@ test.data <-  mix.samples(gene.mat = test.mat,
                           included.in.X = include.in.X,
                           nSamples = 500,
                           nPerMixture = 100,
-                          verbose = F)
+                          verbose = FALSE)
 
 # wrapper for gradient:
 DTD.grad.wrapper <- function(tweak){
@@ -180,9 +180,9 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                    EVAL.FUN = DTD.evCor.wrapper,
                                    line_search_speed = 2,
                                    maxit = 250,
-                                   save_all_tweaks = T,
-                                   use_restarts = T,
-                                   verbose = F)
+                                   save_all_tweaks = TRUE,
+                                   use_restarts = TRUE,
+                                   verbose = FALSE)
 
 print(ggplot_correlation(fista.output = catch,
                          test.set = test.data,

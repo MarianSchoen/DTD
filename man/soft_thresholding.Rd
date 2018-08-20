@@ -12,7 +12,7 @@ soft_thresholding(x, lambda)
 \item{lambda}{float or list of floats, regularization parameter}
 }
 \value{
-
+list of numerics, same length as x
 }
 \description{
 implementation of the proximal operator for l1 penalty

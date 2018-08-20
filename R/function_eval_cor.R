@@ -68,8 +68,8 @@
 #'                                      nSamples = 1e3,
 #'                                      datamatrix = random.data,
 #'                                      pheno = indicator.list,
-#'                                      singleSpecial = F,
-#'                                      add_jitter = T,
+#'                                      singleSpecial = FALSE,
+#'                                      add_jitter = TRUE,
 #'                                      chosen.mean = 1,
 #'                                      chosen.sd = 0.05,
 #'                                      min.amount.samples = 1,
@@ -97,7 +97,7 @@ evaluate_cor <- function(X, Y, C, tweak){
   cor_per_cType <- rep(NA, nrow(C))
   for(l1 in 1:nrow(C)){
     # calculate the correlation per Type:
-    cor_per_cType[l1] <- cor(C[l1, ], esti.cs[l1, ])
+    cor_per_cType[l1] <- stats::cor(C[l1, ], esti.cs[l1, ])
   }
 
   # The value of loss-function is 1 - the averaged correlation:

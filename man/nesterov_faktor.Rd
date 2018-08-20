@@ -10,7 +10,7 @@ nesterov_faktor(k)
 \item{k}{integer, iteration step of the FISTA algorithm}
 }
 \value{
-
+integer
 }
 \description{
 The FISTA algorithm extrapolates/correctes after the gradient step. The "nesterov_faktor" function

@@ -92,7 +92,9 @@ mix.samples <- function(gene.mat,
 
   for(lsample in 1:nSamples){
     # randomly select 'nPerMixture' samples (without replacing!)
-    randomSamples <- sample(x = colnames(gene.mat), size = nPerMixture, replace = FALSE)
+    randomSamples <- sample(x = colnames(gene.mat),
+                            size = nPerMixture,
+                            replace = FALSE)
     # average over the selected samples ...
     avg <- rowSums(gene.mat[, randomSamples])
     # ... store the result in the geneExpression matrix:

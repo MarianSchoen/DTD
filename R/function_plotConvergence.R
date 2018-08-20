@@ -6,7 +6,7 @@
 #' As input parameter it needs the output of \code{\link{descent_generalized_fista}}. If fista has been evoked
 #' with save_all_tweaks = T, and a test set is available, the loss-function can be evaluated for all tweak vectors,
 #' and both training and test loss curves will be plotted (=> detect overfitting).\cr
-#' The following example needs data generation, and evoking the FISTA algorithm as shown in
+#' For an example see
 #' \code{\link{descent_generalized_fista}}
 #'
 #' @param fista.output list, with "Convergence" entry as return by the descent_generalized_fista function
@@ -31,9 +31,9 @@ ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA, main 
     cor.in.test <- c()
     for(l.iteration in 1:length(fista.output$Convergence)){
     cor.in.test <- c(cor.in.test, evaluate_cor(X = X.matrix,
-                                                Y = test.set$mixtures,
-                                                C = test.set$quantities,
-                                                tweak = fista.output$History[, l.iteration])
+                                               Y = test.set$mixtures,
+                                               C = test.set$quantities,
+                                               tweak = fista.output$History[, l.iteration])
                       )
     }
     # build a data.frame holding training, test and iter
@@ -54,7 +54,7 @@ ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA, main 
   tit <- paste0("Loss-function curve during FISTA optimization \n", main)
 
   # build the ggplot object
-  pic <- ggplot(convergence.melt, aes(x=iter, y = value, col = variable)) +
+  pic <- ggplot(convergence.melt, aes_string(x = "iter", y = "value", col = "variable")) +
                 geom_point() + xlab("Iteration") + ylab("Loss-Function") +
                 ggtitle(tit)
 

@@ -4,7 +4,7 @@
 \alias{Trace.H.gradient}
 \title{Gradient of \eqn{L(g) = \sum cor(true_C, estimated_C(g) )}}
 \usage{
-Trace.H.gradient(X = x_mat, Y = y_mat, C = c_mat, tweak = v_vec)
+Trace.H.gradient(X, Y, C, tweak)
 }
 \arguments{
 \item{X}{numeric matrix with features as rows, and reference samples as columns}

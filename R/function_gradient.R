@@ -17,7 +17,7 @@
 #'
 #' @return numeric list, same length as "tweak"
 
-Trace.H.gradient <- function(X = x_mat, Y = y_mat, C = c_mat, tweak = v_vec){
+Trace.H.gradient <- function(X, Y, C, tweak){
 
   Gamma <- Matrix::Matrix(diag(tweak))
   estimates.cs <- est.cs(X, Y, tweak)
@@ -29,7 +29,7 @@ Trace.H.gradient <- function(X = x_mat, Y = y_mat, C = c_mat, tweak = v_vec){
   cov.cs.hat.cs <- NULL
 
   for(j in 1:nrow(C)){
-    cov.cs.hat.cs <- c(cov.cs.hat.cs, cov(estimates.cs[j,],C[j,]) )
+    cov.cs.hat.cs <- c(cov.cs.hat.cs, stats::cov(estimates.cs[j,],C[j,]) )
   }
 
   A <- matrix(NA, nrow=ncol(X), ncol=ncol(C))

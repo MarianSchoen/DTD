@@ -118,7 +118,7 @@
 #'                              included.in.X = include.in.X,
 #'                              nSamples = 500,
 #'                              nPerMixture = 100,
-#'                              verbose = F)
+#'                              verbose = FALSE)
 #'
 #' indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
 #' test.data <-  mix.samples(gene.mat = test.mat,
@@ -126,7 +126,7 @@
 #'                           included.in.X = include.in.X,
 #'                           nSamples = 500,
 #'                           nPerMixture = 100,
-#'                           verbose = F)
+#'                           verbose = FALSE)
 #'
 #' # wrapper for gradient:
 #' DTD.grad.wrapper <- function(tweak){
@@ -156,9 +156,9 @@
 #'                                    EVAL.FUN = DTD.evCor.wrapper,
 #'                                    line_search_speed = 2,
 #'                                    maxit = 250,
-#'                                    save_all_tweaks = T,
-#'                                    use_restarts = T,
-#'                                    verbose = F)
+#'                                    save_all_tweaks = TRUE,
+#'                                    use_restarts = TRUE,
+#'                                    verbose = FALSE)
 #'
 #' print(ggplot_correlation(fista.output = catch,
 #'                          test.set = test.data,
@@ -177,9 +177,9 @@ descent_generalized_fista <- function(tweak_vec = NA,
                                       EVAL.FUN = DTD.evCor.wrapper,
                                       line_search_speed = 2,
                                       cycles=50,
-                                      save_all_tweaks=F,
-                                      use_restarts=T,
-                                      verbose=T){
+                                      save_all_tweaks=FALSE,
+                                      use_restarts=TRUE,
+                                      verbose=TRUE){
   # safety checks:
   if(any(is.na(tweak_vec))){
     stop("Tweak vector includes NAs")
@@ -248,7 +248,7 @@ descent_generalized_fista <- function(tweak_vec = NA,
           function(x){ST.FUN(y_vec - x * grad, x*lambda)}),
         use.names = FALSE),
       nrow = cycles,
-      byrow = T)
+      byrow = TRUE)
 
     # every row of u_mat holds a u_vec with another step.size.
     # In order to find the best of them, we use the EVAL.FUN on all of them:
@@ -317,7 +317,7 @@ descent_generalized_fista <- function(tweak_vec = NA,
       cat("factor: ", factor, "\n")
       # plot converge_vec:
       if(iter %% 100 == 0){
-        plot(1:iter, converge_vec)
+        graphics::plot(1:iter, converge_vec)
       }
     }
   }

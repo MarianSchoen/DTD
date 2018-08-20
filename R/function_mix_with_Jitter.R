@@ -25,6 +25,7 @@
 #' @param included.in.X list of strings, which cell types are included in the reference matrix.
 #' The mix function will mix all samples in the data set, but will only return the quantity matrix
 #' for the types included in X (and in the right ordering)
+#' @param per.type integer, how many samples "per type" should be used for each mixture
 #'
 #' @return list with two entries. "quantities" matrix (nrow = ncol(datamatrix), ncol = nMixtures) and "mixture"
 #' matrix (nrow = nrow(datamatrix), ncol = nMixtures)
@@ -84,21 +85,21 @@
 #'                                      nSamples = 1e3,
 #'                                      datamatrix = random.data,
 #'                                      pheno = indicator.list,
-#'                                      singleSpecial = F,
-#'                                      add_jitter = T,
+#'                                      singleSpecial = FALSE,
+#'                                      add_jitter = TRUE,
 #'                                      chosen.mean = 1,
 #'                                      chosen.sd = 0.05,
 #'                                      min.amount.samples = 1)
 mix.samples.jitter <- function(sample.names,
                                special.samples,
-                               nSamples=1e3,
+                               nSamples = 1e3,
                                datamatrix,
                                pheno,
-                               verbose=F,
-                               singleSpecial = F,
-                               add_jitter = F,
-                               chosen.mean=1,
-                               chosen.sd=0.05,
+                               verbose = FALSE,
+                               singleSpecial = FALSE,
+                               add_jitter = FALSE,
+                               chosen.mean = 1,
+                               chosen.sd = 0.05,
                                min.amount.samples = 1,
                                per.type = 1,
                                included.in.X){
@@ -125,7 +126,7 @@ mix.samples.jitter <- function(sample.names,
     }
     # get quantities for the special samples:
     # The special samples (e.g. malignant cells) dominate the cells (=> high quants)
-    quant.special  <- runif(n = 1, min = 0.5, max = 0.7)
+    quant.special  <- stats::runif(n = 1, min = 0.5, max = 0.7)
 
     # singleSpecial indicates if there is only one special sample present in the mixtures:
     if(singleSpecial){
@@ -137,7 +138,7 @@ mix.samples.jitter <- function(sample.names,
       count <- 1
       special <- c()
       while(count <= length(special.samples)){
-        tmp.special <- runif(n=1, min=0, max=remaining)
+        tmp.special <- stats::runif(n=1, min=0, max=remaining)
         special <- c(special, tmp.special)
         remaining <- remaining - tmp.special
         count <- count + 1
@@ -154,7 +155,7 @@ mix.samples.jitter <- function(sample.names,
     count <- 1
     other <- c()
     while(count <= length(sample.names)){
-      tmp <- runif(n=1, min=0, max=remaining)
+      tmp <- stats::runif(n=1, min=0, max=remaining)
       other <- c(other, tmp)
       remaining <- remaining - tmp
       count <- count + 1
@@ -190,7 +191,7 @@ mix.samples.jitter <- function(sample.names,
       # jitter means to multply every entry of every "next_quant" with a random number close to 1:
       if(add_jitter){
         # get a vector of random numbers:
-        factors <- rnorm(n=length(next_quant), mean=chosen.mean, sd=chosen.sd)
+        factors <- stats::rnorm(n=length(next_quant), mean=chosen.mean, sd=chosen.sd)
         # elementwise multiply next_quant with it
         next_quant <- next_quant * factors
       }
