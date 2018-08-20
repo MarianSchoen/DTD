@@ -156,7 +156,7 @@ knitr::opts_chunk$set(
                            X.matrix = X.matrix, 
                            main = "DTD Vignette"))
 
-## ------------------------------------------------------------------------
+## ---- fig.width=7--------------------------------------------------------
   test.estimations <- est.cs(X = X.matrix, 
                              Y = test.data$mixtures, 
                              gamma.vec = catch$Tweak

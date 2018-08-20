@@ -18,3 +18,7 @@ list of numerics, same length as x
 implementation of the proximal operator for l1 penalty
 (see Bubeck 2015)
 }
+\examples{
+set.seed(1)
+soft_thresholding(x = runif(10) - rnorm(10), lambda = 0.2)
+}

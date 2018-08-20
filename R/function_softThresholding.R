@@ -8,7 +8,7 @@
 #'
 #' @export
 #' @return list of numerics, same length as x
-#' @example
+#' @examples
 #' set.seed(1)
 #' soft_thresholding(x = runif(10) - rnorm(10), lambda = 0.2)
 soft_thresholding <- function(x, lambda){
