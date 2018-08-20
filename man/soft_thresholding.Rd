@@ -16,4 +16,5 @@ soft_thresholding(x, lambda)
 }
 \description{
 implementation of the proximal operator for l1 penalty
+(see Bubeck 2015)
 }

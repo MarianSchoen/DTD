@@ -1,6 +1,6 @@
 #' normalizeToCount
 #'
-#' 'normalizeToCount' takes a numeric matrix mat and normalizes each column (=> sample) to fix number of counts.\cr
+#' 'normalizeToCount' takes a numeric matrix mat and normalizes each column (=> sample) to a fix number of counts.\cr
 #' For every sample i, each feature j gets scaled to
 #'  \deqn{mat[j, i] = (count * mat[j, i]) / sum(mat[, i])}
 #'
@@ -11,8 +11,8 @@
 #' @export
 #'
 #' @examples
-#' someMatrix <- matrix(rnorm(1000*5), ncol=5, nrow=1000)
-#' # each sample (=column) has different sum:
+#' someMatrix <- matrix(abs(rnorm(1000*5)), ncol=5, nrow=1000)
+#' # each sample (=column) has different number of total counts:
 #' apply(someMatrix, 2, sum)
 #'
 #' normalizedMatrix <- normalizeToCount(someMatrix)

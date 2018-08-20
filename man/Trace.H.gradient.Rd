@@ -2,9 +2,9 @@
 % Please edit documentation in R/function_gradient.R
 \name{Trace.H.gradient}
 \alias{Trace.H.gradient}
-\title{Gradient of \eqn{L(g) = \sum cor(true_C, estimated_C(g) }}
+\title{Gradient of \eqn{L(g) = \sum cor(true_C, estimated_C(g) )}}
 \usage{
-Trace.H.gradient(X = x_mat, Y = y_mat, C = c_mat, gamma.vec = v_vec)
+Trace.H.gradient(X = x_mat, Y = y_mat, C = c_mat, tweak = v_vec)
 }
 \arguments{
 \item{X}{numeric matrix with features as rows, and reference samples as columns}
@@ -13,14 +13,14 @@ Trace.H.gradient(X = x_mat, Y = y_mat, C = c_mat, gamma.vec = v_vec)
 
 \item{C}{numeric matrix with reference samples as rows, and samples as columns}
 
-\item{gamma.vec}{numeric vector with length of nrow(X).
-In the Loss function above gamma.vec is named "g"}
+\item{tweak}{numeric vector with length of nrow(X).
+In the Loss function above tweak is named "g"}
 }
 \value{
-numeric list, same length as "gamma.vec"
+numeric list, same length as "tweak"
 }
 \description{
 This function returns the value of the gradient of our Loss-function L.\cr
-For the mathematical theory see
+For the mathematical theory see Goertler et al 2018.
 For examples see wrapper in \code{\link{descent_generalized_fista}}
 }

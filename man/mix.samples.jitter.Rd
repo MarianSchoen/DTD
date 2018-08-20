@@ -54,9 +54,9 @@ list of special samples (which occur in major fractions)
 }
 \examples{
 library(DTD)
-random.data <- generate.random.data(nTypes = 5,
+random.data <- generate.random.data(nTypes = 10,
                                     nSamples.perType = 10,
-                                    nFeatures = 100,
+                                    nFeatures = 500,
                                     sample.type = "Cell",
                                     feature.type = "gene")
 
@@ -64,8 +64,8 @@ random.data <- generate.random.data(nTypes = 5,
 random.data <- normalizeToCount(random.data)
 
 # extract indicator list.
-# This list contains the Type of the sample as value, and the sample name as name
-indicator.list <- gsub("^Cell([0-9])*.", "", colnames(random.data))
+# This list contains the type of the sample as value, and the sample name as names
+indicator.list <- gsub("^Cell[0-9]*\\\\.", "", colnames(random.data))
 names(indicator.list) <- colnames(random.data)
 
 # extract reference matrix X

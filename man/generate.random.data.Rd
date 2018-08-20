@@ -32,7 +32,7 @@ and for each type "nSamples.perType". Notice, that "nSamples.perType" will be ra
 such that the number of sampler per type differ between the types.
 }
 \examples{
-#' library(DTD)
+ library(DTD)
 random.data <- generate.random.data(nTypes = 5,
                                     nSamples.perType = 10,
                                     nFeatures = 100,

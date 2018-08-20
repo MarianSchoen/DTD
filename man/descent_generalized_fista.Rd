@@ -82,24 +82,28 @@ Exemplary wrapper functions can be found in the examples.
 }
 \examples{
 library(DTD)
-random.data <- generate.random.data(nTypes = 5,
-                                    nSamples.perType = 10,
-                                    nFeatures = 100,
+random.data <- generate.random.data(nTypes = 10,
+                                    nSamples.perType = 150,
+                                    nFeatures = 250,
                                     sample.type = "Cell",
                                     feature.type = "gene")
+
+# the randomly generated data is on log scale, which needs to be undone,
+# as the DTD approach works on a additive, not a multiplicative scale
+random.data <- (2^random.data) - 1
 
 # normalize all samples to the same amount of counts:
 random.data <- normalizeToCount(random.data)
 
 # extract indicator list.
 # This list contains the Type of the sample as value, and the sample name as name
-indicator.list <- gsub("^Cell([0-9])*.", "", colnames(random.data))
+indicator.list <- gsub("^Cell[0-9]*\\\\.", "", colnames(random.data))
 names(indicator.list) <- colnames(random.data)
 
 # extract reference matrix X
 # First, decide which cells should be deconvoluted.
 # Notice, in the mixtures there can be more cells than in the reference matrix.
-include.in.X <- c("Type2", "Type3", "Type4", "Type5")
+include.in.X <- paste0("Type", 2:7)
 
 X.matrix <- matrix(NA, nrow=nrow(random.data), ncol=length(include.in.X))
 colnames(X.matrix) <- include.in.X
@@ -123,31 +127,29 @@ for(l.type in include.in.X){
 
 # all samples that have been used in the reference matrix, must not be included in
 # the test/training set
-reduced.mat <- random.data[, -which(colnames(random.data) \%in\% samples.to.remove)]
-# all remaining samples will be equally split into test and training:
-test.samples <- sample(x = colnames(reduced.mat),
-                       size = ceiling(ncol(reduced.mat)/2),
+remaining.mat <- random.data[, -which(colnames(random.data) \%in\% samples.to.remove)]
+train.samples <- sample(x = colnames(remaining.mat),
+                       size = ceiling(ncol(remaining.mat)/2),
                        replace = FALSE)
-test.mat <- random.data[, test.samples]
-indicator.list.test <- indicator.list[-which(!names(indicator.list) \%in\% colnames(test.mat))]
+test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) \%in\% train.samples)]
 
-train.samples <- colnames(reduced.mat)[which(!colnames(reduced.mat) \%in\% test.samples)]
-train.mat <- random.data[, train.samples]
-indicator.list.train <- indicator.list[-which(!names(indicator.list) \%in\% colnames(train.mat))]
+train.mat <- remaining.mat[, train.samples]
+test.mat <- remaining.mat[, test.samples]
 
-
+indicator.train <- indicator.list[names(indicator.list) \%in\% colnames(train.mat)]
 training.data <- mix.samples(gene.mat = train.mat,
-                             pheno = indicator.list.train,
+                             pheno = indicator.train,
                              included.in.X = include.in.X,
-                             nSamples = 200,
-                             nPerMixture = 10,
+                             nSamples = 500,
+                             nPerMixture = 100,
                              verbose = F)
 
+indicator.test <- indicator.list[names(indicator.list) \%in\% colnames(test.mat)]
 test.data <-  mix.samples(gene.mat = test.mat,
-                          pheno = indicator.list.test,
+                          pheno = indicator.test,
                           included.in.X = include.in.X,
-                          nSamples = 100,
-                          nPerMixture = 10,
+                          nSamples = 500,
+                          nPerMixture = 100,
                           verbose = F)
 
 # wrapper for gradient:
@@ -155,7 +157,7 @@ DTD.grad.wrapper <- function(tweak){
    X <- X.matrix
    Y <- training.data$mixtures
    C <- training.data$quantities
-   grad <- Trace.H.gradient(X = X, Y = Y, C = C, gamma.vec = tweak)
+   grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
    return(grad)
 }
 # wrapper for evaluate corelation:
@@ -177,9 +179,9 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                    FACTOR.FUN = nesterov_faktor,
                                    EVAL.FUN = DTD.evCor.wrapper,
                                    line_search_speed = 2,
-                                   maxit = 200,
+                                   maxit = 250,
                                    save_all_tweaks = T,
-                                   use_restarts = F,
+                                   use_restarts = T,
                                    verbose = F)
 
 print(ggplot_correlation(fista.output = catch,

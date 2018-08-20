@@ -18,7 +18,7 @@
 #' @export
 #'
 #' @examples
-#' #' library(DTD)
+#'  library(DTD)
 #' random.data <- generate.random.data(nTypes = 5,
 #'                                     nSamples.perType = 10,
 #'                                     nFeatures = 100,
@@ -73,7 +73,8 @@ generate.random.data <- function(nTypes = 5,
 
 
   # Expression will be generated randomly using a poisson distribution.
-  # Therefore, we sample for every gene in every type a lambda.
+  # Each gene in every type is poisson distributed with an unique lambda.
+  # Here, I generate the lambda for each gene as a normal distributed random variable:
   lambda.mat <- matrix(data = abs(rnorm(nTypes*nFeatures, mean = 5, sd = 2)),
                        nrow = nFeatures,
                        ncol = nTypes)
@@ -81,11 +82,15 @@ generate.random.data <- function(nTypes = 5,
   colnames(lambda.mat) <- paste0("Type", 1:nTypes)
 
 
-  # maybe fasten this !
+  # Now, I loop over every type ...
   for(l.type in colnames(lambda.mat)){
+    # ... and every gene ...
     for(l.gene in rownames(lambda.mat)){
+      # (There are many samples per type: )
       pos <- which(grepl(x = colnames(expression.matrix),
                          pattern = l.type))
+
+      # ... and sample "nSamples.perType" expression values, with the previously generated lambda:
       expression.matrix[l.gene, pos] <- rpois(n = nSamples.perType,
                                               lambda = lambda.mat[l.gene, l.type])
     }

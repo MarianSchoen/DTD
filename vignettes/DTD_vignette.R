@@ -6,7 +6,7 @@ knitr::opts_chunk$set(
 
 ## ----include=FALSE-------------------------------------------------------
   # for fast testing 
-  maxit <- 20
+  maxit <- 250
   nSamples <- 500
 
 ## ------------------------------------------------------------------------
@@ -93,8 +93,8 @@ knitr::opts_chunk$set(
 
 ## ------------------------------------------------------------------------
   indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
-  test.data <- mix.samples(gene.mat = train.mat,
-                           pheno = indicator.train,
+  test.data <- mix.samples(gene.mat = test.mat,
+                           pheno = indicator.test,
                            included.in.X = include.in.X, 
                            nSamples = nSamples, 
                            nPerMixture = 100, 
