@@ -299,7 +299,7 @@ The output of the `descent_generalized_fista` algorithm is a list. It returns th
 ```
 
 The trained model needs to be evaluated on the test set.  Therefore the function `ggplot_true_vs_esti` can be used. As input it takes the cell estimations of the DTD model on the test set, and the true cell compositions of the test set. In addition a `color.indi` vector can be provided
-```{r}
+```{r, fig.width=7}
   test.estimations <- est.cs(X = X.matrix, 
                              Y = test.data$mixtures, 
                              gamma.vec = catch$Tweak
