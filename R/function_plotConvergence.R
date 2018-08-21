@@ -37,7 +37,7 @@ ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA, main 
                       )
     }
     # build a data.frame holding training, test and iter
-    convergence <- data.frame("trainig" = fista.output$Convergence,
+    convergence <- data.frame("training" = fista.output$Convergence,
                               "test" = cor.in.test,
                               "iter" = 1:length(fista.output$Convergence))
 
@@ -45,7 +45,7 @@ ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA, main 
   }else{
     # if the correlation can not be calculated on the test set,
     # the data.frame only holds training and iter:
-    convergence <- data.frame("trainig" = fista.output$Convergence,
+    convergence <- data.frame("training" = fista.output$Convergence,
                               "iter" = 1:length(fista.output$Convergence))
   }
   # melt convergence:

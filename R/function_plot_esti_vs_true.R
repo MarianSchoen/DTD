@@ -28,7 +28,7 @@ ggplot_true_vs_esti <- function(estimatedC, trueC, norm.columnwise = TRUE, title
 
   cor.list <- c()
   for(l1 in 1:nrow(estimatedC)){
-    cor.list <- c(cor.list, cor(estimatedC[l1, ], trueC[l1, ]))
+    cor.list <- c(cor.list, stats::cor(estimatedC[l1, ], trueC[l1, ]))
   }
   names(cor.list) <- rownames(estimatedC)
 

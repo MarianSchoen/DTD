@@ -6,10 +6,10 @@
 (fast iterative shrinkage thresholding algorithm)}
 \usage{
 descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 1000,
-  learning.rate = NA, F.GRAD.FUN = DTD.grad.wrapper,
-  ST.FUN = soft_thresholding, FACTOR.FUN = nesterov_faktor,
-  EVAL.FUN = DTD.evCor.wrapper, line_search_speed = 2, cycles = 50,
-  save_all_tweaks = FALSE, use_restarts = TRUE, verbose = TRUE)
+  learning.rate = NA, F.GRAD.FUN, ST.FUN = soft_thresholding,
+  FACTOR.FUN = nesterov_faktor, EVAL.FUN, line_search_speed = 2,
+  cycles = 50, save_all_tweaks = FALSE, use_restarts = TRUE,
+  verbose = TRUE)
 }
 \arguments{
 \item{tweak_vec}{numeric vector, with which the minimization algorithm starts}
