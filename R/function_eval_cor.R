@@ -1,7 +1,7 @@
 #' Evaluate correlation
 #'
 #' The loss-function learning digital tissue deconvolution finds a vector g which minimizes the Loss function L\cr
-#' \deqn{L(g) = 1 - \sum cor(true_C, estimatd_C(g))}
+#' \deqn{L(g) = - \sum cor(true_C, estimatd_C(g))}
 #' The evaluate_cor function returns the value of the Loss function.
 #' The evaluate_cor function takes 4 arguments. However, we wrote the FISTA implementation in a way that both the
 #' gradient and the evaluation function only take one argument, which is the g vector. In order to use this function
@@ -83,7 +83,7 @@
 #'                      C = training.data$quantities,
 #'                      tweak = rep(1, nrow(X.matrix)))
 #'
-#' cor <- 1 - loss
+#' cor <-  -loss/ncol(X.matrix)
 #'
 evaluate_cor <- function(X, Y, C, tweak){
   # estimate C using reference matrix, bulks and the tweak vector:
@@ -93,14 +93,14 @@ evaluate_cor <- function(X, Y, C, tweak){
     stop("evaluate_cor: dimension of estimated C do not fit")
   }
 
-  # initialise cor_per_cType:
-  cor_per_cType <- rep(NA, nrow(C))
+  # initialise loss:
+  loss <- 0
   for(l1 in 1:nrow(C)){
     # calculate the correlation per Type:
-    cor_per_cType[l1] <- stats::cor(C[l1, ], esti.cs[l1, ])
+    loss <- loss + stats::cor(C[l1, ], esti.cs[l1, ])
   }
 
-  # The value of loss-function is 1 - the averaged correlation:
-  loss <- 1 - mean(cor_per_cType)
+  # The value of loss-function is the sum over
+  loss <- -loss
   return(loss)
 }

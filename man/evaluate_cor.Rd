@@ -22,7 +22,7 @@ float, value of the Loss function
 }
 \description{
 The loss-function learning digital tissue deconvolution finds a vector g which minimizes the Loss function L\cr
-\deqn{L(g) = 1 - \sum cor(true_C, estimatd_C(g))}
+\deqn{L(g) = - \sum cor(true_C, estimatd_C(g))}
 The evaluate_cor function returns the value of the Loss function.
 The evaluate_cor function takes 4 arguments. However, we wrote the FISTA implementation in a way that both the
 gradient and the evaluation function only take one argument, which is the g vector. In order to use this function
@@ -94,6 +94,6 @@ loss <- evaluate_cor(X = X.matrix,
                      C = training.data$quantities,
                      tweak = rep(1, nrow(X.matrix)))
 
-cor <- 1 - loss
+cor <-  -loss/ncol(X.matrix)
 
 }
