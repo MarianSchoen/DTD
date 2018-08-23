@@ -75,7 +75,7 @@ generate.random.data <- function(nTypes = 5,
   # Expression will be generated randomly using a poisson distribution.
   # Each gene in every type is poisson distributed with an unique lambda.
   # Here, I generate the lambda for each gene as a normal distributed random variable:
-  lambda.mat <- matrix(data = abs(stats::rnorm(nTypes*nFeatures, mean = 5, sd = 2)),
+  lambda.mat <- matrix(data = abs(stats::rnorm(nTypes*nFeatures, mean = 10, sd = 10)),
                        nrow = nFeatures,
                        ncol = nTypes)
   rownames(lambda.mat) <- rownames(expression.matrix)
