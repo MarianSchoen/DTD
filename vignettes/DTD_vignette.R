@@ -6,7 +6,7 @@ knitr::opts_chunk$set(
 
 ## ----include=FALSE-------------------------------------------------------
   # for fast testing 
-  maxit <- 10
+  maxit <- 100
   nSamples <- 500
 
 ## ----include=FALSE-------------------------------------------------------
