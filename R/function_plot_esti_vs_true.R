@@ -26,6 +26,16 @@ ggplot_true_vs_esti <- function(estimatedC, trueC, norm.columnwise = TRUE, title
     estimatedC <- apply(estimatedC, 2, function(x){return(x/sum(x))})
   }
 
+  #check if both rows are sorted in the same way:
+  if(any(rownames(estimatedC) != rownames(trueC))){
+    # if not, resort them
+    if(all(rownames(estimatedC) %in% rownames(trueC))){
+      trueC <- trueC[rownames(estimatedC), ]
+    }else{
+      stop("ggplot_true_vs_esti: There are different rownames in estimatedC and trueC")
+    }
+  }
+
   cor.list <- c()
   for(l1 in 1:nrow(estimatedC)){
     cor.list <- c(cor.list, stats::cor(estimatedC[l1, ], trueC[l1, ]))
@@ -39,27 +49,30 @@ ggplot_true_vs_esti <- function(estimatedC, trueC, norm.columnwise = TRUE, title
   esti.frame$colorIndi <- factor(color.indi)
   esti.frame$names <- rownames(esti.frame)
   estimated <- melt(esti.frame, id.vars = c("colorIndi", "names"))
+  # resort the frame, that it can be matched with true:
+  estimated <- estimated[order(estimated$names, as.character(estimated$variable)), ]
 
   true.frame <- as.data.frame(t(trueC))
   true.frame$colorIndi <- factor(color.indi)
   true.frame$names <- rownames(true.frame)
   true <- melt(true.frame, id.vars = c("colorIndi", "names"))
+  # resort the frame, that it can be matched with estimated:
+  true <- true[order(true$names, as.character(true$variable)), ]
 
-  if(all(true$names == estimated$names) && all(true$variable  == estimated$variable)){
-    all <- estimated
-    all$true <- true$value
+  if(all(true$names == estimated$names) && all(true$variable == estimated$variable)){
+    complete <- estimated
+    complete$true <- true$value
   }
 
-  oldLabels <- levels(all$variable)
+  oldLabels <- levels(complete$variable)
   newLabels <- c()
   for(l1 in oldLabels){
     newLabels <- c(newLabels, paste0(l1, "\nCor: ", format(cor.list[l1], digits=2)))
   }
 
-  levels(all$variable) <- newLabels
+  levels(complete$variable) <- newLabels
 
-
-  pic <- ggplot(all, aes_string(y="value", x="true", color = "variable", shape = "colorIndi")) +
+  pic <- ggplot(complete, aes_string(y="value", x="true", color = "variable", shape = "colorIndi")) +
     geom_point() + ylab("estimated") + xlab("true") +
     ggtitle(tit) +
     facet_grid(.~variable, scales = "free") +

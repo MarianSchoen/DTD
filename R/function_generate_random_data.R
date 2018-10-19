@@ -1,10 +1,9 @@
 #' Generating random data
 #'
-#' generate.random.data simulates data which can be used for digital tissue deconvolution.
+#' generate.random.data simulates data which can be used exemplary for digital tissue deconvolution.
 #' It will generate a numeric matrix with "nFeatures" rows, and "nTypes" * "nSamples.perType"
 #' columns. Each column represents a sample of special type. The function will generate "nTypes",
-#' and for each type "nSamples.perType". Notice, that "nSamples.perType" will be randomised,
-#' such that the number of sampler per type differ between the types.
+#' and for each type "nSamples.perType".
 #'
 #' @param nTypes integer, how many different types should be included in the data set
 #' @param nSamples.perType integer, how many samples should be generated per type.
@@ -14,7 +13,7 @@
 #' @param feature.type string, name of features
 #' @param seed integer, to which the seed will be set
 #'
-#' @return matrix with ~ (nTypes * nSamples.perType) columns, and nFeatures rows
+#' @return matrix with (nTypes * nSamples.perType) columns, and nFeatures rows
 #' @export
 #'
 #' @examples

@@ -6,16 +6,19 @@ knitr::opts_chunk$set(
 
 ## ----include=FALSE-------------------------------------------------------
   # for fast testing 
-  maxit <- 100
+  maxit <- 75
   nSamples <- 500
 
 ## ----include=FALSE-------------------------------------------------------
   # I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
   library(DTD)
-  number.types <- 10
+  number.types <- 20
+  n.features <- 250 
+  n.per.type <- 200
+  nPerMixture <- 100
   random.data <- generate.random.data(nTypes = number.types, 
-                                      nSamples.perType = 150, 
-                                      nFeatures = 250)
+                                      nSamples.perType = n.per.type, 
+                                      nFeatures = n.features)
   normalized.data <- normalizeToCount(random.data)
   indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
   names(indicator.list) <- colnames(normalized.data)
@@ -23,7 +26,7 @@ knitr::opts_chunk$set(
   X.matrix <- matrix(NA, nrow=nrow(normalized.data), ncol=length(include.in.X))
   colnames(X.matrix) <- include.in.X
   rownames(X.matrix) <- rownames(normalized.data)
-    percentage.of.all.cells <- 0.2
+  percentage.of.all.cells <- 0.1
   samples.to.remove <- c()
   for(l.type in include.in.X){
     # get sample names of all cells of type "l.type" 
@@ -54,65 +57,84 @@ knitr::opts_chunk$set(
                                pheno = indicator.train,
                                included.in.X = include.in.X, 
                                nSamples = nSamples, 
-                               nPerMixture = 100, 
+                               nPerMixture = nPerMixture, 
                                verbose = F)
   indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
   test.data <- mix.samples(gene.mat = test.mat,
                            pheno = indicator.test,
                            included.in.X = include.in.X, 
                            nSamples = nSamples, 
-                           nPerMixture = 100, 
+                           nPerMixture = nPerMixture, 
                            verbose = F)
   # wrapper for gradient:
-   DTD.grad.wrapper <- function(tweak){
-      X <- X.matrix
-      Y <- training.data$mixtures
-      C <- training.data$quantities
+   DTD.grad.wrapper <- function(tweak, 
+                                X = X.matrix,
+                                train.list = training.data){
+      Y <- train.list$mixtures
+      C <- train.list$quantities
       grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
       return(grad)
    }
   # wrapper for evaluation:
-  DTD.evCor.wrapper <- function(tweak){
-      X <- X.matrix
-      Y <- training.data$mixtures
-      C <- training.data$quantities
+  DTD.evCor.wrapper <- function(tweak, 
+                                X = X.matrix, 
+                                train.list = training.data){
+      Y <- train.list$mixtures
+      C <- train.list$quantities
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
       return(loss)
   }
   start_tweak <- rep(1, nrow(X.matrix))
   start.loss <- DTD.evCor.wrapper(start_tweak)
+  DTD.evCor.wrapper.test <- function(tweak, 
+                              X = X.matrix, 
+                              yc.list = test.data){
+    Y <- yc.list$mixtures
+    C <- yc.list$quantities
+    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+    return(loss)
+  }
 
-
-## ---- fig.width = 7------------------------------------------------------
+## ---- fig.width = 7, fig.align="center"----------------------------------
   catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                      F.GRAD.FUN = DTD.grad.wrapper,
                                      ST.FUN = soft_thresholding,
                                      FACTOR.FUN = nesterov_faktor,
                                      EVAL.FUN = DTD.evCor.wrapper,
+                                     NORM.FUN = n2normed, 
                                      line_search_speed = 2,
                                      maxit = maxit,
-                                     save_all_tweaks = T, 
+                                     save_all_tweaks = TRUE, 
                                      verbose = F)
   str(catch)
-  print(ggplot_correlation(fista.output = catch, 
+  
+  print(ggplot_convergence(fista.output = catch, 
                          test.set = test.data, 
                          X.matrix = X.matrix, 
+                         EVAL.FUN = DTD.evCor.wrapper.test,
                          main = "DTD Vignette"))
 
 ## ------------------------------------------------------------------------
   library(DTD)
 
+## ----echo=FALSE, results = "asis"----------------------------------------
+  cat("```\n")
+  cat(" number.types <- " , number.types, "\n",
+      "n.features <- ", n.features, "\n",
+      "n.per.type <- ", n.per.type, "\n")
+  cat("```\n")
+
 ## ------------------------------------------------------------------------
-  number.types <- 10
   random.data <- generate.random.data(nTypes = number.types, 
-                                      nSamples.perType = 150, 
-                                      nFeatures = 250)
+                                      nSamples.perType = n.per.type, 
+                                      nFeatures = n.features)
 
 ## ------------------------------------------------------------------------
   print(random.data[1:5, 1:5])
-  
+
+## ----include=FALSE-------------------------------------------------------
   # for further exemplary visualization 
-  example.index <- c(1, 151, 301, 451)
+  example.index <- c(1, n.per.type + 1, 2*n.per.type + 1, 3 * n.per.type+1)
 
 ## ------------------------------------------------------------------------
   print(colnames(random.data)[example.index])
@@ -129,17 +151,22 @@ knitr::opts_chunk$set(
  names(indicator.list) <- colnames(normalized.data)
  print(indicator.list[example.index])
 
-## ------------------------------------------------------------------------
-  include.in.X <- paste0("Type", 2:5)
-  print(include.in.X)
+## ----echo=FALSE, results = "asis"----------------------------------------
+  cat("```\n")
+  cat(" include.in.X <- " , paste0("c(\"", paste(include.in.X ,collapse = "\", \""), "\")"), "\n")
+  cat("```\n")
 
 ## ------------------------------------------------------------------------
   X.matrix <- matrix(NA, nrow=nrow(normalized.data), ncol=length(include.in.X))
   colnames(X.matrix) <- include.in.X
   rownames(X.matrix) <- rownames(normalized.data)
 
+## ----echo=FALSE, results = "asis"----------------------------------------
+  cat("```\n")
+  cat(" percentage.of.all.cells <- ", percentage.of.all.cells,  "\n")
+  cat("```\n")
+
 ## ------------------------------------------------------------------------
-  percentage.of.all.cells <- 0.2
   samples.to.remove <- c()
   for(l.type in include.in.X){
     # get sample names of all cells of type "l.type" 
@@ -159,14 +186,25 @@ knitr::opts_chunk$set(
  }
 
 ## ------------------------------------------------------------------------
+  # removing samples that have been used in X.matrix
   remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
+
+  # sampling training samples: (notice, that train test seperation is 50:50)
   train.samples <- sample(x = colnames(remaining.mat), 
                           size = ceiling(ncol(remaining.mat)/2), 
                           replace = FALSE)
+  # selecting test samples: 
   test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
   
+  # extract data matrices for training and testing: 
   train.mat <- remaining.mat[, train.samples]
   test.mat <- remaining.mat[, test.samples]
+
+## ----echo=FALSE, results = "asis"----------------------------------------
+  cat("```\n")
+  cat(" nSamples <- ", nSamples,  "\n",
+      "nPerMixture <- ", nPerMixture,  "\n")
+  cat("```\n")
 
 ## ------------------------------------------------------------------------
   indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
@@ -174,7 +212,7 @@ knitr::opts_chunk$set(
                                pheno = indicator.train,
                                included.in.X = include.in.X, 
                                nSamples = nSamples, 
-                               nPerMixture = 100, 
+                               nPerMixture = nPerMixture, 
                                verbose = F)
   str(training.data)
 
@@ -184,7 +222,7 @@ knitr::opts_chunk$set(
                            pheno = indicator.test,
                            included.in.X = include.in.X, 
                            nSamples = nSamples, 
-                           nPerMixture = 100, 
+                           nPerMixture = nPerMixture, 
                            verbose = F)
 
 ## ------------------------------------------------------------------------
@@ -207,19 +245,21 @@ knitr::opts_chunk$set(
                                              included.in.X = include.in.X)
 
 ## ------------------------------------------------------------------------
-   # wrapper for gradient:
-   DTD.grad.wrapper <- function(tweak){
-      X <- X.matrix
-      Y <- training.data$mixtures
-      C <- training.data$quantities
+  # wrapper for gradient:
+   DTD.grad.wrapper <- function(tweak, 
+                                X = X.matrix, 
+                                train.list = training.data){
+      Y <- train.list$mixtures 
+      C <- train.list$quantities
       grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
       return(grad)
    }
   # wrapper for evaluation:
-  DTD.evCor.wrapper <- function(tweak){
-      X <- X.matrix
-      Y <- training.data$mixtures
-      C <- training.data$quantities
+  DTD.evCor.wrapper <- function(tweak, 
+                                X = X.matrix, 
+                                train.list = training.data){
+      Y <- train.list$mixtures 
+      C <- train.list$quantities
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
       return(loss)
   }
@@ -227,7 +267,7 @@ knitr::opts_chunk$set(
 ## ------------------------------------------------------------------------
   start_tweak <- rep(1, nrow(X.matrix))
   start.loss <- DTD.evCor.wrapper(start_tweak)
-  cat("Start average correlation: ", -start.loss/ncol(X.matrix))
+  cat("Start average correlation: ", -start.loss/ncol(X.matrix), "\n")
   catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                      F.GRAD.FUN = DTD.grad.wrapper,
                                      ST.FUN = soft_thresholding,
@@ -240,9 +280,18 @@ knitr::opts_chunk$set(
   str(catch)
 
 ## ---- fig.width=5--------------------------------------------------------
-  print(ggplot_correlation(fista.output = catch, 
+  DTD.evCor.wrapper.test <- function(tweak, 
+                                X = X.matrix, 
+                                test.list = test.data){
+      Y = test.list$mixtures 
+      C = test.list$quantities
+      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+      return(loss)
+  }
+  print(ggplot_convergence(fista.output = catch, 
                            test.set = test.data, 
-                           X.matrix = X.matrix, 
+                           X.matrix = X.matrix,
+                           EVAL.FUN = DTD.evCor.wrapper.test,
                            main = "DTD Vignette"))
 
 ## ---- fig.width=7--------------------------------------------------------
@@ -254,4 +303,27 @@ knitr::opts_chunk$set(
                            trueC = test.data$quantities, 
                            norm.columnwise = FALSE)
        )
+
+## ------------------------------------------------------------------------
+  cv.object <- DTD_cv_lambda(tweak_vec = start_tweak, 
+                             nfolds = 5, 
+                             lambda.length = 10, 
+                             cv.verbose = TRUE, 
+                             train.list = training.data, 
+                             GRAD.FUN = DTD.grad.wrapper, 
+                             EVAL.FUN = DTD.evCor.wrapper, 
+                             ST.FUN = soft_thresholding,
+                             FACTOR.FUN = nesterov_faktor,
+                             line_search_speed = 2,
+                             maxit = maxit,
+                             save_all_tweaks = FALSE, 
+                             NORM.FUN = n2normed, 
+                             use_restarts = TRUE,
+                             verbose = FALSE
+    
+  )
+  str(cv.object)
+
+## ------------------------------------------------------------------------
+  print(ggplot_cv(cv.object$cv.obj))
 

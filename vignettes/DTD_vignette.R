@@ -6,7 +6,7 @@ knitr::opts_chunk$set(
 
 ## ----include=FALSE-------------------------------------------------------
   # for fast testing 
-  maxit <- 100
+  maxit <- 75
   nSamples <- 500
 
 ## ----include=FALSE-------------------------------------------------------
@@ -67,24 +67,33 @@ knitr::opts_chunk$set(
                            nPerMixture = nPerMixture, 
                            verbose = F)
   # wrapper for gradient:
-   DTD.grad.wrapper <- function(tweak){
-      X <- X.matrix
-      Y <- training.data$mixtures
-      C <- training.data$quantities
+   DTD.grad.wrapper <- function(tweak, 
+                                X = X.matrix,
+                                train.list = training.data){
+      Y <- train.list$mixtures
+      C <- train.list$quantities
       grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
       return(grad)
    }
   # wrapper for evaluation:
-  DTD.evCor.wrapper <- function(tweak){
-      X <- X.matrix
-      Y <- training.data$mixtures
-      C <- training.data$quantities
+  DTD.evCor.wrapper <- function(tweak, 
+                                X = X.matrix, 
+                                train.list = training.data){
+      Y <- train.list$mixtures
+      C <- train.list$quantities
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
       return(loss)
   }
   start_tweak <- rep(1, nrow(X.matrix))
   start.loss <- DTD.evCor.wrapper(start_tweak)
-
+  DTD.evCor.wrapper.test <- function(tweak, 
+                              X = X.matrix, 
+                              yc.list = test.data){
+    Y <- yc.list$mixtures
+    C <- yc.list$quantities
+    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+    return(loss)
+  }
 
 ## ---- fig.width = 7, fig.align="center"----------------------------------
   catch <- descent_generalized_fista(tweak_vec = start_tweak,
@@ -92,14 +101,17 @@ knitr::opts_chunk$set(
                                      ST.FUN = soft_thresholding,
                                      FACTOR.FUN = nesterov_faktor,
                                      EVAL.FUN = DTD.evCor.wrapper,
+                                     NORM.FUN = n2normed, 
                                      line_search_speed = 2,
                                      maxit = maxit,
                                      save_all_tweaks = TRUE, 
-                                     verbose = FALSE)
+                                     verbose = F)
   str(catch)
-  print(ggplot_correlation(fista.output = catch, 
+  
+  print(ggplot_convergence(fista.output = catch, 
                          test.set = test.data, 
                          X.matrix = X.matrix, 
+                         EVAL.FUN = DTD.evCor.wrapper.test,
                          main = "DTD Vignette"))
 
 ## ------------------------------------------------------------------------
@@ -174,12 +186,17 @@ knitr::opts_chunk$set(
  }
 
 ## ------------------------------------------------------------------------
+  # removing samples that have been used in X.matrix
   remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
+
+  # sampling training samples: (notice, that train test seperation is 50:50)
   train.samples <- sample(x = colnames(remaining.mat), 
                           size = ceiling(ncol(remaining.mat)/2), 
                           replace = FALSE)
+  # selecting test samples: 
   test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
   
+  # extract data matrices for training and testing: 
   train.mat <- remaining.mat[, train.samples]
   test.mat <- remaining.mat[, test.samples]
 
@@ -228,19 +245,21 @@ knitr::opts_chunk$set(
                                              included.in.X = include.in.X)
 
 ## ------------------------------------------------------------------------
-   # wrapper for gradient:
-   DTD.grad.wrapper <- function(tweak){
-      X <- X.matrix
-      Y <- training.data$mixtures
-      C <- training.data$quantities
+  # wrapper for gradient:
+   DTD.grad.wrapper <- function(tweak, 
+                                X = X.matrix, 
+                                train.list = training.data){
+      Y <- train.list$mixtures 
+      C <- train.list$quantities
       grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
       return(grad)
    }
   # wrapper for evaluation:
-  DTD.evCor.wrapper <- function(tweak){
-      X <- X.matrix
-      Y <- training.data$mixtures
-      C <- training.data$quantities
+  DTD.evCor.wrapper <- function(tweak, 
+                                X = X.matrix, 
+                                train.list = training.data){
+      Y <- train.list$mixtures 
+      C <- train.list$quantities
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
       return(loss)
   }
@@ -248,7 +267,7 @@ knitr::opts_chunk$set(
 ## ------------------------------------------------------------------------
   start_tweak <- rep(1, nrow(X.matrix))
   start.loss <- DTD.evCor.wrapper(start_tweak)
-  cat("Start average correlation: ", -start.loss/ncol(X.matrix))
+  cat("Start average correlation: ", -start.loss/ncol(X.matrix), "\n")
   catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                      F.GRAD.FUN = DTD.grad.wrapper,
                                      ST.FUN = soft_thresholding,
@@ -261,9 +280,18 @@ knitr::opts_chunk$set(
   str(catch)
 
 ## ---- fig.width=5--------------------------------------------------------
-  print(ggplot_correlation(fista.output = catch, 
+  DTD.evCor.wrapper.test <- function(tweak, 
+                                X = X.matrix, 
+                                test.list = test.data){
+      Y = test.list$mixtures 
+      C = test.list$quantities
+      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+      return(loss)
+  }
+  print(ggplot_convergence(fista.output = catch, 
                            test.set = test.data, 
-                           X.matrix = X.matrix, 
+                           X.matrix = X.matrix,
+                           EVAL.FUN = DTD.evCor.wrapper.test,
                            main = "DTD Vignette"))
 
 ## ---- fig.width=7--------------------------------------------------------
@@ -275,4 +303,27 @@ knitr::opts_chunk$set(
                            trueC = test.data$quantities, 
                            norm.columnwise = FALSE)
        )
+
+## ------------------------------------------------------------------------
+  cv.object <- DTD_cv_lambda(tweak_vec = start_tweak, 
+                             nfolds = 5, 
+                             lambda.length = 10, 
+                             cv.verbose = TRUE, 
+                             train.list = training.data, 
+                             GRAD.FUN = DTD.grad.wrapper, 
+                             EVAL.FUN = DTD.evCor.wrapper, 
+                             ST.FUN = soft_thresholding,
+                             FACTOR.FUN = nesterov_faktor,
+                             line_search_speed = 2,
+                             maxit = maxit,
+                             save_all_tweaks = FALSE, 
+                             NORM.FUN = n2normed, 
+                             use_restarts = TRUE,
+                             verbose = FALSE
+    
+  )
+  str(cv.object)
+
+## ---- fig.align='center'-------------------------------------------------
+  print(ggplot_cv(cv.object$cv.obj))
 

@@ -48,37 +48,13 @@
 #' indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(random.data))
 #' names(indicator.list) <- colnames(random.data)
 #'
-#' # extract reference matrix X
 #' # First, decide which cells should be deconvoluted.
-#' # Notice, in the mixtures there can be more cells than in the reference matrix.
 #' include.in.X <- c("Type2", "Type3", "Type4", "Type5")
-#'
-#' X.matrix <- matrix(NA, nrow=nrow(random.data), ncol=length(include.in.X))
-#' colnames(X.matrix) <- include.in.X
-#' rownames(X.matrix) <- rownames(random.data)
-#'
-#' percentage.of.all.cells <- 0.2
-#'
-#' # samples that are included in X must not be used in the training set!
-#' samples.to.remove <- c()
-#'
-#' for(l.type in include.in.X){
-#'   all.of.type <- names(indicator.list)[which(indicator.list == l.type)]
-#'   chosen.for.X <- sample(x = all.of.type,
-#'                          size = length(all.of.type) * percentage.of.all.cells,
-#'                          replace = FALSE)
-#'   samples.to.remove <- c(samples.to.remove, chosen.for.X)
-#'
-#'   average <- rowSums(random.data[, samples.to.remove])
-#'   X.matrix[, l.type] <- average
-#' }
 #'
 #' # here, I declare "Type1" as Tumor cells, and all other as immune cells
 #' special.samples <- c("Type1")
 #' all.samples <- unique(indicator.list)
 #' sample.names <- all.samples[- which(all.samples %in% special.samples)]
-#'
-#' training.data <- random.data[ , -which(colnames(random.data) %in% samples.to.remove)]
 #'
 #' training.data <- mix.samples.jitter(sample.names = sample.names,
 #'                                      special.samples = special.samples,
@@ -90,6 +66,7 @@
 #'                                      chosen.mean = 1,
 #'                                      chosen.sd = 0.05,
 #'                                      min.amount.samples = 1)
+#'
 mix.samples.jitter <- function(sample.names,
                                special.samples,
                                nSamples = 1e3,

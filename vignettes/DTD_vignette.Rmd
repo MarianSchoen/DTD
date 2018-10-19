@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 
 ```{r include=FALSE}
   # for fast testing 
-  maxit <- 100
+  maxit <- 75
   nSamples <- 500
 ```
 
@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 The gene expression profile of a tissue averages the expression profiles of all cells in this tissue. Digital tissue deconvolution (DTD) addresses the following inverse problem: Given the expression profile __y__ of a tissue, what is the cellular composition __c__ of that tissue? The theory and mathematical background of a DTD model that uses 
 loss-function learning has been published by @Goertler2018. With this package we provide all necessary R functions and routines to train and use a loss-function learning digital tissue deconvolution model. 
 
-The article uses the following notation. The *reference matrix* is denoted as X. Every column $X_{.,k}$ is a cellular reference profile. The expression matrix of *bulk profiles* is named Y. Every column $Y_{.,k}$ is a mixtures of cells, for which the quantities of the given cell profiles in X should be estimated. 
+The article uses the following notation. The _reference matrix_ is denoted as X. Every column $X_{.,k}$ is a cellular reference profile. The expression matrix of _bulk profiles_ is named Y. Every column $Y_{.,k}$ is a mixtures of cells, for which the quantities of the given cell profiles in X should be estimated. 
 The standard deconvolution formula is given by 
 \begin{equation}
   arg~ min_c ~|| Y_{.,k} - Xc||
@@ -103,23 +103,32 @@ In the package DTD we provide functions to generate a training and test set, and
                            verbose = F)
   # wrapper for gradient:
    DTD.grad.wrapper <- function(tweak, 
-                                X = X.matrix, 
-                                Y = training.data$mixtures, 
-                                C = training.data$quantities){
+                                X = X.matrix,
+                                train.list = training.data){
+      Y <- train.list$mixtures
+      C <- train.list$quantities
       grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
       return(grad)
    }
   # wrapper for evaluation:
   DTD.evCor.wrapper <- function(tweak, 
                                 X = X.matrix, 
-                                Y = training.data$mixtures, 
-                                C = training.data$quantities){
+                                train.list = training.data){
+      Y <- train.list$mixtures
+      C <- train.list$quantities
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
       return(loss)
   }
   start_tweak <- rep(1, nrow(X.matrix))
   start.loss <- DTD.evCor.wrapper(start_tweak)
-
+  DTD.evCor.wrapper.test <- function(tweak, 
+                              X = X.matrix, 
+                              yc.list = test.data){
+    Y <- yc.list$mixtures
+    C <- yc.list$quantities
+    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+    return(loss)
+  }
 ```
 The crucial function in the DTD package is the `descent_generalized_fista` function, which minimizes the vector g over a training set. After some preliminary work it can be called via: 
 ```{r, fig.width = 7, fig.align="center"}
@@ -128,17 +137,21 @@ The crucial function in the DTD package is the `descent_generalized_fista` funct
                                      ST.FUN = soft_thresholding,
                                      FACTOR.FUN = nesterov_faktor,
                                      EVAL.FUN = DTD.evCor.wrapper,
+                                     NORM.FUN = n2normed, 
                                      line_search_speed = 2,
                                      maxit = maxit,
                                      save_all_tweaks = TRUE, 
-                                     verbose = FALSE)
+                                     verbose = F)
   str(catch)
-  print(ggplot_correlation(fista.output = catch, 
+  
+  print(ggplot_convergence(fista.output = catch, 
                          test.set = test.data, 
                          X.matrix = X.matrix, 
+                         EVAL.FUN = DTD.evCor.wrapper.test,
                          main = "DTD Vignette"))
 ```
-Here, we trained the g-vector for `r maxit` iterations, which decreased the loss function from `r format(max(catch$Convergence), digits = 3)` (average correlation per celltype: `r format(-max(catch$Convergence)/ncol(X.matrix), digits = 3)`) to `r format(min(catch$Convergence), digits = 3)` (average correlation per celltype `r format(-min(catch$Convergence)/ncol(X.matrix), digits = 3)`)
+
+Here, we trained the g-vector for `r maxit` iterations, which decreased the loss function from `r format(max(catch$Convergence), digits = 3)` (average correlation per celltype: `r format(-max(catch$Convergence)/ncol(X.matrix), digits = 3)`) to `r format(min(catch$Convergence), digits = 3)` (average correlation per celltype: `r format(-min(catch$Convergence)/ncol(X.matrix), digits = 3)`)
 
 # How to use? 
 In the following examples, we demonstrate how data has to look like in order to be used for loss-function learning digital tissue deconvolution. After that, we give examples on how to process the data, how to generate a test and training set, how to train the g vector, and finally, how to visualize the results. 
@@ -246,14 +259,19 @@ For each cell type its reference profile will be calculated as the average over 
     X.matrix[, l.type] <- average
  }
 ```
-Notice that every sample which has been used in the reference matrix X must not be included in the training or test set! In order to keep track of samples which must not be used furthermore we introduced the variable `samples.to.remove`. We remove all samples that have been used for generating X, and split the remaining samples into a training and a test set.
+Notice that every sample which has been used in the reference matrix X must not be included in the training or test set! In order to keep track of samples which must not be used further on we introduced the variable `samples.to.remove`. We remove all samples that have been used for generating X, and split the remaining samples into a training and a test set.
 ```{r}
+  # removing samples that have been used in X.matrix
   remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
+
+  # sampling training samples: (notice, that train test seperation is 50:50)
   train.samples <- sample(x = colnames(remaining.mat), 
                           size = ceiling(ncol(remaining.mat)/2), 
                           replace = FALSE)
+  # selecting test samples: 
   test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
   
+  # extract data matrices for training and testing: 
   train.mat <- remaining.mat[, train.samples]
   test.mat <- remaining.mat[, test.samples]
 ```
@@ -360,7 +378,7 @@ Our FISTA implementation takes the following arguments:
 
 - tweak_vec: numeric vector, with which the minimization starts. 
 - maxit: integer, maximum number of iterations. 
-- learning.rate: float, initial step size while learning. During the algorithm it may in or decreased. 
+- learning.rate: float, initial step size while learning. During the algorithm it may in or decrease. 
 - F.GRAD.FUN: function with one parameter: a vector with same length as tweak_vec, and one return value with the same length. For a given vector, it returns the gradient of the loss function. 
 - EVAL.FUN: function with one parameter: a vector with same length as tweak_vec, and a float as return value. For a given vector, it returns the value of the loss function. 
 
@@ -369,16 +387,18 @@ In the `descent_generalized_fista` function, the gradient function gets called w
   # wrapper for gradient:
    DTD.grad.wrapper <- function(tweak, 
                                 X = X.matrix, 
-                                Y = training.data$mixtures, 
-                                C = training.data$quantities){
+                                train.list = training.data){
+      Y <- train.list$mixtures 
+      C <- train.list$quantities
       grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
       return(grad)
    }
   # wrapper for evaluation:
   DTD.evCor.wrapper <- function(tweak, 
                                 X = X.matrix, 
-                                Y = training.data$mixtures, 
-                                C = training.data$quantities){
+                                train.list = training.data){
+      Y <- train.list$mixtures 
+      C <- train.list$quantities
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
       return(loss)
   }
@@ -408,9 +428,18 @@ The output of the `descent_generalized_fista` algorithm is a list. It returns th
   During the training step, the algorithm finds a g-vector which minimzes the Loss-function. In order to visualize the training curve, the function `ggplot_correlation` can be used. 
   Additionally to the output of `descent_generalized_fista` a test set and the X.matrix can be provided.  
 ```{r, fig.width=5}
-  print(ggplot_correlation(fista.output = catch, 
+  DTD.evCor.wrapper.test <- function(tweak, 
+                                X = X.matrix, 
+                                test.list = test.data){
+      Y = test.list$mixtures 
+      C = test.list$quantities
+      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+      return(loss)
+  }
+  print(ggplot_convergence(fista.output = catch, 
                            test.set = test.data, 
-                           X.matrix = X.matrix, 
+                           X.matrix = X.matrix,
+                           EVAL.FUN = DTD.evCor.wrapper.test,
                            main = "DTD Vignette"))
 ```
 
@@ -426,9 +455,46 @@ The trained model needs to be evaluated on the test set.  Therefore the function
        )
 ```
 
+## Cross validation
+The `descent_generalized_fista` implementation includes a l1 regularization term.
+In order to find the optimal size of the regularization parameter we implemented a k-fold 
+cross validation. The arguments of the `DTD_cv_lambda` function are: 
 
+- nfolds: integer, how many buckets in the cross validation 
+- lambda.seq: numeric vector or NULL. For these lambda values, models are trained. For each lambda value `nfolds` models are trained, and tested in a sense of k-fold cross validation.  If `lambda.seq` is set to NULL, a lambda sequence will be generated based on the dimension of the training set. 
+- lambda.length: integer, how many lamdbas will be generated (only used if lambda.seq is NULL)
+- train.list: list, that ca be passed to GRAD.FUN and EVAL.FUN. The train.list must have a entry `mixtures`. This entry must be a matrix, with training samples as columns. The cross validation folds are assigned using these column names. During the cross validation a copy of the train.list will be used, in which only samples of the current fold are present. Sample selection is done via column names for matrices, and via names for vectors.  
+- GRAD.FUN: gradient function. It must expect a numeric `tweak` vector (see `descent_generalized_fista`), and an argument named `train.list`. 
+- EVAL.FUN: evaluation function. It must expect a numeric `tweak` vector (see `descent_generalized_fista`), and an argument named `train.list`. 
+- tol: float, after learning a model the cross validation function checks on the trained model how many coefficients are close to 0 (=> not used as explanatory variables). Instead of testing if they are equal to zero, we check if their absolute values is below `tol`. 
+- ... any argument that can be passed to the `descent_generalized_fista` function (e.g. maxiter, verbose etc.)
 
-
+For each fold and every lambda a model is trained. As a result the execution might be very time consuming. 
+```{r}
+  cv.object <- DTD_cv_lambda(tweak_vec = start_tweak, 
+                             nfolds = 5, 
+                             lambda.length = 10, 
+                             cv.verbose = TRUE, 
+                             train.list = training.data, 
+                             GRAD.FUN = DTD.grad.wrapper, 
+                             EVAL.FUN = DTD.evCor.wrapper, 
+                             ST.FUN = soft_thresholding,
+                             FACTOR.FUN = nesterov_faktor,
+                             line_search_speed = 2,
+                             maxit = maxit,
+                             save_all_tweaks = FALSE, 
+                             NORM.FUN = n2normed, 
+                             use_restarts = TRUE,
+                             verbose = FALSE
+    
+  )
+  str(cv.object)
+```
+The return object from the `DTD_cv_lambda` function is a list with 2 entries. The `cv.obj` entries holds a data.frame with information about the cross validation over the lambda.sequence. Pass this object to the `plot.cv` function for visualization. The second entry `best.model` of the `cv.obj` is a trained model which used the lambda with minimal loss function during the cross validation. Notice that this model is trained on the complete trainings data set. This model is the output of a `descent_generalized_fista` call.
+Visualize the cross validation result via:
+```{r, fig.align='center'}
+  print(ggplot_cv(cv.object$cv.obj))
+```
 
 
 # References

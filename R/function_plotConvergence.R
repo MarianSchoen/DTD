@@ -1,6 +1,6 @@
 #' Plot loss curve
 #'
-#' The "ggplot_correlation" function uses ggplot2 and reshape to visualize the decrease of the loss-function after
+#' The "ggplot_convergence" function uses ggplot2 and reshape to visualize the decrease of the loss-function after
 #' a model has been trained.
 #'
 #' As input parameter it needs the output of \code{\link{descent_generalized_fista}}. If fista has been evoked
@@ -13,6 +13,7 @@
 #' @param test.set list with "mixtures" matrix, and "quantity" matrix as returned by mix.samples or mix.samples.jitter function
 #' @param X.matrix numeric matrix, reference matrix of the DTD problem
 #' @param main string, additionally title
+#' @param EVAL.FUN function, that takes a single input (the tweak vector of the fista.output)
 #'
 #' @return ggplot object
 #' @export
@@ -20,21 +21,23 @@
 #' @import ggplot2
 #' @import reshape2
 #'
-ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA, main = ""){
-  # correlation can be plotted for training and test set, if:
+ggplot_convergence <- function(fista.output,
+                               test.set = NA,
+                               X.matrix = NA,
+                               EVAL.FUN,
+                               main = ""){
+  # convergence can be plotted for training AND test set, if:
   #   - a test set is provided
   #   - the X.matrix is provided
   #   - fista.output has "History" entry
-  # otherwise only trainings correlation will be plotted
+  # otherwise only trainings convergence will be plotted
   if(! (is.na(test.set) || is.na(X.matrix) || is.null(fista.output$History))){
-    # calculate correlation for every saved tweak_vec:
+    # calculate convergence for every saved tweak_vec:
     cor.in.test <- c()
     for(l.iteration in 1:length(fista.output$Convergence)){
-    cor.in.test <- c(cor.in.test, evaluate_cor(X = X.matrix,
-                                               Y = test.set$mixtures,
-                                               C = test.set$quantities,
-                                               tweak = fista.output$History[, l.iteration])
-                      )
+    cor.in.test <- c(cor.in.test,
+                     EVAL.FUN(tweak = fista.output$History[, l.iteration])
+                     )
     }
     # build a data.frame holding training, test and iter
     convergence <- data.frame("training" = fista.output$Convergence,
@@ -43,7 +46,7 @@ ggplot_correlation <- function(fista.output, test.set = NA, X.matrix = NA, main 
 
 
   }else{
-    # if the correlation can not be calculated on the test set,
+    # if the convergence can not be calculated on the test set,
     # the data.frame only holds training and iter:
     convergence <- data.frame("training" = fista.output$Convergence,
                               "iter" = 1:length(fista.output$Convergence))

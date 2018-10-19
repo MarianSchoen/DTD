@@ -7,9 +7,9 @@
 \usage{
 descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 1000,
   learning.rate = NA, F.GRAD.FUN, ST.FUN = soft_thresholding,
-  FACTOR.FUN = nesterov_faktor, EVAL.FUN, line_search_speed = 2,
-  cycles = 50, save_all_tweaks = FALSE, use_restarts = TRUE,
-  verbose = TRUE)
+  FACTOR.FUN = nesterov_faktor, EVAL.FUN, NORM.FUN = identity,
+  line_search_speed = 2, cycles = 50, save_all_tweaks = FALSE,
+  use_restarts = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{tweak_vec}{numeric vector, with which the minimization algorithm starts}
@@ -38,6 +38,9 @@ extrapolates.}
 tweak_vec, and a single float as return. This function evaluates the loss
 function.}
 
+\item{NORM.FUN}{function, with one parameter: After each step the tweak vector will be normed/scaled.
+If no scaling should be done, set NORM.FUN to identity.}
+
 \item{line_search_speed}{numeric, factor with which the learning rate changes,
 if the optimium has not been found}
 
@@ -51,7 +54,7 @@ best step size, with "cycles" different step sizes}
 \item{verbose}{boolean, should information be printed to console}
 }
 \value{
-list, including [["Converge"]] and [["Tweak"]]
+list, including [["Converge"]] and [["Tweak"]] (depending on "save_all_tweks": [["History"]])
 }
 \description{
 descent_generalized_fista takes as input a vector, a gradient function and an
@@ -63,7 +66,7 @@ for k = 2,..., maxit:\cr
 \itemize{
     \item grad = F.GRAD.FUN(y_vec)\cr
     \item# find best step size between 0 and learning.rate\cr
-    \item for step.size = 0,..., learning.rate:\cr
+         for step.size = 0,..., learning.rate:\cr
     \itemize{
         \item u = ST.FUN(y_vec - step.size * grad, step.size * lambda)\cr
         \item eval = EVAL.FUN(u)
@@ -87,10 +90,6 @@ random.data <- generate.random.data(nTypes = 10,
                                     nFeatures = 250,
                                     sample.type = "Cell",
                                     feature.type = "gene")
-
-# the randomly generated data is on log scale, which needs to be undone,
-# as the DTD approach works on a additive, not a multiplicative scale
-random.data <- (2^random.data) - 1
 
 # normalize all samples to the same amount of counts:
 random.data <- normalizeToCount(random.data)
@@ -152,19 +151,28 @@ test.data <-  mix.samples(gene.mat = test.mat,
                           nPerMixture = 100,
                           verbose = FALSE)
 
+# The descent_generalized_fista optimizer finds the minimum iteratively
+# using accelareted gradient descent.
+# Therefore a gradient, and an evaluation function must be provided.
+# Within the fista implementation the gradient/evalution functions get evoked
+# with only one parameter.
+# All other parameters for the gradient (in the following example X, Y and C) must
+# be set using default parameter
+# This can be done using wrappers:
+
 # wrapper for gradient:
-DTD.grad.wrapper <- function(tweak){
-   X <- X.matrix
-   Y <- training.data$mixtures
-   C <- training.data$quantities
+DTD.grad.wrapper <- function(tweak,
+                             X = X.matrix,
+                             Y = training.data$mixtures,
+                             C = training.data$quantities){
    grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
    return(grad)
 }
 # wrapper for evaluate corelation:
-DTD.evCor.wrapper <- function(tweak){
-   X <- X.matrix
-   Y <- training.data$mixtures
-   C <- training.data$quantities
+DTD.evCor.wrapper <- function(tweak,
+                             X = X.matrix,
+                             Y = training.data$mixtures,
+                             C = training.data$quantities){
    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
    return(loss)
 }
@@ -189,6 +197,5 @@ print(ggplot_correlation(fista.output = catch,
                          X.matrix = X.matrix,
                          main="additional title")
      )
-
 
 }

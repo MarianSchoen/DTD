@@ -5,11 +5,11 @@
 #' used for loss-function learning digital tissue deconvolution.
 #'
 #' @param gene.mat numeric matrix, with features as rows and samples as columns
-#' @param pheno matrix, with pheno information for each sample in gene.mat
+#' @param pheno named vector, with pheno information for each sample in gene.mat
 #' @param nSamples integer, numbers of samples to be drawn
 #' @param nPerMixture integer, how many samples should be included per mixutre
 #' @param included.in.X list of strings, types that are in the reference matrix.
-#' Only those, and sorted like that, must be included in the quantity matrix
+#' Only those, and sorted in that order, will be included in the quantity matrix
 #' @param verbose boolean, should information be printed
 #'
 #' @return list with random profiles, and their quantity matrix

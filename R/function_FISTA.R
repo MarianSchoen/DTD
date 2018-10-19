@@ -10,7 +10,7 @@
 #' \itemize{
 #'     \item grad = F.GRAD.FUN(y_vec)\cr
 #'     \item# find best step size between 0 and learning.rate\cr
-#'     \item for step.size = 0,..., learning.rate:\cr
+#'          for step.size = 0,..., learning.rate:\cr
 #'     \itemize{
 #'         \item u = ST.FUN(y_vec - step.size * grad, step.size * lambda)\cr
 #'         \item eval = EVAL.FUN(u)
@@ -44,6 +44,8 @@
 #' @param EVAL.FUN function, with one parameter: vector with same length as
 #'   tweak_vec, and a single float as return. This function evaluates the loss
 #'   function.
+#' @param NORM.FUN function, with one parameter: After each step the tweak vector will be normed/scaled.
+#' If no scaling should be done, set NORM.FUN to identity.
 #' @param line_search_speed numeric, factor with which the learning rate changes,
 #'  if the optimium has not been found
 #' @param cycles integer, in each iteration one gradient is calculated. To find the
@@ -51,10 +53,11 @@
 #' @param save_all_tweaks boolean, should all tweak vectores during all iterations be stored
 #' @param use_restarts boolean, restart the algorithm if the update was not a descent step
 #' @param verbose boolean, should information be printed to console
+
 #'
 #' @export
 #'
-#' @return list, including [["Converge"]] and [["Tweak"]]
+#' @return list, including [["Converge"]] and [["Tweak"]] (depending on "save_all_tweks": [["History"]])
 #'
 #' @examples
 #' library(DTD)
@@ -63,10 +66,6 @@
 #'                                     nFeatures = 250,
 #'                                     sample.type = "Cell",
 #'                                     feature.type = "gene")
-#'
-#' # the randomly generated data is on log scale, which needs to be undone,
-#' # as the DTD approach works on a additive, not a multiplicative scale
-#' random.data <- (2^random.data) - 1
 #'
 #' # normalize all samples to the same amount of counts:
 #' random.data <- normalizeToCount(random.data)
@@ -128,19 +127,28 @@
 #'                           nPerMixture = 100,
 #'                           verbose = FALSE)
 #'
+#' # The descent_generalized_fista optimizer finds the minimum iteratively
+#' # using accelareted gradient descent.
+#' # Therefore a gradient, and an evaluation function must be provided.
+#' # Within the fista implementation the gradient/evalution functions get evoked
+#' # with only one parameter.
+#' # All other parameters for the gradient (in the following example X, Y and C) must
+#' # be set using default parameter
+#' # This can be done using wrappers:
+#'
 #' # wrapper for gradient:
-#' DTD.grad.wrapper <- function(tweak){
-#'    X <- X.matrix
-#'    Y <- training.data$mixtures
-#'    C <- training.data$quantities
+#' DTD.grad.wrapper <- function(tweak,
+#'                              X = X.matrix,
+#'                              Y = training.data$mixtures,
+#'                              C = training.data$quantities){
 #'    grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
 #'    return(grad)
 #' }
 #' # wrapper for evaluate corelation:
-#' DTD.evCor.wrapper <- function(tweak){
-#'    X <- X.matrix
-#'    Y <- training.data$mixtures
-#'    C <- training.data$quantities
+#' DTD.evCor.wrapper <- function(tweak,
+#'                              X = X.matrix,
+#'                              Y = training.data$mixtures,
+#'                              C = training.data$quantities){
 #'    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
 #'    return(loss)
 #' }
@@ -166,7 +174,6 @@
 #'                          main="additional title")
 #'      )
 #'
-#'
 descent_generalized_fista <- function(tweak_vec = NA,
                                       lambda=0,
                                       maxit=1e3,
@@ -175,6 +182,7 @@ descent_generalized_fista <- function(tweak_vec = NA,
                                       ST.FUN = soft_thresholding,
                                       FACTOR.FUN = nesterov_faktor,
                                       EVAL.FUN,
+                                      NORM.FUN = identity,
                                       line_search_speed = 2,
                                       cycles=50,
                                       save_all_tweaks=FALSE,
@@ -189,6 +197,11 @@ descent_generalized_fista <- function(tweak_vec = NA,
   }
   if(!(is.logical(save_all_tweaks) || is.logical(verbose) || is.logical(use_restarts))){
     stop("Set save_all_tweaks, use_restarts and verbose to logicals")
+  }
+
+  # check if the norm function changes EVAL value:
+  if(!isTRUE(all.equal(EVAL.FUN(tweak_vec), EVAL.FUN(NORM.FUN(tweak_vec))))){
+    stop("Norm function changes eval value.")
   }
 
 
@@ -273,8 +286,9 @@ descent_generalized_fista <- function(tweak_vec = NA,
       sequence <- seq(from = 0, to = learning.rate, length.out = cycles)
     }
 
-    # set the winning u_vec, and eval:
-    u_vec <- u_mat[winner.pos, ]
+
+    # set the winning u_vec, and eval. Norm the u_vec using the provided function:
+    u_vec <- NORM.FUN(u_mat[winner.pos, ])
     eval <- eval.vec[winner.pos]
 
     # update tweak_old (tweak of last iteration)

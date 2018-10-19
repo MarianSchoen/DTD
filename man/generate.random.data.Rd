@@ -22,14 +22,13 @@ Notice, for each type, the number of samples will be randomized a bit.}
 \item{seed}{integer, to which the seed will be set}
 }
 \value{
-matrix with ~ (nTypes * nSamples.perType) columns, and nFeatures rows
+matrix with (nTypes * nSamples.perType) columns, and nFeatures rows
 }
 \description{
-generate.random.data simulates data which can be used for digital tissue deconvolution.
+generate.random.data simulates data which can be used exemplary for digital tissue deconvolution.
 It will generate a numeric matrix with "nFeatures" rows, and "nTypes" * "nSamples.perType"
 columns. Each column represents a sample of special type. The function will generate "nTypes",
-and for each type "nSamples.perType". Notice, that "nSamples.perType" will be randomised,
-such that the number of sampler per type differ between the types.
+and for each type "nSamples.perType".
 }
 \examples{
  library(DTD)

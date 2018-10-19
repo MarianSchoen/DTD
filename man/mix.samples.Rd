@@ -10,10 +10,10 @@ mix.samples(gene.mat, pheno, included.in.X, nSamples = 1000,
 \arguments{
 \item{gene.mat}{numeric matrix, with features as rows and samples as columns}
 
-\item{pheno}{matrix, with pheno information for each sample in gene.mat}
+\item{pheno}{named vector, with pheno information for each sample in gene.mat}
 
 \item{included.in.X}{list of strings, types that are in the reference matrix.
-Only those, and sorted like that, must be included in the quantity matrix}
+Only those, and sorted in that order, will be included in the quantity matrix}
 
 \item{nSamples}{integer, numbers of samples to be drawn}
 
