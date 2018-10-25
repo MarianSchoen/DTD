@@ -7,7 +7,14 @@
 ggplot_cv(crossValFrame, main = "", LAMBDA.TRANS.FUN = log2)
 }
 \arguments{
-\item{LAMBDA.TRANS.FUN}{}
+\item{crossValFrame}{data frame, as return by the DTD_cv_lambda function}
+
+\item{main}{string, used as title in the plot}
+
+\item{LAMBDA.TRANS.FUN}{function, will be applied to the lambda sequence, to get equdistance x ticks (defaults to log2)}
+}
+\value{
+a ggplot plot object
 }
 \description{
 Visualizing cross validation output

@@ -23,7 +23,6 @@
 #'
 ggplot_convergence <- function(fista.output,
                                test.set = NA,
-                               X.matrix = NA,
                                EVAL.FUN,
                                main = ""){
   # convergence can be plotted for training AND test set, if:
@@ -31,7 +30,7 @@ ggplot_convergence <- function(fista.output,
   #   - the X.matrix is provided
   #   - fista.output has "History" entry
   # otherwise only trainings convergence will be plotted
-  if(! (is.na(test.set) || is.na(X.matrix) || is.null(fista.output$History))){
+  if(! (is.na(test.set) || is.null(fista.output$History))){
     # calculate convergence for every saved tweak_vec:
     cor.in.test <- c()
     for(l.iteration in 1:length(fista.output$Convergence)){

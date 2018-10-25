@@ -17,6 +17,7 @@
 #' @param tol float, in each cross validation model, the function keeps track how many explaining
 #' variables do not contribute (=> equal 0). tol is the limit until a explaining variable is
 #' declared as "not contributing".
+#' @param cv.verbose boolean, should information about the cv process be printed to the screen?
 #' @param ... all parameters that are passed to the \code{\link{descent_generalized_fista}} function.
 #' E.g. maxiter, tweak_vec etc ...
 #'
@@ -24,21 +25,15 @@
 #' retrained on the complete dataset
 #' @export
 #'
-#' @examples
-#'
-
-
 DTD_cv_lambda <- function(lambda.seq = NULL,
-                          nfolds = 10,
-                          lambda.length = 20,
-                          train.list = train,
-                          GRAD.FUN = DTD.grad.wrapper,
-                          EVAL.FUN = DTD.evCor.wrapper,
-                          tol = 1e-5,
-                          cv.verbose = TRUE,
-                          ...
-){
-
+                           nfolds = 10,
+                           lambda.length = 20,
+                           train.list = train,
+                           GRAD.FUN = DTD.grad.wrapper,
+                           EVAL.FUN = DTD.evCor.wrapper,
+                           tol = 1e-5,
+                           cv.verbose = TRUE,
+                           ...){
   # First, all possible training samples get assigned to a bucket:
   # extract Y:
   train.Y <- train.list$mixtures
@@ -53,17 +48,17 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
     if(!is.numeric(lambda.length)){lambda.length <- 20}
     p <- nrow(train.Y)
     n <- ncol(train.Y)
-    lambda.0 <- 0.5*sqrt(log(p)/n)
+    lambda.0 <- sqrt(log(p)/n)
     lambda.seq <- lambda.0*2^seq(2, -5, length.out = lambda.length)
   }
 
   # internal training samples selection function:
-  select.fun <- function(list.entry, train.samples){
+  select.fun <- function(list.entry, samples){
     if(is.matrix(list.entry)){
-      return(list.entry[, train.samples])
+      return(list.entry[, samples])
     }
     if(!is.null(names(list.entry))){
-      return(list.entry[train.samples])
+      return(list.entry[samples])
     }
     return(list.entry)
   }
@@ -80,8 +75,9 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
   # Start of cross validation:
   for(lambda in lambda.seq){
     if(cv.verbose){
-      cat("doing lambda: ", lambda, "\n")
-      }
+      pos <- which(lambda.seq == lambda) - 1
+      cat("doing lambda: ", lambda, ", completed ", pos, " of ", length(lambda.seq),", ", 100*pos/length(lambda.seq), "% \n")
+    }
     cor.test.vec <- c()
     non_zeros <- c()
     foundMods <- 0
@@ -93,14 +89,14 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
       train.samples <- names(which(bucket.indicator != l.fold))
 
       # reduce the train to only include the cv train samples ...
-      tmp.train.list <- lapply(train.list, select.fun)
+      tmp.train.list <- lapply(train.list, select.fun, samples=train.samples)
 
       # ... and reset the default values of the gradient and evaluation functions:
-      tmp.grad.fun <- function(tmp.tweak, tmp.train = tmp.train.list){
-        return(GRAD.FUN(tmp.tweak, train.list = tmp.train))
+      tmp.grad.fun <- function(tmp.tweak, tmp.list = tmp.train.list){
+        return(GRAD.FUN(tmp.tweak, train.list = tmp.list))
       }
-      tmp.eval.fun <- function(tmp.tweak, tmp.train = tmp.train.list){
-        return(EVAL.FUN(tmp.tweak, train.list = tmp.train))
+      tmp.eval.fun <- function(tmp.tweak, tmp.list = tmp.train.list){
+        return(EVAL.FUN(tmp.tweak, train.list = tmp.list))
       }
 
       # Now, try to train a model on the reduced training set:
@@ -127,7 +123,12 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
         non_zeros <- c(non_zeros, tmp_non_zero)
       }
       # Evaluate the reached minimum on the test set:
-      cor.test.vec <- c(cor.test.vec, rep(x = EVAL.FUN(catch$Tweak), length(test.samples)))
+      tmp.test.list <- lapply(train.list, select.fun, samples=test.samples)
+      tmp.eval.fun.test <- function(tmp.tweak, tmp.list = tmp.test.list){
+        return(EVAL.FUN(tmp.tweak, train.list = tmp.list))
+      }
+
+      cor.test.vec <- c(cor.test.vec, rep(x = tmp.eval.fun.test(catch$Tweak), length(test.samples)))
     }
     if(cv.verbose){cat("\n")}
     # fill the cv.object data.frame:

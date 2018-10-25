@@ -30,6 +30,8 @@ training samples (as columns) and all features (as rows) must be present. (see V
 variables do not contribute (=> equal 0). tol is the limit until a explaining variable is
 declared as "not contributing".}
 
+\item{cv.verbose}{boolean, should information about the cv process be printed to the screen?}
+
 \item{...}{all parameters that are passed to the \code{\link{descent_generalized_fista}} function.
 E.g. maxiter, tweak_vec etc ...}
 }
@@ -40,7 +42,4 @@ retrained on the complete dataset
 \description{
 Our descent generalized FISTA implementation includes a l1 regularization term.
 This function performs a k-fold cross validation to find the best fitting regularization parameter.
-}
-\examples{
-
 }

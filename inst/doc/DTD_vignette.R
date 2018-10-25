@@ -96,16 +96,16 @@ knitr::opts_chunk$set(
   }
 
 ## ---- fig.width = 7, fig.align="center"----------------------------------
-  catch <- descent_generalized_fista(tweak_vec = start_tweak,
-                                     F.GRAD.FUN = DTD.grad.wrapper,
-                                     ST.FUN = soft_thresholding,
-                                     FACTOR.FUN = nesterov_faktor,
-                                     EVAL.FUN = DTD.evCor.wrapper,
-                                     NORM.FUN = n2normed, 
-                                     line_search_speed = 2,
-                                     maxit = maxit,
-                                     save_all_tweaks = TRUE, 
-                                     verbose = F)
+catch <- descent_generalized_fista(tweak_vec = start_tweak,
+                                   F.GRAD.FUN = DTD.grad.wrapper,
+                                   ST.FUN = soft_thresholding,
+                                   FACTOR.FUN = nesterov_faktor,
+                                   EVAL.FUN = DTD.evCor.wrapper,
+                                   NORM.FUN = n2normed, 
+                                   line_search_speed = 2,
+                                   maxit = maxit,
+                                   save_all_tweaks = TRUE, 
+                                   verbose = F)
   str(catch)
   
   print(ggplot_convergence(fista.output = catch, 
@@ -290,7 +290,6 @@ knitr::opts_chunk$set(
   }
   print(ggplot_convergence(fista.output = catch, 
                            test.set = test.data, 
-                           X.matrix = X.matrix,
                            EVAL.FUN = DTD.evCor.wrapper.test,
                            main = "DTD Vignette"))
 
@@ -305,9 +304,11 @@ knitr::opts_chunk$set(
        )
 
 ## ------------------------------------------------------------------------
+  sequence <- 0.001*2^seq(5, -5, length.out = 10)
+  set.seed(2018)
   cv.object <- DTD_cv_lambda(tweak_vec = start_tweak, 
                              nfolds = 5, 
-                             lambda.length = 10, 
+                             lambda.seq = sequence, 
                              cv.verbose = TRUE, 
                              train.list = training.data, 
                              GRAD.FUN = DTD.grad.wrapper, 
@@ -320,10 +321,9 @@ knitr::opts_chunk$set(
                              NORM.FUN = n2normed, 
                              use_restarts = TRUE,
                              verbose = FALSE
-    
   )
   str(cv.object)
 
-## ------------------------------------------------------------------------
+## ---- fig.align='center'-------------------------------------------------
   print(ggplot_cv(cv.object$cv.obj))
 

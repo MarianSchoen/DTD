@@ -1,13 +1,11 @@
 #' Visualizing cross validation output
 #'
-#' @param crossValFrame
-#' @param main
-#' @param LAMBDA.TRANS.FUN
+#' @param crossValFrame data frame, as return by the DTD_cv_lambda function
+#' @param main string, used as title in the plot
+#' @param LAMBDA.TRANS.FUN function, will be applied to the lambda sequence, to get equdistance x ticks (defaults to log2)
 #'
-#' @return
+#' @return a ggplot plot object
 #' @export
-#'
-#' @examples
 ggplot_cv <- function(crossValFrame, main = "", LAMBDA.TRANS.FUN = log2){
   # safety check, if the passed frame matches:
   if(!is.data.frame(crossValFrame) ||
@@ -32,6 +30,9 @@ ggplot_cv <- function(crossValFrame, main = "", LAMBDA.TRANS.FUN = log2){
                                 ~.,
                               breaks = crossValFrame$lambda.trans,
                               labels =  paste0(crossValFrame$nfoundModels,  "\n", crossValFrame$nzero),
-                              name = "# of Found Models \n # of zero-coefficients")) +
+                              name = "# of Found Models \n # of zero-coefficients")
+                              ) +
          ggplot2::ggtitle(main)
+
+  return(pic)
 }

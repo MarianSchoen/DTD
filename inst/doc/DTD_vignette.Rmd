@@ -3,11 +3,11 @@
   author: "Marian Schön"
   date: "`r Sys.Date()`"
   output: 
-    rmarkdown::html_vignette: 
+    rmarkdown::html_vignette:
       toc: TRUE
   bibliography: bibliography.bib
   vignette: >
-    %\VignetteIndexEntry{Vignette Title}
+    %\VignetteIndexEntry{Loss-function learning for digital tissue deconvolution}
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
 ---
@@ -24,14 +24,15 @@ knitr::opts_chunk$set(
   nSamples <- 500
 ```
 
-# What is DTD?
-The gene expression profile of a tissue averages the expression profiles of all cells in this tissue. Digital tissue deconvolution (DTD) addresses the following inverse problem: Given the expression profile __y__ of a tissue, what is the cellular composition __c__ of that tissue? The theory and mathematical background of a DTD model that uses 
+# What is DTD? 
+
+The gene expression profile of a tissue averages the expression profiles of all cells in this tissue. Digital tissue deconvolution (DTD) addresses the following inverse problem: Given the expression profile __y__ of a tissue, what is the cellular composition __c__ of cells __X__ in that tissue? The theory and mathematical background of a DTD model that uses 
 loss-function learning has been published by @Goertler2018. With this package we provide all necessary R functions and routines to train and use a loss-function learning digital tissue deconvolution model. 
 
-The article uses the following notation. The _reference matrix_ is denoted as X. Every column $X_{.,k}$ is a cellular reference profile. The expression matrix of _bulk profiles_ is named Y. Every column $Y_{.,k}$ is a mixtures of cells, for which the quantities of the given cell profiles in X should be estimated. 
+The article uses the following notation. The _reference matrix_ is denoted as X. Every column $X_{.,k}$ is a cellular reference profile. The expression matrix of _bulk profiles_ is named Y. Every column $Y_{.,k}$ is a mixture of cells, for which the quantities $c$ of the given cell profiles in $X$ should be estimated. 
 The standard deconvolution formula is given by 
 \begin{equation}
-  arg~ min_c ~|| Y_{.,k} - Xc||
+  arg~ min_c ~|| Y_{.,k} - Xc|| 
 \end{equation}
 @Goertler2018 improve this formula by introducing a vector __g__ 
 \begin{equation}
@@ -39,7 +40,7 @@ The standard deconvolution formula is given by
 \end{equation}
 Every entry $g_i$ of g holds the information how important gene i is for the deconvolution process. The underlying idea of loss-function learning DTD is to gain the vector g by minimizing a loss function L on a training set. 
 \begin{equation}
-  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g))
+  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
 \end{equation}
 The training set consists of a matrix Y with bulk profiles, for which the quantities of the cells in X should be estimated. Additionally there is a matrix C. In the composition or quantity matrix C every column $C_{.,k}$ holds the distribution of the reference cells X in the bulk profile $Y_{.,k}$. For the loss function L the correlation between the known quantities $C_{j,.}$ and the estimated quantities $\widehat{C_{j,.}}(g)$ (solution of equation (2)) is calculated per reference profile j. 
 
@@ -132,16 +133,16 @@ In the package DTD we provide functions to generate a training and test set, and
 ```
 The crucial function in the DTD package is the `descent_generalized_fista` function, which minimizes the vector g over a training set. After some preliminary work it can be called via: 
 ```{r, fig.width = 7, fig.align="center"}
-  catch <- descent_generalized_fista(tweak_vec = start_tweak,
-                                     F.GRAD.FUN = DTD.grad.wrapper,
-                                     ST.FUN = soft_thresholding,
-                                     FACTOR.FUN = nesterov_faktor,
-                                     EVAL.FUN = DTD.evCor.wrapper,
-                                     NORM.FUN = n2normed, 
-                                     line_search_speed = 2,
-                                     maxit = maxit,
-                                     save_all_tweaks = TRUE, 
-                                     verbose = F)
+catch <- descent_generalized_fista(tweak_vec = start_tweak,
+                                   F.GRAD.FUN = DTD.grad.wrapper,
+                                   ST.FUN = soft_thresholding,
+                                   FACTOR.FUN = nesterov_faktor,
+                                   EVAL.FUN = DTD.evCor.wrapper,
+                                   NORM.FUN = n2normed, 
+                                   line_search_speed = 2,
+                                   maxit = maxit,
+                                   save_all_tweaks = TRUE, 
+                                   verbose = F)
   str(catch)
   
   print(ggplot_convergence(fista.output = catch, 
@@ -154,12 +155,15 @@ The crucial function in the DTD package is the `descent_generalized_fista` funct
 Here, we trained the g-vector for `r maxit` iterations, which decreased the loss function from `r format(max(catch$Convergence), digits = 3)` (average correlation per celltype: `r format(-max(catch$Convergence)/ncol(X.matrix), digits = 3)`) to `r format(min(catch$Convergence), digits = 3)` (average correlation per celltype: `r format(-min(catch$Convergence)/ncol(X.matrix), digits = 3)`)
 
 # How to use? 
+
 In the following examples, we demonstrate how data has to look like in order to be used for loss-function learning digital tissue deconvolution. After that, we give examples on how to process the data, how to generate a test and training set, how to train the g vector, and finally, how to visualize the results. 
 First of all, load the library: 
 ```{r}
   library(DTD)
 ```
-## Data generation
+
+## Data generation 
+
 The DTD package needs expression measurements of sorted cells to train a g-vector. We did not include any data in the DTD package. In order to demonstrate all functions, and to show users how the data needs to be processed, we included a `generate.random.data` function. The random generated data does not hold any biological information, and is only used for demonstration purpose. 
 Basically, this function has 3 key arguments:
 
@@ -190,14 +194,15 @@ The object `random.data` is a numeric matrix with `r nrow(random.data)` rows (fe
   example.index <- c(1, n.per.type + 1, 2*n.per.type + 1, 3 * n.per.type+1)
 ```
 
- Notice that the colnames of `random.data` indicate the type of cell:
+ Notice that the colnames of `random.data` indicate the type of the cell:
 ```{r}
   print(colnames(random.data)[example.index])
 ```
 
 Now the generated expression matrix `random.data` looks similar to single-cell RNA sequencing data.
 
-## Data processing
+## Data processing 
+
 Notice that the loss-function learning DTD approach works on an additive, not a multiplicative scale. Therefore, any log transformation or similar needs to be undone.  
 Next, we scale every sample of the data set to a fix number of counts. Using the provided `normalizeToCount` function, every sample gets scaled such that the sum over all counts equals $10^6$:
 ```{r}
@@ -232,7 +237,7 @@ For each of these types we need a reference profile $X_{.,k}$:
   colnames(X.matrix) <- include.in.X
   rownames(X.matrix) <- rownames(normalized.data)
 ```
-For each cell type its reference profile will be calculated as the average over a fraction of all samples in the whole data set:  
+The reference profiles will be calculated as the average over a randomly drawn fraction of all samples in the whole data set:  
 
 ```{r echo=FALSE, results = "asis"}
   cat("```\n")
@@ -371,9 +376,9 @@ In the training set imbalanced quantities should be reflected.
 
 In the optimizing procedure we search for a vector g, which minimizes our loss function L: 
 \begin{equation}
-  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g))
+  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
 \end{equation}
-This optimization is done iteratively by gradient descent, using an implementation of 'FISTA' (Fast iterative shrinkage thresholding algorithm) @Beck2009.
+This optimization is done iteratively by gradient descent, using an implementation of 'FISTA' (Fast iterative shrinkage thresholding algorithm) @Beck2009.  
 Our FISTA implementation takes the following arguments:  
 
 - tweak_vec: numeric vector, with which the minimization starts. 
@@ -438,7 +443,6 @@ The output of the `descent_generalized_fista` algorithm is a list. It returns th
   }
   print(ggplot_convergence(fista.output = catch, 
                            test.set = test.data, 
-                           X.matrix = X.matrix,
                            EVAL.FUN = DTD.evCor.wrapper.test,
                            main = "DTD Vignette"))
 ```
@@ -471,9 +475,11 @@ cross validation. The arguments of the `DTD_cv_lambda` function are:
 
 For each fold and every lambda a model is trained. As a result the execution might be very time consuming. 
 ```{r}
+  sequence <- 0.001*2^seq(5, -5, length.out = 10)
+  set.seed(2018)
   cv.object <- DTD_cv_lambda(tweak_vec = start_tweak, 
                              nfolds = 5, 
-                             lambda.length = 10, 
+                             lambda.seq = sequence, 
                              cv.verbose = TRUE, 
                              train.list = training.data, 
                              GRAD.FUN = DTD.grad.wrapper, 
@@ -486,13 +492,12 @@ For each fold and every lambda a model is trained. As a result the execution mig
                              NORM.FUN = n2normed, 
                              use_restarts = TRUE,
                              verbose = FALSE
-    
   )
   str(cv.object)
 ```
-The return object from the `DTD_cv_lambda` function is a list with 2 entries. The `cv.obj` entries holds a data.frame with information about the cross validation over the lambda.sequence. Pass this object to the `plot.cv` function for visualization. The second entry `best.model` of the `cv.obj` is a trained model which used the lambda with minimal loss function during the cross validation. Notice that this model is trained on the complete trainings data set. This model is the output of a `descent_generalized_fista` call. 
-Visualize the cross validation result via: 
-```{r}
+The return object from the `DTD_cv_lambda` function is a list with 2 entries. The `cv.obj` entries holds a data.frame with information about the cross validation over the lambda.sequence. Pass this object to the `plot.cv` function for visualization. The second entry `best.model` of the `cv.obj` is a trained model which used the lambda with minimal loss function during the cross validation. Notice that this model is trained on the complete trainings data set. This model is the output of a `descent_generalized_fista` call.
+Visualize the cross validation result via:
+```{r, fig.align='center'}
   print(ggplot_cv(cv.object$cv.obj))
 ```
 
