@@ -11,7 +11,7 @@ identity <- function(x){
   return(x)
 }
 
-#' Norm a vector to ||x||_2 = 1
+#' Norm a vector such that ||x||_2 = 1 is equal to the length of
 #'
 #' @param x numeric vector
 #'
@@ -27,11 +27,11 @@ identity <- function(x){
 #'
 n2normed <- function(x){
   n2 <- norm(matrix(x, ncol=1), type = "2")
-  tmp <- x/n2
+  tmp <- (length(x) * x)/n2
   return(tmp)
 }
 
-#' Norm a vector to ||x||_1 = 1
+#' Norm a vector such that ||x||_1 is equal to the length of x
 #'
 #' @param x numeric vector
 #'
@@ -47,7 +47,7 @@ n2normed <- function(x){
 #'
 n1normed <- function(x){
   n2 <- norm(matrix(x, ncol=1), type="O")
-  tmp <- x/n2
+  tmp <- (length(x)*x)/n2
   return(tmp)
 }
 

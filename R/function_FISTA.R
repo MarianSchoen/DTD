@@ -220,6 +220,7 @@ descent_generalized_fista <- function(tweak_vec = NA,
     learning.rate <- abs((tweak_vec - tweak_hat) %*% (grad - g_hat) / sum((grad - g_hat)**2))
     # learning rate is a matrix => make it a numeric:
     learning.rate <- as.numeric(learning.rate)
+    l0 <- learning.rate
   }
 
   # initialise required variables:
@@ -244,6 +245,7 @@ descent_generalized_fista <- function(tweak_vec = NA,
   # Every gradient step is done multiple times with different step sizes larging from 0 to learning.rate
   # sequence holds the different learning rates:
   sequence <- seq(from = 0, to = learning.rate, length.out = cycles)
+
 
   # Notice that the for loop starts at 2, due to the extrapolation/correction step of the FISTA algorithm
   for(iter in 2:maxit){
@@ -316,19 +318,34 @@ descent_generalized_fista <- function(tweak_vec = NA,
     }
 
     # calculate the new v_vec:
-    v_vec <- tweak_old + 1/factor * (tweak_vec - tweak_old)
+    v_vec <- tweak_vec + (tweak_vec - tweak_old)
 
     # and the new y_vec:
     factor <- FACTOR.FUN(nesterov.counter)
     nesterov.counter <- nesterov.counter + 1
-    y_vec <- (1-factor) * tweak_vec + factor * v_vec
+
+    # kind of experimental, maybe I should change it?
+    nesterov.sequence <- seq(from=0, to=factor, length.out = cycles)
+    best.y <- Inf
+    for(l.nesterov in nesterov.sequence){
+      y_vec.l <- l.nesterov * tweak_vec + (1 - l.nesterov) * v_vec
+      eval.y <- EVAL.FUN(y_vec.l)
+      if(eval.y < best.y){
+        y_vec <- y_vec.l
+        best.y <- eval.y
+        nesterov.winner <- l.nesterov
+      }
+    }
 
     # if verbose = TRUE, print information to the screen
     if(verbose){
       cat("###############################################\n")
       cat("iter: ", iter, "\n")
       cat("Loss: ", rev(converge_vec)[1], "\n")
+      cat("learning.rate: ", learning.rate, "\n")
+      cat("cycle winner pos:", winner.pos, "\n")
       cat("factor: ", factor, "\n")
+      cat("nesterov rate: ", nesterov.winner, "\n")
       # plot converge_vec:
       if(iter %% 100 == 0){
         graphics::plot(1:iter, converge_vec)

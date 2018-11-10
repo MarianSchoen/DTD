@@ -22,15 +22,13 @@
 #' @import reshape2
 #'
 ggplot_convergence <- function(fista.output,
-                               test.set = NA,
-                               EVAL.FUN,
+                               EVAL.FUN  = NA,
                                main = ""){
   # convergence can be plotted for training AND test set, if:
-  #   - a test set is provided
-  #   - the X.matrix is provided
   #   - fista.output has "History" entry
+  #   - if EVAL.FUN returns a numeric value for every entry in "History"
   # otherwise only trainings convergence will be plotted
-  if(! (is.na(test.set) || is.null(fista.output$History))){
+  if(!(!is.numeric(EVAL.FUN(fista.output$Tweak)) || is.null(fista.output$History))){
     # calculate convergence for every saved tweak_vec:
     cor.in.test <- c()
     for(l.iteration in 1:length(fista.output$Convergence)){

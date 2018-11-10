@@ -4,10 +4,10 @@
 \alias{mix.samples.jitter}
 \title{Mix samples with Jitter}
 \usage{
-mix.samples.jitter(sample.names, special.samples, nSamples = 1000, datamatrix,
-  pheno, verbose = FALSE, singleSpecial = FALSE, add_jitter = FALSE,
-  chosen.mean = 1, chosen.sd = 0.05, min.amount.samples = 1,
-  per.type = 1, included.in.X)
+mix.samples.jitter(sample.names, special.samples, nSamples = 1000,
+  datamatrix, pheno, verbose = FALSE, singleSpecial = FALSE,
+  add_jitter = FALSE, chosen.mean = 1, chosen.sd = 0.05,
+  min.amount.samples = 1, per.type = 1, included.in.X)
 }
 \arguments{
 \item{sample.names}{vector of strings, have to match colnames(datamatrix).}

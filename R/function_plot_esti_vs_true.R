@@ -72,10 +72,16 @@ ggplot_true_vs_esti <- function(estimatedC, trueC, norm.columnwise = TRUE, title
 
   levels(complete$variable) <- newLabels
 
-  pic <- ggplot(complete, aes_string(y="value", x="true", color = "variable", shape = "colorIndi")) +
-    geom_point() + ylab("estimated") + xlab("true") +
+  pic <- ggplot(complete, aes_string(y="value", x="true", color = "variable")) +
+    ylab("estimated") + xlab("true") +
     ggtitle(tit) +
     facet_grid(.~variable, scales = "free") +
     theme(axis.text.x = element_text(angle=90))
+
+  if(length(table(color.indi)) == 1){
+    pic <- pic + geom_point()
+  }else{
+    pic <- pic + geom_point(aes_string(shape = "colorIndi"))
+  }
   return(pic)
 }

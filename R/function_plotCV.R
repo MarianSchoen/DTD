@@ -18,7 +18,6 @@ ggplot_cv <- function(crossValFrame, main = "", LAMBDA.TRANS.FUN = log2){
     ) {
     stop("In plot.cv: passed \"crossValFrame\" frame does not fit")
   }
-
   crossValFrame$lambda.trans <- LAMBDA.TRANS.FUN(crossValFrame$lambda)
 
   pic <- ggplot2::ggplot(crossValFrame, aes(x = lambda.trans, y = cvm)) +

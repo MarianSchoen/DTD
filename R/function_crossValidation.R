@@ -6,13 +6,14 @@
 #' @param lambda.seq numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
 #' If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
 #' of the training set -  will be generated
+#' @param tweak.start numeric vector, starting vector for the DTD algorithm
 #' @param nfolds integer, number of buckets in the cross validation
 #' @param lambda.length integer, how many lambdas will be generated (only used if lambda.seq is NULL)
-#' @param train.list list, that can be passed to the GRAD.FUN and EVAL.FUN.
+#' @param train.list list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
 #' Within this list the train/test cross validation will be done.
 #' Notice, that the train.list must have an entry named "mixtues". In this entry, the matrix containing the
 #' training samples (as columns) and all features (as rows) must be present. (see Vignette for details)
-#' @param GRAD.FUN gradient function, see \code{\link{descent_generalized_fista}}
+#' @param F.GRAD.FUN gradient function, see \code{\link{descent_generalized_fista}}
 #' @param EVAL.FUN evaluation function, see \code{\link{descent_generalized_fista}}
 #' @param tol float, in each cross validation model, the function keeps track how many explaining
 #' variables do not contribute (=> equal 0). tol is the limit until a explaining variable is
@@ -26,14 +27,15 @@
 #' @export
 #'
 DTD_cv_lambda <- function(lambda.seq = NULL,
-                           nfolds = 10,
-                           lambda.length = 20,
-                           train.list = train,
-                           GRAD.FUN = DTD.grad.wrapper,
-                           EVAL.FUN = DTD.evCor.wrapper,
-                           tol = 1e-5,
-                           cv.verbose = TRUE,
-                           ...){
+                          tweak.start = NULL,
+                          nfolds = 10,
+                          lambda.length = 20,
+                          train.list = train,
+                          F.GRAD.FUN = DTD.grad.wrapper,
+                          EVAL.FUN = DTD.evCor.wrapper,
+                          tol = 1e-5,
+                          cv.verbose = TRUE,
+                          ...){
   # First, all possible training samples get assigned to a bucket:
   # extract Y:
   train.Y <- train.list$mixtures
@@ -44,7 +46,7 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
 
   # Next, if no lambda.seq is provided, a generic sequence is created,
   # based on "p" and "n" of the mixture matrix:
-  if(is.null(lambda.seq)){
+  if(is.null(lambda.seq) || is.na(lambda.seq)){
     if(!is.numeric(lambda.length)){lambda.length <- 20}
     p <- nrow(train.Y)
     n <- ncol(train.Y)
@@ -93,7 +95,7 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
 
       # ... and reset the default values of the gradient and evaluation functions:
       tmp.grad.fun <- function(tmp.tweak, tmp.list = tmp.train.list){
-        return(GRAD.FUN(tmp.tweak, train.list = tmp.list))
+        return(F.GRAD.FUN(tmp.tweak, train.list = tmp.list))
       }
       tmp.eval.fun <- function(tmp.tweak, tmp.list = tmp.train.list){
         return(EVAL.FUN(tmp.tweak, train.list = tmp.list))
@@ -101,6 +103,7 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
 
       # Now, try to train a model on the reduced training set:
       catch <- try(descent_generalized_fista(lambda = lambda,
+                                             tweak_vec = tweak.start,
                                              F.GRAD.FUN = tmp.grad.fun,
                                              EVAL.FUN = tmp.eval.fun,
                                              ...)
@@ -121,13 +124,15 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
           )
         )
         non_zeros <- c(non_zeros, tmp_non_zero)
+
+        # warm start, after learning a model, keep last tweak vec as start for next model:
+        tweak.start <- catch$Tweak
       }
       # Evaluate the reached minimum on the test set:
       tmp.test.list <- lapply(train.list, select.fun, samples=test.samples)
       tmp.eval.fun.test <- function(tmp.tweak, tmp.list = tmp.test.list){
         return(EVAL.FUN(tmp.tweak, train.list = tmp.list))
       }
-
       cor.test.vec <- c(cor.test.vec, rep(x = tmp.eval.fun.test(catch$Tweak), length(test.samples)))
     }
     if(cv.verbose){cat("\n")}
@@ -147,7 +152,8 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
   lmin.pos <- which.min(cv.object$cvm)
   lmin <- cv.object$lambda[lmin.pos]
   bestModel <- descent_generalized_fista(lambda = lmin,
-                                         F.GRAD.FUN = GRAD.FUN,
+                                         tweak_vec = tweak.start,
+                                         F.GRAD.FUN = F.GRAD.FUN,
                                          EVAL.FUN = EVAL.FUN,
                                          ...)
 

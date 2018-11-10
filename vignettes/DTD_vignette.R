@@ -81,7 +81,7 @@ knitr::opts_chunk$set(
                                 train.list = training.data){
       Y <- train.list$mixtures
       C <- train.list$quantities
-      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X.matrix)
       return(loss)
   }
   start_tweak <- rep(1, nrow(X.matrix))
@@ -91,7 +91,7 @@ knitr::opts_chunk$set(
                               yc.list = test.data){
     Y <- yc.list$mixtures
     C <- yc.list$quantities
-    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X.matrix)
     return(loss)
   }
 
@@ -109,7 +109,6 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
   str(catch)
   
   print(ggplot_convergence(fista.output = catch, 
-                         test.set = test.data, 
                          EVAL.FUN = DTD.evCor.wrapper.test,
                          main = "DTD Vignette"))
 
@@ -259,7 +258,7 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                 train.list = training.data){
       Y <- train.list$mixtures 
       C <- train.list$quantities
-      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X)
       return(loss)
   }
 
@@ -284,11 +283,10 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                 test.list = test.data){
       Y = test.list$mixtures 
       C = test.list$quantities
-      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+      loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X)
       return(loss)
   }
   print(ggplot_convergence(fista.output = catch, 
-                           test.set = test.data, 
                            EVAL.FUN = DTD.evCor.wrapper.test,
                            main = "DTD Vignette"))
 
@@ -305,12 +303,12 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
 ## ------------------------------------------------------------------------
   sequence <- 0.001*2^seq(5, -5, length.out = 10)
   set.seed(2018)
-  cv.object <- DTD_cv_lambda(tweak_vec = start_tweak, 
+  cv.object <- DTD_cv_lambda(tweak.start = start_tweak, 
                              nfolds = 5, 
                              lambda.seq = sequence, 
                              cv.verbose = TRUE, 
                              train.list = training.data, 
-                             GRAD.FUN = DTD.grad.wrapper, 
+                             F.GRAD.FUN = DTD.grad.wrapper, 
                              EVAL.FUN = DTD.evCor.wrapper, 
                              ST.FUN = soft_thresholding,
                              FACTOR.FUN = nesterov_faktor,

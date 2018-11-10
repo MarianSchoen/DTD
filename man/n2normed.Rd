@@ -2,7 +2,7 @@
 % Please edit documentation in R/function_norms.R
 \name{n2normed}
 \alias{n2normed}
-\title{Norm a vector to ||x||_2 = 1}
+\title{Norm a vector such that ||x||_2 = 1 is equal to the length of}
 \usage{
 n2normed(x)
 }
@@ -13,7 +13,7 @@ n2normed(x)
 numeric vector with same length as x
 }
 \description{
-Norm a vector to ||x||_2 = 1
+Norm a vector such that ||x||_2 = 1 is equal to the length of
 }
 \examples{
 set.seed(1)

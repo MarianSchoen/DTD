@@ -4,8 +4,8 @@
 \alias{ggplot_true_vs_esti}
 \title{Plot true vs estimated cell composition}
 \usage{
-ggplot_true_vs_esti(estimatedC, trueC, norm.columnwise = TRUE, title = "",
-  color.indi = NA)
+ggplot_true_vs_esti(estimatedC, trueC, norm.columnwise = TRUE,
+  title = "", color.indi = NA)
 }
 \arguments{
 \item{estimatedC}{matrix, with cell types as rows, and mixtures as columns.}

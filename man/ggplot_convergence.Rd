@@ -4,16 +4,16 @@
 \alias{ggplot_convergence}
 \title{Plot loss curve}
 \usage{
-ggplot_convergence(fista.output, test.set = NA, EVAL.FUN, main = "")
+ggplot_convergence(fista.output, EVAL.FUN = NA, main = "")
 }
 \arguments{
 \item{fista.output}{list, with "Convergence" entry as return by the descent_generalized_fista function}
 
-\item{test.set}{list with "mixtures" matrix, and "quantity" matrix as returned by mix.samples or mix.samples.jitter function}
-
 \item{EVAL.FUN}{function, that takes a single input (the tweak vector of the fista.output)}
 
 \item{main}{string, additionally title}
+
+\item{test.set}{list with "mixtures" matrix, and "quantity" matrix as returned by mix.samples or mix.samples.jitter function}
 
 \item{X.matrix}{numeric matrix, reference matrix of the DTD problem}
 }

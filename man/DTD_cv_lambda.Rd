@@ -4,25 +4,28 @@
 \alias{DTD_cv_lambda}
 \title{Cross-validation for digital tissue deconvolution}
 \usage{
-DTD_cv_lambda(lambda.seq = NULL, nfolds = 10, lambda.length = 20,
-  train.list = train, GRAD.FUN = DTD.grad.wrapper,
-  EVAL.FUN = DTD.evCor.wrapper, tol = 1e-05, cv.verbose = TRUE, ...)
+DTD_cv_lambda(lambda.seq = NULL, tweak.start = NULL, nfolds = 10,
+  lambda.length = 20, train.list = train,
+  F.GRAD.FUN = DTD.grad.wrapper, EVAL.FUN = DTD.evCor.wrapper,
+  tol = 1e-05, cv.verbose = TRUE, ...)
 }
 \arguments{
 \item{lambda.seq}{numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
 If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
 of the training set -  will be generated}
 
+\item{tweak.start}{numeric vector, starting vector for the DTD algorithm}
+
 \item{nfolds}{integer, number of buckets in the cross validation}
 
 \item{lambda.length}{integer, how many lambdas will be generated (only used if lambda.seq is NULL)}
 
-\item{train.list}{list, that can be passed to the GRAD.FUN and EVAL.FUN.
+\item{train.list}{list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
 Within this list the train/test cross validation will be done.
 Notice, that the train.list must have an entry named "mixtues". In this entry, the matrix containing the
 training samples (as columns) and all features (as rows) must be present. (see Vignette for details)}
 
-\item{GRAD.FUN}{gradient function, see \code{\link{descent_generalized_fista}}}
+\item{F.GRAD.FUN}{gradient function, see \code{\link{descent_generalized_fista}}}
 
 \item{EVAL.FUN}{evaluation function, see \code{\link{descent_generalized_fista}}}
 
