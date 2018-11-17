@@ -1,13 +1,15 @@
 ## ----setup, include = FALSE----------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>", 
+  fig.align = "center"
 )
 
 ## ----include=FALSE-------------------------------------------------------
-  # for fast testing 
+  # for fast testing ...
   maxit <- 75
   nSamples <- 500
+  do.cv <- TRUE
 
 ## ----include=FALSE-------------------------------------------------------
   # I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
@@ -22,28 +24,14 @@ knitr::opts_chunk$set(
   normalized.data <- normalizeToCount(random.data)
   indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
   names(indicator.list) <- colnames(normalized.data)
+  perc.of.all.cells <- 0.1
   include.in.X <- paste0("Type", 2:5)
-  X.matrix <- matrix(NA, nrow=nrow(normalized.data), ncol=length(include.in.X))
-  colnames(X.matrix) <- include.in.X
-  rownames(X.matrix) <- rownames(normalized.data)
-  percentage.of.all.cells <- 0.1
-  samples.to.remove <- c()
-  for(l.type in include.in.X){
-    # get sample names of all cells of type "l.type" 
-    all.of.type <- names(indicator.list)[which(indicator.list == l.type)]
-    
-    # randomly sample some cells
-    chosen.for.X <- sample(x = all.of.type,
-                           size = ceiling(length(all.of.type) * percentage.of.all.cells),
-                           replace = FALSE)
-    
-    # Add those cells which will be included in X to the list of samples.to.remove 
-    samples.to.remove <- c(samples.to.remove, chosen.for.X)
-
-    # for each gene average over the selected 
-    average <- rowSums(normalized.data[, chosen.for.X, drop = FALSE])
-    X.matrix[, l.type] <- average
-  }
+  sample.X <- sample.random.X(included.in.X = include.in.X, 
+                              pheno = indicator.list, 
+                              exp.data = normalized.data, 
+                              percentage.of.all.cells = perc.of.all.cells)
+  X.matrix <- sample.X$X.matrix
+  samples.to.remove <- sample.X$samples.to.remove
   remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
   train.samples <- sample(x = colnames(remaining.mat), 
                           size = ceiling(ncol(remaining.mat)/2), 
@@ -73,6 +61,7 @@ knitr::opts_chunk$set(
       Y <- train.list$mixtures
       C <- train.list$quantities
       grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
+      grad[grad > 0] <- 0
       return(grad)
    }
   # wrapper for evaluation:
@@ -84,7 +73,7 @@ knitr::opts_chunk$set(
       loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X.matrix)
       return(loss)
   }
-  start_tweak <- rep(1, nrow(X.matrix))
+  start_tweak <- rep(1, nrow(X.matrix)); names(start_tweak) <- rownames(X.matrix)
   start.loss <- DTD.evCor.wrapper(start_tweak)
   DTD.evCor.wrapper.test <- function(tweak, 
                               X = X.matrix, 
@@ -96,7 +85,7 @@ knitr::opts_chunk$set(
   }
 
 ## ---- fig.width = 7, fig.align="center"----------------------------------
-catch <- descent_generalized_fista(tweak_vec = start_tweak,
+  catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                    F.GRAD.FUN = DTD.grad.wrapper,
                                    ST.FUN = soft_thresholding,
                                    FACTOR.FUN = nesterov_faktor,
@@ -152,36 +141,16 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
 ## ----echo=FALSE, results = "asis"----------------------------------------
   cat("```\n")
   cat(" include.in.X <- " , paste0("c(\"", paste(include.in.X ,collapse = "\", \""), "\")"), "\n")
+  cat(" perc.of.all.cells <- ", perc.of.all.cells,  "\n")
   cat("```\n")
 
 ## ------------------------------------------------------------------------
-  X.matrix <- matrix(NA, nrow=nrow(normalized.data), ncol=length(include.in.X))
-  colnames(X.matrix) <- include.in.X
-  rownames(X.matrix) <- rownames(normalized.data)
-
-## ----echo=FALSE, results = "asis"----------------------------------------
-  cat("```\n")
-  cat(" percentage.of.all.cells <- ", percentage.of.all.cells,  "\n")
-  cat("```\n")
-
-## ------------------------------------------------------------------------
-  samples.to.remove <- c()
-  for(l.type in include.in.X){
-    # get sample names of all cells of type "l.type" 
-    all.of.type <- names(indicator.list)[which(indicator.list == l.type)]
-    
-    # randomly sample some cells
-    chosen.for.X <- sample(x = all.of.type,
-                           size = ceiling(length(all.of.type) * percentage.of.all.cells),
-                           replace = FALSE)
-    
-    # Add those cells which will be included in X to the list of samples.to.remove 
-    samples.to.remove <- c(samples.to.remove, chosen.for.X)
-
-    # for each gene average over the selected 
-    average <- rowSums(normalized.data[, chosen.for.X, drop = FALSE])
-    X.matrix[, l.type] <- average
- }
+  sample.X <- sample.random.X(included.in.X = include.in.X, 
+                              pheno = indicator.list, 
+                              exp.data = normalized.data, 
+                              percentage.of.all.cells = perc.of.all.cells)
+  X.matrix <- sample.X$X.matrix
+  samples.to.remove <- sample.X$samples.to.remove
 
 ## ------------------------------------------------------------------------
   # removing samples that have been used in X.matrix
@@ -264,14 +233,12 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
 
 ## ------------------------------------------------------------------------
   start_tweak <- rep(1, nrow(X.matrix))
+  names(start_tweak) <- rownames(X.matrix)
   start.loss <- DTD.evCor.wrapper(start_tweak)
   cat("Start average correlation: ", -start.loss/ncol(X.matrix), "\n")
   catch <- descent_generalized_fista(tweak_vec = start_tweak,
                                      F.GRAD.FUN = DTD.grad.wrapper,
-                                     ST.FUN = soft_thresholding,
-                                     FACTOR.FUN = nesterov_faktor,
                                      EVAL.FUN = DTD.evCor.wrapper,
-                                     line_search_speed = 2,
                                      maxit = maxit,
                                      save_all_tweaks = T, 
                                      verbose = F)
@@ -301,6 +268,30 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
        )
 
 ## ------------------------------------------------------------------------
+    print(ggplot_ghistogram(fista.output = catch))
+
+## ---- fig.show="hold", fig.width=3---------------------------------------
+  singlePic <- ggplot_gPath(fista.output = catch, 
+                            number.pics = 1, 
+                            main="All genes")
+   print(singlePic$gPath)
+
+## ------------------------------------------------------------------------
+  singlePic.subset <- ggplot_gPath(fista.output = catch,
+                                   number.pics = 1, 
+                                   main = "Gene Subset", 
+                                   subset = c("gene121", "gene66"), 
+                                   plot_legend = TRUE)
+   print(singlePic.subset$gPath)
+
+## ---- fig.width=5--------------------------------------------------------
+  multPic <- ggplot_gPath(fista.output = catch, 
+                          number.pics = 3,  
+                          main = "All Genes, split into 3")
+  print(multPic$gPath)
+
+## ------------------------------------------------------------------------
+  if(do.cv){
   sequence <- 0.001*2^seq(5, -5, length.out = 10)
   set.seed(2018)
   cv.object <- DTD_cv_lambda(tweak.start = start_tweak, 
@@ -320,7 +311,8 @@ catch <- descent_generalized_fista(tweak_vec = start_tweak,
                              verbose = FALSE
   )
   str(cv.object)
+  }
 
 ## ---- fig.align='center'-------------------------------------------------
-  print(ggplot_cv(cv.object$cv.obj))
+ if(do.cv) print(ggplot_cv(cv.object$cv.obj))
 

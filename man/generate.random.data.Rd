@@ -11,8 +11,8 @@ generate.random.data(nTypes = 5, nSamples.perType = 10,
 \arguments{
 \item{nTypes}{integer, how many different types should be included in the data set}
 
-\item{nSamples.perType}{integer, how many samples should be generated per type.
-Notice, for each type, the number of samples will be randomized a bit.}
+\item{nSamples.perType}{integer, how many samples should be generated per type
+Notice, for each type, the number of samples will be randomized a bit}
 
 \item{nFeatures}{integer, how many features should be included}
 
@@ -38,10 +38,6 @@ random.data <- generate.random.data(nTypes = 5,
                                     nFeatures = 100,
                                     sample.type = "Cell",
                                     feature.type = "gene")
-
-# undo log transformation to have counts:
-
-random.data <- (2^random.data) - 1
 
 # normalize all samples to the same amount of counts:
 random.data <- normalizeToCount(random.data)

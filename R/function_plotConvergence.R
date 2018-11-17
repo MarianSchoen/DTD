@@ -28,7 +28,14 @@ ggplot_convergence <- function(fista.output,
   #   - fista.output has "History" entry
   #   - if EVAL.FUN returns a numeric value for every entry in "History"
   # otherwise only trainings convergence will be plotted
-  if(!(!is.numeric(EVAL.FUN(fista.output$Tweak)) || is.null(fista.output$History))){
+
+  # Test if EVAL.FUN has been set:
+  test.eval.fun <- !suppressWarnings(is.na(EVAL.FUN))
+  # If EVAl.FUN has been set, therefore "test.eval.fun" is TRUE, test if it returns a numeric value:
+  useable.eval.fun <- ifelse(test.eval.fun, is.numeric(EVAL.FUN(fista.output$Tweak)), FALSE)
+
+  # If the eval.fun is "useable", and there is a History, then test can be evaluated:
+  if(useable.eval.fun && !is.null(fista.output$History)){
     # calculate convergence for every saved tweak_vec:
     cor.in.test <- c()
     for(l.iteration in 1:length(fista.output$Convergence)){
@@ -49,14 +56,16 @@ ggplot_convergence <- function(fista.output,
                               "iter" = 1:length(fista.output$Convergence))
   }
   # melt convergence:
-  convergence.melt <- melt(convergence, id.var = "iter")
+  convergence.melt <- reshape2::melt(convergence, id.var = "iter")
   # set title:
   tit <- paste0("Loss-function curve during FISTA optimization \n", main)
 
   # build the ggplot object
-  pic <- ggplot(convergence.melt, aes_string(x = "iter", y = "value", col = "variable")) +
-                geom_point() + xlab("Iteration") + ylab("Loss-Function") +
-                ggtitle(tit)
+  pic <- ggplot2::ggplot(convergence.melt, aes_string(x = "iter", y = "value", col = "variable")) +
+            ggplot2::geom_point() +
+            ggplot2::xlab("Iteration") +
+            ggplot2::ylab("Loss-Function") +
+            ggplot2::ggtitle(tit)
 
   return(pic)
 }

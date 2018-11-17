@@ -7,7 +7,7 @@
 DTD_cv_lambda(lambda.seq = NULL, tweak.start = NULL, nfolds = 10,
   lambda.length = 20, train.list = train,
   F.GRAD.FUN = DTD.grad.wrapper, EVAL.FUN = DTD.evCor.wrapper,
-  tol = 1e-05, cv.verbose = TRUE, ...)
+  tol = 1e-05, cv.verbose = TRUE, warm_start = FALSE, ...)
 }
 \arguments{
 \item{lambda.seq}{numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
@@ -45,4 +45,5 @@ retrained on the complete dataset
 \description{
 Our descent generalized FISTA implementation includes a l1 regularization term.
 This function performs a k-fold cross validation to find the best fitting regularization parameter.
+For an example see `browseVignettes("DTD")`
 }

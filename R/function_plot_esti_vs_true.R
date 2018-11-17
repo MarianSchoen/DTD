@@ -5,11 +5,14 @@
 #' For an example see
 #' \code{\link{descent_generalized_fista}}
 #'
-#' @param estimatedC matrix, with cell types as rows, and mixtures as columns.
-#' @param trueC matrix, with cell types as rows, and mixtures as columns.
+#' @param estimatedC matrix, with cell types as rows, and mixtures as columns
+#' @param trueC matrix, with cell types as rows, and mixtures as columns
 #' @param norm.columnwise boolean, should every column be normalized to sum of 1?
 #' @param title string, title for plot
 #' @param color.indi vector with length of ncol(trueC), used for colouring in ggplot
+#'
+#' @import ggplot2
+#' @import reshape2
 #'
 #' @return ggplot object
 #' @export
@@ -48,7 +51,7 @@ ggplot_true_vs_esti <- function(estimatedC, trueC, norm.columnwise = TRUE, title
   esti.frame <- as.data.frame(t(estimatedC))
   esti.frame$colorIndi <- factor(color.indi)
   esti.frame$names <- rownames(esti.frame)
-  estimated <- melt(esti.frame, id.vars = c("colorIndi", "names"))
+  estimated <- reshape2::melt(esti.frame, id.vars = c("colorIndi", "names"))
   # resort the frame, that it can be matched with true:
   estimated <- estimated[order(estimated$names, as.character(estimated$variable)), ]
 
@@ -72,16 +75,16 @@ ggplot_true_vs_esti <- function(estimatedC, trueC, norm.columnwise = TRUE, title
 
   levels(complete$variable) <- newLabels
 
-  pic <- ggplot(complete, aes_string(y="value", x="true", color = "variable")) +
-    ylab("estimated") + xlab("true") +
-    ggtitle(tit) +
-    facet_grid(.~variable, scales = "free") +
-    theme(axis.text.x = element_text(angle=90))
+  pic <- ggplot2::ggplot(complete, aes_string(y="value", x="true", color = "variable")) +
+          ggplot2::ylab("estimated") + xlab("true") +
+          ggplot2::ggtitle(tit) +
+          ggplot2::facet_grid(.~variable, scales = "free") +
+          ggplot2::theme(axis.text.x = element_text(angle=90))
 
   if(length(table(color.indi)) == 1){
-    pic <- pic + geom_point()
+    pic <- pic + ggplot2::geom_point()
   }else{
-    pic <- pic + geom_point(aes_string(shape = "colorIndi"))
+    pic <- pic + ggplot2::geom_point(aes_string(shape = "colorIndi"))
   }
   return(pic)
 }

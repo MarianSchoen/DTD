@@ -8,9 +8,9 @@ ggplot_true_vs_esti(estimatedC, trueC, norm.columnwise = TRUE,
   title = "", color.indi = NA)
 }
 \arguments{
-\item{estimatedC}{matrix, with cell types as rows, and mixtures as columns.}
+\item{estimatedC}{matrix, with cell types as rows, and mixtures as columns}
 
-\item{trueC}{matrix, with cell types as rows, and mixtures as columns.}
+\item{trueC}{matrix, with cell types as rows, and mixtures as columns}
 
 \item{norm.columnwise}{boolean, should every column be normalized to sum of 1?}
 

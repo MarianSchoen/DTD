@@ -2,6 +2,7 @@
 #'
 #' Our descent generalized FISTA implementation includes a l1 regularization term.
 #' This function performs a k-fold cross validation to find the best fitting regularization parameter.
+#' For an example see `browseVignettes("DTD")`
 #'
 #' @param lambda.seq numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
 #' If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
@@ -35,12 +36,14 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
                           EVAL.FUN = DTD.evCor.wrapper,
                           tol = 1e-5,
                           cv.verbose = TRUE,
+                          warm_start = FALSE,
                           ...){
   # First, all possible training samples get assigned to a bucket:
   # extract Y:
   train.Y <- train.list$mixtures
   # map every sample to a bucket:
-  bucket.indicator <- sample(rep(1:nfolds, each = ceiling(ncol(train.Y)/nfolds)))[1:ncol(train.Y)]
+  bucket.indicator <- sample(rep(1:nfolds,
+                                 each = ceiling(ncol(train.Y)/nfolds)))[1:ncol(train.Y)]
   names(bucket.indicator) <- colnames(train.Y)
 
 
@@ -51,7 +54,7 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
     p <- nrow(train.Y)
     n <- ncol(train.Y)
     lambda.0 <- sqrt(log(p)/n)
-    lambda.seq <- lambda.0*2^seq(2, -5, length.out = lambda.length)
+    lambda.seq <- lambda.0*2^seq(2, -18, length.out = lambda.length)
   }
 
   # internal training samples selection function:
@@ -76,10 +79,6 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
 
   # Start of cross validation:
   for(lambda in lambda.seq){
-    if(cv.verbose){
-      pos <- which(lambda.seq == lambda) - 1
-      cat("doing lambda: ", lambda, ", completed ", pos, " of ", length(lambda.seq),", ", 100*pos/length(lambda.seq), "% \n")
-    }
     cor.test.vec <- c()
     non_zeros <- c()
     foundMods <- 0
@@ -106,7 +105,8 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
                                              tweak_vec = tweak.start,
                                              F.GRAD.FUN = tmp.grad.fun,
                                              EVAL.FUN = tmp.eval.fun,
-                                             ...)
+                                             ...),
+                   silent = TRUE
       )
 
       # If the regularization parameter lambda is to big,
@@ -126,7 +126,9 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
         non_zeros <- c(non_zeros, tmp_non_zero)
 
         # warm start, after learning a model, keep last tweak vec as start for next model:
-        tweak.start <- catch$Tweak
+        if(warm_start){
+          tweak.start <- catch$Tweak
+        }
       }
       # Evaluate the reached minimum on the test set:
       tmp.test.list <- lapply(train.list, select.fun, samples=test.samples)
@@ -135,7 +137,10 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
       }
       cor.test.vec <- c(cor.test.vec, rep(x = tmp.eval.fun.test(catch$Tweak), length(test.samples)))
     }
-    if(cv.verbose){cat("\n")}
+    if(cv.verbose){
+      pos <- which(lambda.seq == lambda) - 1
+      cat("\ndoing lambda: ", lambda, ", completed ", pos, " of ", length(lambda.seq),", ", 100*pos/length(lambda.seq), "% \n")
+    }
     # fill the cv.object data.frame:
     pos <- which(cv.object[["lambda"]] == lambda)
     cv.object[["cvm"]][pos] <- suppressWarnings(mean(cor.test.vec, na.rm = TRUE))

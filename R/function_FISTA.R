@@ -204,7 +204,6 @@ descent_generalized_fista <- function(tweak_vec = NA,
     stop("Norm function changes eval value.")
   }
 
-
   # If no learning.rate is set, the initial learning rate will be initialized according to:
   # Barzali & Borwein 1988
   # It estimates via:
@@ -223,6 +222,7 @@ descent_generalized_fista <- function(tweak_vec = NA,
     l0 <- learning.rate
   }
 
+
   # initialise required variables:
   tweak_old <- tweak_vec
   converge_vec <- EVAL.FUN(tweak_vec)
@@ -233,13 +233,17 @@ descent_generalized_fista <- function(tweak_vec = NA,
   if(verbose){
     cat("starting to optimize \n")
   }
+  # store the names of tweak, that they can be reset at the end:
+  tweak.names <- names(tweak_vec)
+
 
   # Notice, if save_all_tweaks is FALSE only the last tweak_vec will be stored,
   # and returned after optimization. if save_all_tweaks is true all tweak_vec will be stored
   # in tweak.history, and returned after optimization:
   if(save_all_tweaks){
     tweak.history <- matrix(NA, nrow = length(tweak_vec), ncol = maxit)
-    tweak.history[, 1] <- tweak_vec
+    tweak.history[, 1] <- NORM.FUN(tweak_vec)
+    rownames(tweak.history) <- tweak.names
   }
 
   # Every gradient step is done multiple times with different step sizes larging from 0 to learning.rate
@@ -317,20 +321,18 @@ descent_generalized_fista <- function(tweak_vec = NA,
       tweak.history[, iter] <- tweak_vec
     }
 
-    # calculate the new v_vec:
-    v_vec <- tweak_vec + (tweak_vec - tweak_old)
 
-    # and the new y_vec:
+    # the same line search approach gets applied to the nesterov extrapolation:
     factor <- FACTOR.FUN(nesterov.counter)
-    nesterov.counter <- nesterov.counter + 1
-
-    # kind of experimental, maybe I should change it?
     nesterov.sequence <- seq(from=0, to=factor, length.out = cycles)
     best.y <- Inf
     for(l.nesterov in nesterov.sequence){
-      y_vec.l <- l.nesterov * tweak_vec + (1 - l.nesterov) * v_vec
+      # extrapolate by "l.nesterov" ...
+      y_vec.l <- tweak_vec + l.nesterov * (tweak_vec - tweak_old)
+      # ... check the eval.y value ...
       eval.y <- EVAL.FUN(y_vec.l)
       if(eval.y < best.y){
+        # ... and reset the best.y if its a new winner
         y_vec <- y_vec.l
         best.y <- eval.y
         nesterov.winner <- l.nesterov
@@ -353,8 +355,9 @@ descent_generalized_fista <- function(tweak_vec = NA,
     }
   }
 
+  names(tweak_vec) <- tweak.names
   # build a list to return:
-  ret <- list("Tweak"=tweak_vec, "Convergence"=converge_vec)
+  ret <- list("Tweak"=NORM.FUN(tweak_vec), "Convergence"=converge_vec)
 
   # if save_all_tweaks is TRUE add the tweak.history
   if(save_all_tweaks){
