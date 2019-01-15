@@ -5,20 +5,19 @@
 \title{Cross-validation for digital tissue deconvolution}
 \usage{
 DTD_cv_lambda(lambda.seq = NULL, tweak.start = NULL, nfolds = 10,
-  lambda.length = 20, train.list = train,
-  F.GRAD.FUN = DTD.grad.wrapper, EVAL.FUN = DTD.evCor.wrapper,
-  tol = 1e-05, cv.verbose = TRUE, warm_start = FALSE, ...)
+  lambda.length = 20, train.list, F.GRAD.FUN, EVAL.FUN,
+  cv.verbose = TRUE, warm.start = FALSE, ...)
 }
 \arguments{
 \item{lambda.seq}{numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
 If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
-of the training set -  will be generated}
+of the training set -  will be generated. Default: NULL}
 
-\item{tweak.start}{numeric vector, starting vector for the DTD algorithm}
+\item{tweak.start}{numeric vector, starting vector for the DTD algorithm. Default: NULL.}
 
-\item{nfolds}{integer, number of buckets in the cross validation}
+\item{nfolds}{integer, number of buckets in the cross validation. Defaults to 10}
 
-\item{lambda.length}{integer, how many lambdas will be generated (only used if lambda.seq is NULL)}
+\item{lambda.length}{integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 20}
 
 \item{train.list}{list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
 Within this list the train/test cross validation will be done.
@@ -29,18 +28,17 @@ training samples (as columns) and all features (as rows) must be present. (see V
 
 \item{EVAL.FUN}{evaluation function, see \code{\link{descent_generalized_fista}}}
 
-\item{tol}{float, in each cross validation model, the function keeps track how many explaining
-variables do not contribute (=> equal 0). tol is the limit until a explaining variable is
-declared as "not contributing".}
+\item{cv.verbose}{boolean, should information about the cv process be printed to the screen? (Defaults to TRUE)}
 
-\item{cv.verbose}{boolean, should information about the cv process be printed to the screen?}
+\item{warm.start}{boolean, should the solution of a previous model of the cross validation be used as a start
+in the next model. Defaults to FALSE}
 
 \item{...}{all parameters that are passed to the \code{\link{descent_generalized_fista}} function.
 E.g. maxiter, tweak_vec etc ...}
 }
 \value{
-list of length 2. A cross validation matrix, and the model with minimal loss function
-retrained on the complete dataset
+list of length 2. A cross validation matrix as entry "cv.obj", and the model with minimal loss function
+retrained on the complete dataset as "best.model
 }
 \description{
 Our descent generalized FISTA implementation includes a l1 regularization term.

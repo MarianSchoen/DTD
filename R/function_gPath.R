@@ -7,33 +7,34 @@
 #' In each picture all \eqn{g_i} get collected that end up in the same quantile range.
 #' E.g if you split into 3 pictures, the first picture includes all genes that result into the
 #' quantile range from 0% Qu to 33% Qu of all g.
-#' There are parameters (G.TRANSFORM.FUn and ITER.TRANSFORM.FUN) to transform the g vector, and iteration number.
+#' There are parameters (G.TRANSFORM.FUN and ITER.TRANSFORM.FUN) to transform the g vector, and iteration number.
 #' These might help to make the plot more understandable, e.g. if the distribution of the g vector is dominated by same outliers, applying a log transformation might help.
 #' In most of the scenarios the major changes in the g vector occur in the early iterations. Focus on this part via a log transformation.
 #' For an example see `browseVignettes("DTD")`
 #'
 #' @param fista.output : list with "Tweak" and "History" entry. The result of a \code{\link{descent_generalized_fista}} call
-#' @param number.pics : integer, into how many pictures should the resutlt be split
+#' @param number.pics : integer, into how many pictures should the resutlt be split. (defaults to 3)
 #' @param G.TRANSFORM.FUN : function, that expects a vector of numerics, and returns a vector of the same length.
 #' Will be applied on fista.output$Tweak. Set G.TRANSFORM.FUN to identity if no transformation is required.
-#' If you change G.TRANSFORM.FUN don't forget to adjust the y.lab parameter.
+#' If you change G.TRANSFORM.FUN don't forget to adjust the y.lab parameter. (default is identity)
 #' @param ITER.TRANSFORM.FUN : function, that expects a vector of numerics, and returns a vector of the same length.
 #' Will be applied on the iteration/x.axis of the plot. Set ITER.TRANSFORM.FUN to identity if no transformation is required.
-#' If you change ITER.TRANSFORM.FUN don't forget to adjust the x.lab parameter
-#' @param y.lab string, used as y label on the plot
-#' @param x.lab string, used as x label on the plot
-#' @param plot_legend boolean, should the legend be plotted? Notice that the legend will be plotted in a additional figure, and can be visualized via grid::grid.draw
-#' @param subset vector of strings, or NA that match the rownames of fista.output$History. Only these entries will be visualized
-#' @param main string, used as title of the plot
+#' If you change ITER.TRANSFORM.FUN don't forget to adjust the x.lab parameter (Default: log10)
+#' @param y.lab string, used as y label on the plot (Default: "g)
+#' @param x.lab string, used as x label on the plot (default is "log10(iteration)")
+#' @param plot.legend boolean, should the legend be plotted? Notice that the legend will
+#' be plotted in a additional figure, and can be visualized via grid::grid.draw (Default: FALSE)
+#' @param subset vector of strings, or NA that match the rownames of fista.output$History.
+#' Only these entries will be visualized. If set to NA, all entries will be used. (Default: NAA)
+#' @param main string, used as title of the plot (Default: "")
 #'
 #' @import ggplot2
 #' @import reshape2
-#'
 #' @return list, with "gPath" entry. "gPath" will be a ggplot object.
-#' Depending on "plot_legend" the list has a second entry named "legend". "legend" will be a grid object.
+#' Depending on "plot.legend" the list has a second entry named "legend". "legend" will be a grid object.
 #' @export
 #'
-ggplot_gPath <- function(fista.output,
+ggplot_gpath <- function(fista.output,
                          number.pics=3,
                          G.TRANSFORM.FUN = DTD::identity,
                          ITER.TRANSFORM.FUN = log10,
@@ -41,7 +42,7 @@ ggplot_gPath <- function(fista.output,
                          x.lab = "log10(iteration)",
                          subset = NA,
                          main = "",
-                         plot_legend = FALSE){
+                         plot.legend = FALSE){
 
   # safety check (if there is no History for the g_i, then no path can be plotted)
   if(is.null(fista.output$History)){
@@ -68,7 +69,7 @@ ggplot_gPath <- function(fista.output,
   # Therefore, we calculate how many quantile ranges are necessary (depending on the number.pics parameter)
   pic.sep <- as.numeric(format(x=seq(0, 1, length.out = (number.pics +1))[2:(number.pics+1)], digits = 2))
   # Next we calculate the value of the quantiles in our g vector ...
-  quantile.values <- sapply(X = pic.sep, FUN = quantile, x=abs(tweak))
+  quantile.values <- sapply(X = pic.sep, FUN = stats::quantile, x=abs(tweak))
   # ... and name them without the "%" sign
   names(quantile.values) <- gsub("%", "", names(quantile.values))
 
@@ -100,16 +101,20 @@ ggplot_gPath <- function(fista.output,
 
 
   # Plot the picture (notice that this plot is with the legend!)
-  pics <- ggplot2::ggplot(f.h.melt, aes(x=iteration, y=g, group=geneName, colour=geneName)) +
-    ggplot2::geom_line() + ggplot2::ylab(y.lab) + ggplot2::xlab(x.lab) + ggplot2::ggtitle(main) +
-    ggplot2::facet_grid(.~qpg)
+  pics <- ggplot2::ggplot(f.h.melt,
+                          aes_string(x="iteration", y="g", group="geneName", colour="geneName")) +
+          ggplot2::geom_line() +
+          ggplot2::ylab(y.lab) +
+          ggplot2::xlab(x.lab) +
+          ggplot2::ggtitle(main) +
+          ggplot2::facet_grid(.~qpg)
 
   ret <- list()
   # Store the picture WITHOUT the legend
   ret[["gPath"]] <- pics + theme(legend.position = "none")
 
   # Only if required, extract the legend from "pics" and provide as a entry in ret
-  if(plot_legend){
+  if(plot.legend){
     tmp <- ggplot2::ggplot_gtable(ggplot_build(pics))
     tmp.leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
     legend <- tmp$grobs[[tmp.leg]]

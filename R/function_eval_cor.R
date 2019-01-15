@@ -19,75 +19,92 @@
 #' @export
 #' @examples
 #' library(DTD)
-#' random.data <- generate.random.data(nTypes = 5,
-#'                                     nSamples.perType = 10,
-#'                                     nFeatures = 100,
+#' random.data <- generate_random_data(n.types = 10,
+#'                                     n.samples.per.type = 150,
+#'                                     n.features = 250,
 #'                                     sample.type = "Cell",
 #'                                     feature.type = "gene")
 #'
 #' # normalize all samples to the same amount of counts:
-#' random.data <- normalizeToCount(random.data)
+#' normalized.data <- normalize_to_count(random.data)
 #'
 #' # extract indicator list.
 #' # This list contains the Type of the sample as value, and the sample name as name
-#' indicator.list <- gsub("^Cell([0-9])*.", "", colnames(random.data))
+#' indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(random.data))
 #' names(indicator.list) <- colnames(random.data)
 #'
 #' # extract reference matrix X
 #' # First, decide which cells should be deconvoluted.
 #' # Notice, in the mixtures there can be more cells than in the reference matrix.
-#' include.in.X <- c("Type2", "Type3", "Type4", "Type5")
-#'
-#' X.matrix <- matrix(NA, nrow=nrow(random.data), ncol=length(include.in.X))
-#' colnames(X.matrix) <- include.in.X
-#' rownames(X.matrix) <- rownames(random.data)
+#' include.in.X <- paste0("Type", 2:7)
 #'
 #' percentage.of.all.cells <- 0.2
+#' sample.X <- sample_random_X(included.in.X = include.in.X,
+#'                             pheno = indicator.list,
+#'                             exp.data = normalized.data,
+#'                             percentage.of.all.cells = percentage.of.all.cells)
+#' X.matrix <- sample.X$X.matrix
+#' samples.to.remove <- sample.X$samples.to.remove
 #'
-#' # samples that are included in X must not be used in the training set!
-#' samples.to.remove <- c()
+#' # all samples that have been used in the reference matrix, must not be included in
+#' # the test/training set
+#' remaining.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+#' train.samples <- sample(x = colnames(remaining.mat),
+#'                        size = ceiling(ncol(remaining.mat)/2),
+#'                        replace = FALSE)
+#' test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
 #'
-#' for(l.type in include.in.X){
-#'   all.of.type <- names(indicator.list)[which(indicator.list == l.type)]
-#'   chosen.for.X <- sample(x = all.of.type,
-#'                          size = length(all.of.type) * percentage.of.all.cells,
-#'                          replace = FALSE)
-#'   samples.to.remove <- c(samples.to.remove, chosen.for.X)
+#' train.mat <- remaining.mat[, train.samples]
+#' test.mat <- remaining.mat[, test.samples]
 #'
-#'   average <- rowSums(random.data[, samples.to.remove])
-#'   X.matrix[, l.type] <- average
+#' indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
+#' training.data <- mix_samples(gene.mat = train.mat,
+#'                              pheno = indicator.train,
+#'                              included.in.X = include.in.X,
+#'                              n.samples = 500,
+#'                              n.per.mixture = 100,
+#'                              verbose = FALSE)
+#'
+#' indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
+#' test.data <-  mix_samples(gene.mat = test.mat,
+#'                           pheno = indicator.test,
+#'                           included.in.X = include.in.X,
+#'                           n.samples = 500,
+#'                           n.per.mixture = 100,
+#'                           verbose = FALSE)
+#'
+#' # The descent_generalized_fista optimizer finds the minimum iteratively
+#' # using accelareted gradient descent.
+#' # Therefore a gradient, and an evaluation function must be provided.
+#' # Within the fista implementation the gradient/evalution functions get evoked
+#' # with only one parameter.
+#' # All other parameters for the gradient (in the following example X, Y and C) must
+#' # be set using default parameter
+#' # This can be done using wrappers:
+#'
+#' # wrapper for gradient:
+#' DTD.grad.wrapper <- function(tweak,
+#'                              X = X.matrix,
+#'                              Y = training.data$mixtures,
+#'                              C = training.data$quantities){
+#'    grad <- gradient_cor_trace(X = X, Y = Y, C = C, tweak = tweak)
+#'    return(grad)
+#' }
+#' # wrapper for evaluate corelation:
+#' DTD.evCor.wrapper <- function(tweak,
+#'                              X = X.matrix,
+#'                              Y = training.data$mixtures,
+#'                              C = training.data$quantities){
+#'    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X)
+#'    return(loss)
 #' }
 #'
-#' # here, I declare "Type1" as Tumor cells, and all other as immune cells
-#' special.samples <- c("Type1")
-#' all.samples <- unique(indicator.list)
-#' sample.names <- all.samples[- which(all.samples %in% special.samples)]
-#'
-#' training.data <- mix.samples.jitter(sample.names = sample.names,
-#'                                      special.samples = special.samples,
-#'                                      nSamples = 1e3,
-#'                                      datamatrix = random.data,
-#'                                      pheno = indicator.list,
-#'                                      singleSpecial = FALSE,
-#'                                      add_jitter = TRUE,
-#'                                      chosen.mean = 1,
-#'                                      chosen.sd = 0.05,
-#'                                      min.amount.samples = 1,
-#'                                      verbose = FALSE,
-#'                                      included.in.X = include.in.X)
-#'
-#' training.data$mixtures <- normalizeToCount(training.data$mixtures)
-#'
-#' loss <- evaluate_cor(X = X.matrix,
-#'                      Y = training.data$mixtures,
-#'                      C = training.data$quantities,
-#'                      tweak = rep(1, nrow(X.matrix)))
-#'
-#' cor <-  -loss/ncol(X.matrix)
-#'
+#' start.tweak <- rep(1, nrow(X.matrix))
+#' start.cor <- DTD.evCor.wrapper(start.tweak)
+#' cat("Starting correlation: ", -start.cor, "\n")
 evaluate_cor <- function(X, Y, C, tweak){
   # estimate C using reference matrix, bulks and the tweak vector:
-  esti.cs <- est.cs(X, Y, tweak)
+  esti.cs <- est_cs(X, Y, tweak)
 
   if(any(dim(esti.cs) != dim(C))){
     stop("evaluate_cor: dimension of estimated C do not fit")
@@ -96,11 +113,12 @@ evaluate_cor <- function(X, Y, C, tweak){
   # initialise loss:
   loss <- 0
   for(l1 in 1:nrow(C)){
-    # calculate the correlation per Type:
+    # calculate the correlation per Type and add them up
     loss <- loss + stats::cor(C[l1, ], esti.cs[l1, ])
   }
 
-  # The value of loss-function is the sum over
+  # Our loss function is set to be a minimization problem, therefore we invert the sign:
   loss <- -loss
   return(loss)
 }
+

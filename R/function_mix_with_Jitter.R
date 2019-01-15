@@ -1,31 +1,32 @@
 #' Mix samples with Jitter
 #'
-#' "mix.samples.jitter" takes pheno information (sample.names, special.names) and a expression matrix.
-#' Its output is a expression and a quantity matrix.
+#' "mix_samples_with_jitter" takes pheno information (sample.names, special.names) and a expression matrix.
+#' Its output is a expression matrix with in-silicio mixtures and a quantity matrix.
 #' Each sample of the output is a mixture of input samples, multiplied with Jitter vector.
-#' "mix.samples.Jitter" mixes samples in a way that they look similar to biological data.
+#' "mix_samples_with_jitter" mixes samples in a way that they look similar to biological data.
 #' For example, in a tumor tissue there are several cells included, but we expect that
-#' most of them are tumor cells. Therefore, the mix.samples.Jitter function expects a
+#' most of them are tumor cells. Therefore, the mix_samples_with_jitter function expects a
 #' list of samples which represent immune cells (and occur in minor fractions) and a
 #' list of special samples (which occur in major fractions)
 #'
 #' @param sample.names vector of strings, have to match colnames(datamatrix).
 #' @param special.samples vector of strings, have to match colnames(datamatrix), these samples will
 #' occur with higher quantites within the mix data.
-#' @param nSamples integer, how many mixtures should be drawn
+#' @param n.samples integer, how many mixtures should be drawn
 #' @param datamatrix numeric matrix, with samples as columns, and features as rows
-#' @param singleSpecial boolean, should all special names be used? or only a single one
-#' @param add_jitter boolean, should the mixtures be mulitplied with a vector of normally distributed numbers? (JITTER)
-#' @param verbose boolean, should function tell about progression?
+#' @param single.special boolean, should all special names be used? or only a single one (Defaults to FALSE)
+#' @param add.jitter boolean, should the mixtures be mulitplied with a vector of normally distributed numbers? (JITTER)
+#' @param verbose boolean, should function tell about progression? (Defaults to FALSE)
 #' @param pheno named list of characters, indicates which of the samples in datamatrix belongs to which type in sample.names/special.names
-#' @param chosen.mean numeric, mean of jitter
-#' @param chosen.sd numeric, standard deviation of jitter
+#' @param chosen.mean numeric, mean of jitter (Default: 1)
+#' @param chosen.sd numeric, standard deviation of jitter (Default: 0.05)
 #' @param min.amount.samples integer, how many samples have to be present such that it averages over them,
-#'  instead of taking only 1
+#'  instead of taking only 1 (Default: 1)
 #' @param included.in.X list of strings, which cell types are included in the reference matrix.
 #' The mix function will mix all samples in the data set, but will only return the quantity matrix
-#' for the types included in X (and in the right ordering)
-#' @param per.type integer, how many samples "per type" should be used for each mixture
+#' for the types included in X (and in the right ordering).
+#' Defaults to NA, then no reordering/selecting will be done
+#' @param per.type integer, how many samples "per type" should be used for each mixture (Default: 1)
 #'
 #' @return list with two entries. "quantities" matrix (nrow = ncol(datamatrix), ncol = nMixtures) and "mixture"
 #' matrix (nrow = nrow(datamatrix), ncol = nMixtures)
@@ -34,14 +35,14 @@
 #'
 #' @examples
 #' library(DTD)
-#' random.data <- generate.random.data(nTypes = 10,
-#'                                     nSamples.perType = 10,
-#'                                     nFeatures = 500,
+#' random.data <- generate_random_data(n.types = 10,
+#'                                     n.samples.per.type = 10,
+#'                                     n.features = 500,
 #'                                     sample.type = "Cell",
 #'                                     feature.type = "gene")
 #'
 #' # normalize all samples to the same amount of counts:
-#' random.data <- normalizeToCount(random.data)
+#' random.data <- normalize_to_count(random.data)
 #'
 #' # extract indicator list.
 #' # This list contains the type of the sample as value, and the sample name as names
@@ -56,30 +57,30 @@
 #' all.samples <- unique(indicator.list)
 #' sample.names <- all.samples[- which(all.samples %in% special.samples)]
 #'
-#' training.data <- mix.samples.jitter(sample.names = sample.names,
-#'                                      special.samples = special.samples,
-#'                                      nSamples = 1e3,
+#' training.data <- mix_samples_with_jitter(sample.names = sample.names,
+#'                                          special.samples = special.samples,
+#'                                      n.samples = 1e3,
 #'                                      datamatrix = random.data,
 #'                                      pheno = indicator.list,
-#'                                      singleSpecial = FALSE,
-#'                                      add_jitter = TRUE,
+#'                                      single.special = FALSE,
+#'                                      add.jitter = TRUE,
 #'                                      chosen.mean = 1,
 #'                                      chosen.sd = 0.05,
 #'                                      min.amount.samples = 1)
 #'
-mix.samples.jitter <- function(sample.names,
+mix_samples_with_jitter <- function(sample.names,
                                special.samples,
-                               nSamples = 1e3,
+                               n.samples,
                                datamatrix,
                                pheno,
                                verbose = FALSE,
-                               singleSpecial = FALSE,
-                               add_jitter = FALSE,
+                               single.special = FALSE,
+                               add.jitter = FALSE,
                                chosen.mean = 1,
                                chosen.sd = 0.05,
                                min.amount.samples = 1,
                                per.type = 1,
-                               included.in.X){
+                               included.in.X = NA){
   # Safety check
   if(any(!names(pheno) %in% colnames(datamatrix))){
     stop("not all names provided are within the data matrix")
@@ -97,16 +98,16 @@ mix.samples.jitter <- function(sample.names,
   rownames(quant.matrix) <- c(sample.names, special.samples)
 
 
-  for(lrun in 1:nSamples){
+  for(lrun in 1:n.samples){
     if(verbose){
-      cat("doing ", lrun, " or ", 100*lrun/nSamples, "%\n" )
+      cat("doing ", lrun, " or ", 100*lrun/n.samples, "%\n" )
     }
     # get quantities for the special samples:
     # The special samples (e.g. malignant cells) dominate the cells (=> high quants)
     quant.special  <- stats::runif(n = 1, min = 0.5, max = 0.7)
 
-    # singleSpecial indicates if there is only one special sample present in the mixtures:
-    if(singleSpecial){
+    # single.special indicates if there is only one special sample present in the mixtures:
+    if(single.special){
       special <- c(quant.special, rep(0, length(special.samples)-1))
     }else{
       # if there are more than one special samples, the quant.special gets split,
@@ -166,7 +167,7 @@ mix.samples.jitter <- function(sample.names,
         next_quant <- quant.matrix[lsample, lrun] * rowSums(datamatrix[, potentialCells, drop = FALSE])
       }
       # jitter means to multply every entry of every "next_quant" with a random number close to 1:
-      if(add_jitter){
+      if(add.jitter){
         # get a vector of random numbers:
         factors <- stats::rnorm(n=length(next_quant), mean=chosen.mean, sd=chosen.sd)
         # elementwise multiply next_quant with it
@@ -181,8 +182,9 @@ mix.samples.jitter <- function(sample.names,
   }
 
   # only keep the quantity information of cells that are included in X
-  quant.matrix <- quant.matrix[included.in.X, ]
-
+  if(!any(is.na(included.in.X))){
+    quant.matrix <- quant.matrix[included.in.X, ]
+  }
   # build a return list, and add both matrices:
   rets <- vector(mode="list")
   rets[["mixtures"]] <- mix.matrix

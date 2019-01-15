@@ -24,11 +24,10 @@ identity <- function(x){
 #' norm(same.values, type = "2")
 #' normed.values <- n2normed(same.values)
 #' norm(normed.values, type = "2")
-#'
 n2normed <- function(x){
   n2 <- norm(matrix(x, ncol=1), type = "2")
-  tmp <- (length(x) * x)/n2
-  return(tmp)
+  ret <- (length(x) * x)/n2
+  return(ret)
 }
 
 #' Norm a vector such that ||x||_1 is equal to the length of x
@@ -44,10 +43,9 @@ n2normed <- function(x){
 #' norm(as.matrix(same.values), type = "O")
 #' normed.values <- n1normed(same.values)
 #' norm(as.matrix(normed.values), type = "O")
-#'
 n1normed <- function(x){
   n2 <- norm(matrix(x, ncol=1), type="O")
-  tmp <- (length(x)*x)/n2
-  return(tmp)
+  ret <- (length(x)*x)/n2
+  return(ret)
 }
 

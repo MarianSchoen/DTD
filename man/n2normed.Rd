@@ -21,5 +21,4 @@ same.values <- rnorm(n=10)
 norm(same.values, type = "2")
 normed.values <- n2normed(same.values)
 norm(normed.values, type = "2")
-
 }

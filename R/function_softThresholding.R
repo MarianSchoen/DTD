@@ -1,13 +1,13 @@
 #' Soft thresholding
 #'
 #' implementation of the proximal operator for l1 penalty
-#' (see Bubeck 2015)
+#' (see e.g. Bubeck 2015)
 #'
 #' @param x list of numerics, x = g - step.size * gradient(g)
 #' @param lambda float or list of floats, regularization parameter
 #'
 #' @export
-#' @return list of numerics, same length as x
+#' @return vector of numerics, same length as x
 #' @examples
 #' set.seed(1)
 #' soft_thresholding(x = runif(10) - rnorm(10), lambda = 0.2)

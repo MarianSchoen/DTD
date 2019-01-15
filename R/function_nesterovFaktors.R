@@ -14,4 +14,23 @@
 nesterov_faktor <- function(k){
   return(2/(k+1))
 }
+#' Wrapper for pmax
+#'
+#' positive_subspace_pmax expects a vector x, and applies pmax(x, 0) on it.
+#' It is needed as a wrapper within the \code{\link{descent_generalized_fista}} implementation.
+#'
+#' @param x numeric vector
+#'
+#' @return pmax(x,0), numeric vector with same length as x, but without any negative entries
+#' @export
+#'
+#' @examples
+#' set.seed(2202)
+#' vec.with.neg <- rnorm(10)
+#' range(vec.with.neg)
+#' vec.without.neg <- positive_subspace_pmax(vec.with.neg)
+#' range(vec.without.neg)
+positive_subspace_pmax <- function(x){
+  return(pmax(x, 0))
+}
 

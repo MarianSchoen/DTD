@@ -2,32 +2,35 @@
 #'
 #' The loss-function learning digital tissue deconvolution approach published by Goertler et al 2018
 #' estimates cell compositions for a given reference matrix X. Basically, there are two methods to
-#'  specify the reference profiles in X. Either they are selected using external knowledge
+#' specify the reference profiles in X. Either they are selected using external knowledge
 #' (e.g. additional measurements) or they are randomly selected out of the complete data set.
-#' The sample.random.X function is an implementation for the second method.
+#' The sample_random_X function is an implementation for the second method.
+#'
+#' For examples see the DTD vignette: browseVignettes("DTD")
 #'
 #' @param included.in.X vector of strings, which cell types should be included in X?
 #' @param pheno named vector of strings, names have to match exp.data.
-#' Information about the cell type (value of vector) for each sample (name of vector)
+#' Information about the cell type (values of vector) for each sample (names of vector)
 #' @param exp.data numeric matrix with features as rows, and samples as columns
 #' @param percentage.of.all.cells float, which percentage of all possible cells should
-#'  be use to generate a cell type profile?
+#'  be use to generate a cell type profile? Defaults to 0.1
 #'
-#' @return numeric matrix with as many rows as exp.data, and as many columns as length(included.in.X)
+#' @return list with two entries: (1) X.matrix: numeric matrix with as many rows as exp.data,
+#' and as many columns as length(included.in.X)
+#' (2) samples.to.remove: vector of strings, all samples that have been used in generating X.
 #' @export
-sample.random.X <- function(included.in.X,
+sample_random_X <- function(included.in.X,
                             pheno,
                             exp.data,
                             percentage.of.all.cells = 0.1){
-
-
   # initialise empty matrix:
   X.mat <- matrix(NA,
                   nrow = nrow(exp.data),
                   ncol = length(included.in.X))
   colnames(X.mat) <- included.in.X
   rownames(X.mat) <- rownames(exp.data)
-
+  # Keep track of all samples that have been used while generating X,
+  # these have to be removed from the training set afterwards
   samples.to.remove <- c()
 
   for(l.type in included.in.X){
@@ -46,7 +49,8 @@ sample.random.X <- function(included.in.X,
     average <- rowSums(exp.data[, chosen.for.X, drop = FALSE])
     X.mat[, l.type] <- average
   }
-
+  # normalize to common number of counts:
+  X.mat <- normalize_to_count(X.mat)
   # list X.matrix and samples to remove
   ret <- list("X.matrix" = X.mat, "samples.to.remove" = samples.to.remove)
   return(ret)

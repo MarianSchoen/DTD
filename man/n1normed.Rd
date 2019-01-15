@@ -21,5 +21,4 @@ same.values <- rnorm(n=10)
 norm(as.matrix(same.values), type = "O")
 normed.values <- n1normed(same.values)
 norm(as.matrix(normed.values), type = "O")
-
 }

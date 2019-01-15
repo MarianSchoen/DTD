@@ -4,24 +4,25 @@
 \alias{ggplot_cv}
 \title{Visualizing cross validation output}
 \usage{
-ggplot_cv(crossValFrame, main = "", LAMBDA.TRANS.FUN = log2,
+ggplot_cv(cross.val.frame, main = "", LAMBDA.TRANS.FUN = log2,
   x.lab = expression("log2(" * lambda * ")"), y.lab = "Loss function")
 }
 \arguments{
-\item{crossValFrame}{data frame, as return by the DTD_cv_lambda function}
+\item{cross.val.frame}{data frame, as return by the DTD_cv_lambda function}
 
-\item{main}{string, used as title in the plot}
+\item{main}{string, used as title in the plot. Defaults to ""}
 
-\item{LAMBDA.TRANS.FUN}{function, will be applied to the lambda sequence, to get equdistance x ticks (defaults to log2)}
+\item{LAMBDA.TRANS.FUN}{function, will be applied to the lambda sequence,
+to get equdistance x ticks (defaults to log2)}
 
-\item{x.lab}{string, or expression, will be used as the label on the x axis}
+\item{x.lab}{string, or expression, will be used as the label on the x axis, defaults to "log2(lambda)"}
 
-\item{y.lab}{string, or expression, will be used as the label on the y axis}
+\item{y.lab}{string, or expression, will be used as the label on the y axis, defaults to "Loss function"}
 }
 \value{
 a ggplot plot object
 }
 \description{
-Plot the regularization parameter lambda vs the resulting loss function.
+Plot the regularization parameter lambda vs the resulting loss function value.
 For an example see `browseVignettes("DTD")`
 }

@@ -1,6 +1,6 @@
 #' Histogram of the g/tweak vector
 #'
-#' The resulting distribution of the entries of g are visualized best in a histogram.
+#' The resulting distribution of g are visualized best in a histogram.
 #' As the g vector may get spread over a big range, you can provide a transformation function.
 #' This will be applied on the g/tweak vector. If the provided transformation function returns NA,
 #' the function will state the number of NAs in the title of the plot.
@@ -10,6 +10,8 @@
 #' @param n.bins : integer, number of bins in the histogram. Defaults to 50
 #' @param TRANSFORM.FUN : function that expects a list of floats, and returns a list of floats
 #' Defaults to identity.
+#' @param main string, used as title of the plot. Defaults to ""
+#' @param x.lab string, used as x label of the plot. Defaults to ""
 #'
 #' @import ggplot2
 #'

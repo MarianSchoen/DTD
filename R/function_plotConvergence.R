@@ -4,16 +4,16 @@
 #' a model has been trained.
 #'
 #' As input parameter it needs the output of \code{\link{descent_generalized_fista}}. If fista has been evoked
-#' with save_all_tweaks = T, and a test set is available, the loss-function can be evaluated for all tweak vectors,
+#' with save_all_tweaks = T, and a evaluation function is available, the loss-function can be evaluated for all
+#' intermediate tweak vectors,
 #' and both training and test loss curves will be plotted (=> detect overfitting).\cr
 #' For an example see
 #' \code{\link{descent_generalized_fista}}
 #'
 #' @param fista.output list, with "Convergence" entry as return by the descent_generalized_fista function
-#' @param test.set list with "mixtures" matrix, and "quantity" matrix as returned by mix.samples or mix.samples.jitter function
-#' @param X.matrix numeric matrix, reference matrix of the DTD problem
-#' @param main string, additionally title
-#' @param EVAL.FUN function, that takes a single input (the tweak vector of the fista.output)
+#' @param EVAL.FUN function, that takes a single input (the tweak vector of the fista.output),
+#' and returns the loss function on the test set. Default is NA
+#' @param main string, additionally title (default "")
 #'
 #' @return ggplot object
 #' @export

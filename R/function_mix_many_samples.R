@@ -1,16 +1,18 @@
 #' Mix samples for loss-function learning DTD
 #'
-#' mix.samples takes a gene expresssion matrix, and pheno information.
+#' mix_samples takes a gene expresssion matrix, and pheno information.
 #' It then mixes the samples with known quantities such that it can be
 #' used for loss-function learning digital tissue deconvolution.
+#' For mixture it randomly selects "n.samples" samples from "gene.mat", and averages over them.
+#' Using the information stored in pheno, it can get the quantities per cell in each mixture.
 #'
 #' @param gene.mat numeric matrix, with features as rows and samples as columns
 #' @param pheno named vector, with pheno information for each sample in gene.mat
-#' @param nSamples integer, numbers of samples to be drawn
-#' @param nPerMixture integer, how many samples should be included per mixutre
-#' @param included.in.X list of strings, types that are in the reference matrix.
-#' Only those, and sorted in that order, will be included in the quantity matrix
-#' @param verbose boolean, should information be printed
+#' @param n.samples integer, numbers of samples to be drawn (defaults to 1000)
+#' @param n.per.mixture integer, how many samples should be included per mixutre. (Default: 100)
+#' @param included.in.X named vector of strings, indicating types that are in the reference matrix.
+#' Only those types, and sorted in that order, will be included in the quantity matrix
+#' @param verbose boolean, should information be printed (Default: FALSE)
 #'
 #' @return list with random profiles, and their quantity matrix
 #'
@@ -18,57 +20,64 @@
 #'
 #' @examples
 #' library(DTD)
-#' random.data <- generate.random.data(nTypes = 10,
-#'                                     nSamples.perType = 1e2,
-#'                                     nFeatures = 500,
+#' random.data <- generate_random_data(n.types = 10,
+#'                                     n.samples.per.type = 150,
+#'                                     n.features = 250,
 #'                                     sample.type = "Cell",
 #'                                     feature.type = "gene")
 #'
 #' # normalize all samples to the same amount of counts:
-#' random.data <- normalizeToCount(random.data)
+#' normalized.data <- normalize_to_count(random.data)
 #'
 #' # extract indicator list.
-#' # This list contains the type of the sample as value, and the sample name as names
+#' # This list contains the Type of the sample as value, and the sample name as name
 #' indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(random.data))
 #' names(indicator.list) <- colnames(random.data)
 #'
 #' # extract reference matrix X
 #' # First, decide which cells should be deconvoluted.
 #' # Notice, in the mixtures there can be more cells than in the reference matrix.
-#' include.in.X <- c("Type2", "Type3", "Type4", "Type5")
-#'
-#' X.matrix <- matrix(NA, nrow=nrow(random.data), ncol=length(include.in.X))
-#' colnames(X.matrix) <- include.in.X
-#' rownames(X.matrix) <- rownames(random.data)
+#' include.in.X <- paste0("Type", 2:7)
 #'
 #' percentage.of.all.cells <- 0.2
+#' sample.X <- sample_random_X(included.in.X = include.in.X,
+#'                             pheno = indicator.list,
+#'                             exp.data = normalized.data,
+#'                             percentage.of.all.cells = percentage.of.all.cells)
+#' X.matrix <- sample.X$X.matrix
+#' samples.to.remove <- sample.X$samples.to.remove
 #'
-#' # samples that are included in X must not be used in the training set!
-#' samples.to.remove <- c()
+#' # all samples that have been used in the reference matrix, must not be included in
+#' # the test/training set
+#' remaining.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
+#' train.samples <- sample(x = colnames(remaining.mat),
+#'                        size = ceiling(ncol(remaining.mat)/2),
+#'                        replace = FALSE)
+#' test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
 #'
-#' for(l.type in include.in.X){
-#'   all.of.type <- names(indicator.list)[which(indicator.list == l.type)]
-#'   chosen.for.X <- sample(x = all.of.type,
-#'                          size = length(all.of.type) * percentage.of.all.cells,
-#'                          replace = FALSE)
-#'   samples.to.remove <- c(samples.to.remove, chosen.for.X)
+#' train.mat <- remaining.mat[, train.samples]
+#' test.mat <- remaining.mat[, test.samples]
 #'
-#'   average <- rowSums(random.data[, samples.to.remove])
-#'   X.matrix[, l.type] <- average
-#' }
-#'
-#' train.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
 #' indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
-#'
-#' training.data <- mix.samples(gene.mat = train.mat,
+#' training.data <- mix_samples(gene.mat = train.mat,
 #'                              pheno = indicator.train,
-#'                              included.in.X = include.in.X)
+#'                              included.in.X = include.in.X,
+#'                              n.samples = 500,
+#'                              n.per.mixture = 100,
+#'                              verbose = FALSE)
 #'
-mix.samples <- function(gene.mat,
+#' indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
+#' test.data <-  mix_samples(gene.mat = test.mat,
+#'                           pheno = indicator.test,
+#'                           included.in.X = include.in.X,
+#'                           n.samples = 500,
+#'                           n.per.mixture = 100,
+#'                           verbose = FALSE)
+mix_samples <- function(gene.mat,
                        pheno,
                        included.in.X,
-                       nSamples = 1e3,
-                       nPerMixture = 100,
+                       n.samples = 1e3,
+                       n.per.mixture = 100,
                        verbose = FALSE){
 
   if(any(!names(pheno) %in% colnames(gene.mat))){
@@ -76,9 +85,9 @@ mix.samples <- function(gene.mat,
   }
 
   # initialise geneExpression matrix (here, the mixtures will be stored)
-  geneExpression <- matrix(NA, nrow=nrow(gene.mat), ncol=nSamples)
+  geneExpression <- matrix(NA, nrow=nrow(gene.mat), ncol=n.samples)
   rownames(geneExpression) <- rownames(gene.mat)
-  colnames(geneExpression) <- paste0("mixtures", 1:nSamples)
+  colnames(geneExpression) <- paste0("mixtures", 1:n.samples)
 
   # which types are within the pheno?
   types <- unique(pheno)
@@ -86,14 +95,14 @@ mix.samples <- function(gene.mat,
   nTypes <- length(types)
 
   # initialise quantities matrix (here, the quantities for each cell type in every mixture will be stored)
-  quantities <- matrix(NA, nrow = nTypes, ncol=nSamples)
+  quantities <- matrix(NA, nrow = nTypes, ncol=n.samples)
   rownames(quantities) <- types
   colnames(quantities) <- colnames(geneExpression)
 
-  for(lsample in 1:nSamples){
-    # randomly select 'nPerMixture' samples (without replacing!)
+  for(lsample in 1:n.samples){
+    # randomly select 'n.per.mixture' samples (without replacing!)
     randomSamples <- sample(x = colnames(gene.mat),
-                            size = nPerMixture,
+                            size = n.per.mixture,
                             replace = FALSE)
     # average over the selected samples ...
     avg <- rowSums(gene.mat[, randomSamples])
@@ -114,13 +123,13 @@ mix.samples <- function(gene.mat,
     }
 
     # divide quants by the number of used samples:
-    quants <- table.chosen.pheno/nPerMixture
+    quants <- table.chosen.pheno/n.per.mixture
     # order quants by the rownames of quantities ...
     quants <- quants[rownames(quantities)]
     # ... and add them to the quantities matrix
     quantities[, lsample] <- quants
     if(verbose){
-      cat("done ", 100 * lsample/nSamples, " %\n")
+      cat("done ", 100 * lsample/n.samples, " %\n")
     }
   }
 
@@ -128,7 +137,7 @@ mix.samples <- function(gene.mat,
   quantities <- quantities[included.in.X, ]
 
   # normalize the expression matrix
-  geneExpression <- normalizeToCount(geneExpression)
+  geneExpression <- normalize_to_count(geneExpression)
   # and return both matrices as a list:
   ret <- list("mixtures"= geneExpression, "quantities" = quantities)
   return(ret)

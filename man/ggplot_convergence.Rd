@@ -9,13 +9,10 @@ ggplot_convergence(fista.output, EVAL.FUN = NA, main = "")
 \arguments{
 \item{fista.output}{list, with "Convergence" entry as return by the descent_generalized_fista function}
 
-\item{EVAL.FUN}{function, that takes a single input (the tweak vector of the fista.output)}
+\item{EVAL.FUN}{function, that takes a single input (the tweak vector of the fista.output),
+and returns the loss function on the test set. Default is NA}
 
-\item{main}{string, additionally title}
-
-\item{test.set}{list with "mixtures" matrix, and "quantity" matrix as returned by mix.samples or mix.samples.jitter function}
-
-\item{X.matrix}{numeric matrix, reference matrix of the DTD problem}
+\item{main}{string, additionally title (default "")}
 }
 \value{
 ggplot object
@@ -26,7 +23,8 @@ a model has been trained.
 }
 \details{
 As input parameter it needs the output of \code{\link{descent_generalized_fista}}. If fista has been evoked
-with save_all_tweaks = T, and a test set is available, the loss-function can be evaluated for all tweak vectors,
+with save_all_tweaks = T, and a evaluation function is available, the loss-function can be evaluated for all
+intermediate tweak vectors,
 and both training and test loss curves will be plotted (=> detect overfitting).\cr
 For an example see
 \code{\link{descent_generalized_fista}}

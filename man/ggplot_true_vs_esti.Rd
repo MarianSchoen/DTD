@@ -4,26 +4,34 @@
 \alias{ggplot_true_vs_esti}
 \title{Plot true vs estimated cell composition}
 \usage{
-ggplot_true_vs_esti(estimatedC, trueC, norm.columnwise = TRUE,
-  title = "", color.indi = NA)
+ggplot_true_vs_esti(estimated.c, true.c, norm.mixturewise = FALSE,
+  norm.typewise = FALSE, title = "", shape.indi = NA,
+  show.legend = FALSE)
 }
 \arguments{
-\item{estimatedC}{matrix, with cell types as rows, and mixtures as columns}
+\item{estimated.c}{matrix, with cell types as rows, and mixtures as columns}
 
-\item{trueC}{matrix, with cell types as rows, and mixtures as columns}
+\item{true.c}{matrix, with cell types as rows, and mixtures as columns}
 
-\item{norm.columnwise}{boolean, should every column be normalized to sum of 1?}
+\item{norm.mixturewise}{boolean, should every sample (=> column) be normalized to sum of 1? (Defaults to FALSE)}
 
-\item{title}{string, title for plot}
+\item{norm.typewise}{boolean, should every type (=> row) be normalized to range from 0 to 1? (Defaults to FALSE)}
 
-\item{color.indi}{vector with length of ncol(trueC), used for colouring in ggplot}
+\item{title}{string, title for plot (Defaults to "")}
+
+\item{shape.indi}{vector with length of ncol(true.c), used as parameter shape in ggplot.
+Idea is to mark samples from different origin. If no additional(Defaults to NA)}
+
+\item{show.legend}{boolean, should an additional legend be plotted? Notice, in this function a figure per type will be generated.
+In the title of each subfigure the correlation of the included type and the type is shown.
+This parameter only sets the additional overall legend(Defaults to FALSE)}
 }
 \value{
 ggplot object
 }
 \description{
-'ggplot_true_vs_esti' can be used to evaluate a trained DTD model,
-by plotting known/true quantities versus estimated quantities per cell type. Its main inputs are two quantity matrices.
+'ggplot_true_vs_esti' can be used to evaluate a trained DTD model, in the way that
+it plots known/true quantities versus estimated quantities per cell type. Its main inputs are two quantity matrices.
 For an example see
 \code{\link{descent_generalized_fista}}
 }

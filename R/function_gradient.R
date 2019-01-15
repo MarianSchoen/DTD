@@ -17,10 +17,10 @@
 #'
 #' @return numeric list, same length as "tweak"
 
-Trace.H.gradient <- function(X, Y, C, tweak){
+gradient_cor_trace <- function(X, Y, C, tweak){
 
   Gamma <- Matrix::Matrix(diag(tweak))
-  estimates.cs <- est.cs(X, Y, tweak)
+  estimates.cs <- est_cs(X, Y, tweak)
   hat.sigmas <- matrixStats::rowSds(estimates.cs, na.rm = T)
   sigmas <- matrixStats::rowSds(C, na.rm = T)
   mean.hat.cs <- Matrix::rowMeans(estimates.cs)
@@ -48,6 +48,8 @@ Trace.H.gradient <- function(X, Y, C, tweak){
 
   d.elems <- diag(B)
 
+  # due to the constraint that all g have to be positive:
+  d.elems[d.elems > 0] <- 0
   return(d.elems)
 }
 

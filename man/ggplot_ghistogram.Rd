@@ -14,12 +14,16 @@ ggplot_ghistogram(fista.output, n.bins = 50,
 
 \item{TRANSFORM.FUN}{: function that expects a list of floats, and returns a list of floats
 Defaults to identity.}
+
+\item{main}{string, used as title of the plot. Defaults to ""}
+
+\item{x.lab}{string, used as x label of the plot. Defaults to ""}
 }
 \value{
 ggplot object
 }
 \description{
-The resulting distribution of the entries of g are visualized best in a histogram.
+The resulting distribution of g are visualized best in a histogram.
 As the g vector may get spread over a big range, you can provide a transformation function.
 This will be applied on the g/tweak vector. If the provided transformation function returns NA,
 the function will state the number of NAs in the title of the plot.

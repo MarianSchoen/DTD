@@ -5,63 +5,69 @@
 \title{Descent generalized FISTA \cr
 (fast iterative shrinkage thresholding algorithm)}
 \usage{
-descent_generalized_fista(tweak_vec = NA, lambda = 0, maxit = 1000,
+descent_generalized_fista(tweak.vec = NA, lambda = 0, maxit = 1000,
   learning.rate = NA, F.GRAD.FUN, ST.FUN = soft_thresholding,
   FACTOR.FUN = nesterov_faktor, EVAL.FUN, NORM.FUN = identity,
-  line_search_speed = 2, cycles = 50, save_all_tweaks = FALSE,
-  use_restarts = TRUE, verbose = TRUE)
+  line.search.speed = 2, cycles = 50, save.all.tweaks = FALSE,
+  use.restart = TRUE, verbose = TRUE,
+  NESTEROV.FUN = positive_subspace_pmax)
 }
 \arguments{
-\item{tweak_vec}{numeric vector, with which the minimization algorithm starts}
+\item{tweak.vec}{numeric vector, with which the minimization algorithm starts, defaults to NA}
 
-\item{lambda}{float, regularization factor for ST.FUN function}
+\item{lambda}{float, regularization factor for ST.FUN function, defaults to 0}
 
 \item{maxit}{integer, maximum number of iterations for the iterative
-minimization}
+minimization, defaults to 1000}
 
-\item{learning.rate}{float, step size while learning}
+\item{learning.rate}{float, step size while learning. Defaults to NA. If it is NA, the learning rate will
+be estimated as published by Barzilai & Borwein 1988}
 
 \item{F.GRAD.FUN}{function with one parameter: vector with same length as
-tweak_vec, and one return argument: vector with same length as tweak_vec
+tweak.vec, and one return argument: vector with same length as tweak.vec
 For a given vector, it returns the gradient of the loss-function}
 
 \item{ST.FUN}{function, with one parameter: vector with same length as
-tweak_vec, and one return argument: vector with same length as tweak_vec
+tweak.vec, and one return argument: vector with same length as tweak.vec
 implementation of the proximal operator for the chosen Loss-function. Here
-named soft thresholding function.}
+named soft thresholding function. Defaults to soft_thresholding}
 
 \item{FACTOR.FUN}{function, with a integer as input, and a float as return
 value. This function returns the factor the nesterov correction
-extrapolates.}
+extrapolates. Defaults to nesterov_faktor}
 
 \item{EVAL.FUN}{function, with one parameter: vector with same length as
-tweak_vec, and a single float as return. This function evaluates the loss
+tweak.vec, and a single float as return. This function evaluates the loss
 function.}
 
 \item{NORM.FUN}{function, with one parameter: After each step the tweak vector will be normed/scaled.
-If no scaling should be done, set NORM.FUN to identity.}
+If no scaling should be done, set NORM.FUN to identity. Defaults to identity.}
 
-\item{line_search_speed}{numeric, factor with which the learning rate changes,
-if the optimium has not been found}
+\item{line.search.speed}{numeric, factor with which the learning rate changes,
+if the optimium has not been found. Defaults to 2.}
 
 \item{cycles}{integer, in each iteration one gradient is calculated. To find the
-best step size, with "cycles" different step sizes}
+best step size, we do "cycles" steps, and evaluate each of them to find the best step size.
+Defaults to 50}
 
-\item{save_all_tweaks}{boolean, should all tweak vectores during all iterations be stored}
+\item{save.all.tweaks}{boolean, should all tweak vectores during all iterations be stored. Defaults to FALSE}
 
-\item{use_restarts}{boolean, restart the algorithm if the update was not a descent step}
+\item{use.restart}{boolean, restart the algorithm if the update was not a descent step. Defaults to TRUE}
 
-\item{verbose}{boolean, should information be printed to console}
+\item{verbose}{boolean, should information be printed to console. Defaults to TRUE}
+
+\item{NESTEROV.FUN}{function, applied to the nesterov extrapolation.
+In DTD it is all g must be positive. Therefore we set default to a positive_subspace_pmax wrapper function}
 }
 \value{
-list, including [["Converge"]] and [["Tweak"]] (depending on "save_all_tweks": [["History"]])
+list, including [["Converge"]], [["Tweak"]] and [["Lambda"]]  (depending on "save_all_tweks": [["History"]])
 }
 \description{
 descent_generalized_fista takes as input a vector, a gradient function and an
 evaluation function (and some additional parameters/functions). Then, it
 iteratively minimizes the tweak vector via FISTA (Beck and Teboulle 2009). Basically,
 the following equations are used:\cr
-# prelimary initializationstep\cr
+# prelimary initialization step\cr
 for k = 2,..., maxit:\cr
 \itemize{
     \item grad = F.GRAD.FUN(y_vec)\cr
@@ -71,11 +77,19 @@ for k = 2,..., maxit:\cr
         \item u = ST.FUN(y_vec - step.size * grad, step.size * lambda)\cr
         \item eval = EVAL.FUN(u)
     }
-    \item# only keep u with minimal eval\cr
+    \item # only keep u with minimal eval\cr
     \item tweak.old = tweak.vec\cr
-    \item tweak.vec = u\cr
-    \item v_vec = tweak.old + 1/FACTOR.FUN(k) * (tweak.vec - tweak.old)\cr
-    \item y_vec = (1 - FACTOR.FUN(k+1)) * tweak_vec + FACTOR.FUN(k+1) * v_vec\cr
+    \item # if it was a descent step: \cr tweak.vec = u
+    \item # if it was not a descent step: \cr tweak.vec = tweak.vec \cr#(and restart as suggested in  O’Donoghue & Candes (2012))
+    \item # Nesterov extrapolation:
+    \item nesterov.direction = tweak.vec - tweak.old
+    \item # find best extrapolation size bewteen 0 and FACTOR.FUN(k):\cr
+         for ne = 0 ,... FACTOR.FUN(k):\cr
+    \itemize{
+        \item y_vec = u_vec + ne * nesterov.direction
+        \item eval = EVAL.FUN(y_vec)
+    }
+    \item # only keep y_vec with minimal eval
 }
 }
 \details{
@@ -85,14 +99,14 @@ Exemplary wrapper functions can be found in the examples.
 }
 \examples{
 library(DTD)
-random.data <- generate.random.data(nTypes = 10,
-                                    nSamples.perType = 150,
-                                    nFeatures = 250,
+random.data <- generate_random_data(n.types = 10,
+                                    n.samples.per.type = 150,
+                                    n.features = 250,
                                     sample.type = "Cell",
                                     feature.type = "gene")
 
 # normalize all samples to the same amount of counts:
-random.data <- normalizeToCount(random.data)
+normalized.data <- normalize_to_count(random.data)
 
 # extract indicator list.
 # This list contains the Type of the sample as value, and the sample name as name
@@ -104,25 +118,13 @@ names(indicator.list) <- colnames(random.data)
 # Notice, in the mixtures there can be more cells than in the reference matrix.
 include.in.X <- paste0("Type", 2:7)
 
-X.matrix <- matrix(NA, nrow=nrow(random.data), ncol=length(include.in.X))
-colnames(X.matrix) <- include.in.X
-rownames(X.matrix) <- rownames(random.data)
-
 percentage.of.all.cells <- 0.2
-
-# samples that are included in X must not be used in the training set!
-samples.to.remove <- c()
-
-for(l.type in include.in.X){
-  all.of.type <- names(indicator.list)[which(indicator.list == l.type)]
-  chosen.for.X <- sample(x = all.of.type,
-                         size = ceiling(length(all.of.type) * percentage.of.all.cells),
-                         replace = FALSE)
-  samples.to.remove <- c(samples.to.remove, chosen.for.X)
-
-  average <- rowSums(random.data[, chosen.for.X, drop = FALSE])
-  X.matrix[, l.type] <- average
-}
+sample.X <- sample_random_X(included.in.X = include.in.X,
+                            pheno = indicator.list,
+                            exp.data = normalized.data,
+                            percentage.of.all.cells = percentage.of.all.cells)
+X.matrix <- sample.X$X.matrix
+samples.to.remove <- sample.X$samples.to.remove
 
 # all samples that have been used in the reference matrix, must not be included in
 # the test/training set
@@ -136,19 +138,19 @@ train.mat <- remaining.mat[, train.samples]
 test.mat <- remaining.mat[, test.samples]
 
 indicator.train <- indicator.list[names(indicator.list) \%in\% colnames(train.mat)]
-training.data <- mix.samples(gene.mat = train.mat,
+training.data <- mix_samples(gene.mat = train.mat,
                              pheno = indicator.train,
                              included.in.X = include.in.X,
-                             nSamples = 500,
-                             nPerMixture = 100,
+                             n.samples = 500,
+                             n.per.mixture = 100,
                              verbose = FALSE)
 
 indicator.test <- indicator.list[names(indicator.list) \%in\% colnames(test.mat)]
-test.data <-  mix.samples(gene.mat = test.mat,
+test.data <-  mix_samples(gene.mat = test.mat,
                           pheno = indicator.test,
                           included.in.X = include.in.X,
-                          nSamples = 500,
-                          nPerMixture = 100,
+                          n.samples = 500,
+                          n.per.mixture = 100,
                           verbose = FALSE)
 
 # The descent_generalized_fista optimizer finds the minimum iteratively
@@ -165,7 +167,7 @@ DTD.grad.wrapper <- function(tweak,
                              X = X.matrix,
                              Y = training.data$mixtures,
                              C = training.data$quantities){
-   grad <- Trace.H.gradient(X = X, Y = Y, C = C, tweak = tweak)
+   grad <- gradient_cor_trace(X = X, Y = Y, C = C, tweak = tweak)
    return(grad)
 }
 # wrapper for evaluate corelation:
@@ -173,29 +175,26 @@ DTD.evCor.wrapper <- function(tweak,
                              X = X.matrix,
                              Y = training.data$mixtures,
                              C = training.data$quantities){
-   loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)
+   loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X)
    return(loss)
 }
 
-start_tweak <- rep(1, nrow(X.matrix))
-start_cor <- 1 - DTD.evCor.wrapper(start_tweak)
-cat("Starting correlation: ", start_cor, "\\n")
+start.tweak <- rep(1, nrow(X.matrix))
+start.cor <- DTD.evCor.wrapper(start.tweak)
+cat("Starting correlation: ", -start.cor, "\\n")
 
-catch <- descent_generalized_fista(tweak_vec = start_tweak,
+catch <- descent_generalized_fista(tweak.vec = start.tweak,
                                    F.GRAD.FUN = DTD.grad.wrapper,
                                    ST.FUN = soft_thresholding,
                                    FACTOR.FUN = nesterov_faktor,
                                    EVAL.FUN = DTD.evCor.wrapper,
-                                   line_search_speed = 2,
+                                   line.search.speed = 2,
                                    maxit = 250,
-                                   save_all_tweaks = TRUE,
-                                   use_restarts = TRUE,
+                                   save.all.tweaks = TRUE,
+                                   use.restart = TRUE,
                                    verbose = FALSE)
 
-print(ggplot_correlation(fista.output = catch,
-                         test.set = test.data,
-                         X.matrix = X.matrix,
+print(ggplot_convergence(fista.output = catch,
                          main="additional title")
      )
-
 }
