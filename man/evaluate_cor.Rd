@@ -4,18 +4,23 @@
 \alias{evaluate_cor}
 \title{Evaluate correlation}
 \usage{
-evaluate_cor(X, Y, C, tweak)
+evaluate_cor(X.matrix = NA, new.data, true.compositions, DTD.model)
 }
 \arguments{
-\item{X}{numeric matrix with cells as columns, and features as rows. Reference matrix X of the DTD problem.}
+\item{X.matrix}{numeric matrix with cells as columns, and features as rows.
+Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
+includes the reference matrix X (default for \code{\link{train_correlatio_model}})}
 
-\item{Y}{numeric matrix with samples as columns, and features as rows. Each sample in Y is a bulk measurement,
-for which the quantity of the cells in X are known (and saved in C)}
+\item{new.data}{numeric matrix with samples as columns, and features as rows.
+In the formula above denoated as Y.}
 
-\item{C}{numeric matrix with cells as rows, and mixtures as columns.
+\item{true.compositions}{numeric matrix with cells as rows, and mixtures as columns.
 Each row of C holds the distribution of the cell over all mixtures.}
 
-\item{tweak}{numeric vector with length of nrow(X).}
+\item{DTD.model}{either a numeric vector with length of nrow(X),
+or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or\code{\link{descent_generalized_fista}}. In the equation above
+  the DTD.model provides the vector g.}
 }
 \value{
 float, value of the Loss function
@@ -24,9 +29,6 @@ float, value of the Loss function
 The loss-function learning digital tissue deconvolution finds a vector g which minimizes the Loss function L\cr
 \deqn{L(g) = - \sum cor(true_C, estimatd_C(g))}
 The evaluate_cor function returns the value of the Loss function.
-The evaluate_cor function takes 4 arguments. However, we wrote the FISTA implementation in a way that both the
-gradient and the evaluation function only take one argument, which is the g vector. In order to use this function
-within the `descent_generalized_fista` function, you need a wrapper function (see \code{\link{descent_generalized_fista}})
 }
 \examples{
 library(DTD)
@@ -57,60 +59,21 @@ sample.X <- sample_random_X(included.in.X = include.in.X,
 X.matrix <- sample.X$X.matrix
 samples.to.remove <- sample.X$samples.to.remove
 
-# all samples that have been used in the reference matrix, must not be included in
-# the test/training set
-remaining.mat <- random.data[, -which(colnames(random.data) \%in\% samples.to.remove)]
-train.samples <- sample(x = colnames(remaining.mat),
-                       size = ceiling(ncol(remaining.mat)/2),
-                       replace = FALSE)
-test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) \%in\% train.samples)]
-
-train.mat <- remaining.mat[, train.samples]
-test.mat <- remaining.mat[, test.samples]
 
 indicator.train <- indicator.list[names(indicator.list) \%in\% colnames(train.mat)]
-training.data <- mix_samples(gene.mat = train.mat,
+training.data <- mix_samples(gene.mat = remaining.mat,
                              pheno = indicator.train,
                              included.in.X = include.in.X,
                              n.samples = 500,
                              n.per.mixture = 100,
                              verbose = FALSE)
 
-indicator.test <- indicator.list[names(indicator.list) \%in\% colnames(test.mat)]
-test.data <-  mix_samples(gene.mat = test.mat,
-                          pheno = indicator.test,
-                          included.in.X = include.in.X,
-                          n.samples = 500,
-                          n.per.mixture = 100,
-                          verbose = FALSE)
+ start.tweak <- rep(1, nrow(X.matrix))
+ sum.cor <- evaluate_cor(X = X.matrix,
+                      new.data = training.data$mixtures,
+                      true.compositions = training.data$quantities,
+                      DTD.model = start.tweak)
 
-# The descent_generalized_fista optimizer finds the minimum iteratively
-# using accelareted gradient descent.
-# Therefore a gradient, and an evaluation function must be provided.
-# Within the fista implementation the gradient/evalution functions get evoked
-# with only one parameter.
-# All other parameters for the gradient (in the following example X, Y and C) must
-# be set using default parameter
-# This can be done using wrappers:
-
-# wrapper for gradient:
-DTD.grad.wrapper <- function(tweak,
-                             X = X.matrix,
-                             Y = training.data$mixtures,
-                             C = training.data$quantities){
-   grad <- gradient_cor_trace(X = X, Y = Y, C = C, tweak = tweak)
-   return(grad)
-}
-# wrapper for evaluate corelation:
-DTD.evCor.wrapper <- function(tweak,
-                             X = X.matrix,
-                             Y = training.data$mixtures,
-                             C = training.data$quantities){
-   loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X)
-   return(loss)
-}
-
-start.tweak <- rep(1, nrow(X.matrix))
-start.cor <- DTD.evCor.wrapper(start.tweak)
-cat("Starting correlation: ", -start.cor, "\\n")
+ rel.cor <- sum.cor/ncol(X.matrix)
+cat("Relative correlation: ", -rel.cor, "\\n")
 }

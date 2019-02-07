@@ -126,50 +126,13 @@
 #'                           n.per.mixture = 100,
 #'                           verbose = FALSE)
 #'
-#' # The descent_generalized_fista optimizer finds the minimum iteratively
-#' # using accelareted gradient descent.
-#' # Therefore a gradient, and an evaluation function must be provided.
-#' # Within the fista implementation the gradient/evalution functions get evoked
-#' # with only one parameter.
-#' # All other parameters for the gradient (in the following example X, Y and C) must
-#' # be set using default parameter
-#' # This can be done using wrappers:
-#'
-#' # wrapper for gradient:
-#' DTD.grad.wrapper <- function(tweak,
-#'                              X = X.matrix,
-#'                              Y = training.data$mixtures,
-#'                              C = training.data$quantities){
-#'    grad <- gradient_cor_trace(X = X, Y = Y, C = C, tweak = tweak)
-#'    return(grad)
-#' }
-#' # wrapper for evaluate corelation:
-#' DTD.evCor.wrapper <- function(tweak,
-#'                              X = X.matrix,
-#'                              Y = training.data$mixtures,
-#'                              C = training.data$quantities){
-#'    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X)
-#'    return(loss)
-#' }
-#'
 #' start.tweak <- rep(1, nrow(X.matrix))
-#' start.cor <- DTD.evCor.wrapper(start.tweak)
-#' cat("Starting correlation: ", -start.cor, "\n")
-#'
-#' catch <- descent_generalized_fista(tweak.vec = start.tweak,
-#'                                    F.GRAD.FUN = DTD.grad.wrapper,
-#'                                    ST.FUN = soft_thresholding,
-#'                                    FACTOR.FUN = nesterov_faktor,
-#'                                    EVAL.FUN = DTD.evCor.wrapper,
-#'                                    line.search.speed = 2,
-#'                                    maxit = 250,
-#'                                    save.all.tweaks = TRUE,
-#'                                    use.restart = TRUE,
-#'                                    verbose = FALSE)
-#'
-#' print(ggplot_convergence(fista.output = catch,
-#'                          main="additional title")
-#'      )
+#' names(start.tweak) <- rownames(X.matrix)
+#' # Train a deconvolution model:
+#' catch <- train_correlation_model(
+#'               tweak = start.tweak,
+#'               X.matrix = X.matrix,
+#'               train.data.list = training.data)
 descent_generalized_fista <- function(tweak.vec = NA,
                                       lambda=0,
                                       maxit=1e3,
@@ -187,18 +150,18 @@ descent_generalized_fista <- function(tweak.vec = NA,
                                       NESTEROV.FUN = positive_subspace_pmax){
   # safety checks:
   if(any(is.na(tweak.vec))){
-    stop("Tweak vector includes NAs")
+    stop("descent_generalized_fista: Tweak vector includes NAs")
   }
   if(!(is.numeric(lambda) || is.numeric(maxit) || is.numeric(line.search.speed) || is.numeric(cycles))){
-    stop("Set lambda, maxit, line.search.speed and cycles to numeric values")
+    stop("descent_generalized_fista: Set lambda, maxit, line.search.speed and cycles to numeric values")
   }
   if(!(is.logical(save.all.tweaks) || is.logical(verbose) || is.logical(use.restart))){
-    stop("Set save.all.tweaks, use.restart and verbose to logicals")
+    stop("descent_generalized_fista: Set save.all.tweaks, use.restart and verbose to logicals")
   }
 
   # check if the norm function changes EVAL value:
   if(!isTRUE(all.equal(EVAL.FUN(tweak.vec), EVAL.FUN(NORM.FUN(tweak.vec))))){
-    stop("Norm function changes eval value.")
+    stop("descent_generalized_fista: Norm function changes eval value.")
   }
 
   # If no learning.rate is set, the initial learning rate will be initialized according to:
@@ -357,7 +320,9 @@ descent_generalized_fista <- function(tweak.vec = NA,
 
   names(tweak.vec) <- tweak.names
   # build a list to return:
-  ret <- list("Tweak"=NORM.FUN(tweak.vec), "Convergence"=converge_vec, "Lambda" = lambda)
+  ret <- list("Tweak"=NORM.FUN(tweak.vec),
+              "Convergence"=converge_vec,
+              "Lambda" = lambda)
 
   # if save.all.tweaks is TRUE add the tweak.history
   if(save.all.tweaks){

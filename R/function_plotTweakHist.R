@@ -4,9 +4,10 @@
 #' As the g vector may get spread over a big range, you can provide a transformation function.
 #' This will be applied on the g/tweak vector. If the provided transformation function returns NA,
 #' the function will state the number of NAs in the title of the plot.
-#' For an example see `browseVignettes("DTD")`
+#' For an example see section "Histogram of g-vector" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param fista.output : list with "Tweak" entry. The result of a \code{\link{descent_generalized_fista}} call
+#' @param DTD.model : list, as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or \code{\link{descent_generalized_fista}}
 #' @param n.bins : integer, number of bins in the histogram. Defaults to 50
 #' @param TRANSFORM.FUN : function that expects a list of floats, and returns a list of floats
 #' Defaults to identity.
@@ -18,11 +19,25 @@
 #' @return ggplot object
 #' @export
 #'
-ggplot_ghistogram <- function(fista.output,
-                             n.bins = 50,
-                             TRANSFORM.FUN = DTD::identity,
-                             main="",
-                             x.lab = "g-vec"){
+ggplot_ghistogram <- function(DTD.model,
+                              n.bins = 50,
+                              TRANSFORM.FUN = DTD::identity,
+                              main = "",
+                              x.lab = "g-vec") {
+
+  if(is.list(DTD.model)){
+    if("best.model" %in% names(DTD.model)){
+      fista.output <- DTD.model$best.model
+    }else{
+      if("Tweak" %in% names(DTD.model)){
+        stop("ggplot_ghistogram: DTD.model does not fit")
+      }else{
+        fista.output <- DTD.model
+      }
+    }
+  }else{
+    stop("ggplot_ghistogram: DTD.model is not a list")
+  }
 
   # Transformation:
   g_vec <- suppressWarnings(TRANSFORM.FUN(fista.output$Tweak))
@@ -30,15 +45,15 @@ ggplot_ghistogram <- function(fista.output,
   # Get number of na:
   nums.NA <- sum(is.na(g_vec)) + sum(is.infinite(g_vec))
   # If there are na, adjust "main"
-  if(nums.NA > 0){
+  if (nums.NA > 0) {
     main <- paste0("Due to TRANSFORM.FUN, there are ", nums.NA, " missing values \n", main)
   }
 
   # draw the picture:
-  pic <- ggplot2::ggplot(data = NULL, aes(x=g_vec)) +
-            ggplot2::geom_histogram(bins=n.bins) +
-            ggplot2::ggtitle(main) +
-            ggplot2::xlab(x.lab)
+  pic <- ggplot2::ggplot(data = NULL, aes(x = g_vec)) +
+    ggplot2::geom_histogram(bins = n.bins) +
+    ggplot2::ggtitle(main) +
+    ggplot2::xlab(x.lab)
 
 
   return(pic)

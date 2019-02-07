@@ -4,11 +4,11 @@
 \alias{ggplot_cv}
 \title{Visualizing cross validation output}
 \usage{
-ggplot_cv(cross.val.frame, main = "", LAMBDA.TRANS.FUN = log2,
+ggplot_cv(DTD.model, main = "", LAMBDA.TRANS.FUN = log2,
   x.lab = expression("log2(" * lambda * ")"), y.lab = "Loss function")
 }
 \arguments{
-\item{cross.val.frame}{data frame, as return by the DTD_cv_lambda function}
+\item{DTD.model}{: list as returned by \code{\link{train_correlatio_model}} or \code{\link{DTD_cv_lambda}}}
 
 \item{main}{string, used as title in the plot. Defaults to ""}
 
@@ -24,5 +24,5 @@ a ggplot plot object
 }
 \description{
 Plot the regularization parameter lambda vs the resulting loss function value.
-For an example see `browseVignettes("DTD")`
+For an example see " Cross validation" in the package vignette `browseVignettes("DTD")`
 }

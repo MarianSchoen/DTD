@@ -153,48 +153,11 @@ test.data <-  mix_samples(gene.mat = test.mat,
                           n.per.mixture = 100,
                           verbose = FALSE)
 
-# The descent_generalized_fista optimizer finds the minimum iteratively
-# using accelareted gradient descent.
-# Therefore a gradient, and an evaluation function must be provided.
-# Within the fista implementation the gradient/evalution functions get evoked
-# with only one parameter.
-# All other parameters for the gradient (in the following example X, Y and C) must
-# be set using default parameter
-# This can be done using wrappers:
-
-# wrapper for gradient:
-DTD.grad.wrapper <- function(tweak,
-                             X = X.matrix,
-                             Y = training.data$mixtures,
-                             C = training.data$quantities){
-   grad <- gradient_cor_trace(X = X, Y = Y, C = C, tweak = tweak)
-   return(grad)
-}
-# wrapper for evaluate corelation:
-DTD.evCor.wrapper <- function(tweak,
-                             X = X.matrix,
-                             Y = training.data$mixtures,
-                             C = training.data$quantities){
-   loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X)
-   return(loss)
-}
-
 start.tweak <- rep(1, nrow(X.matrix))
-start.cor <- DTD.evCor.wrapper(start.tweak)
-cat("Starting correlation: ", -start.cor, "\\n")
-
-catch <- descent_generalized_fista(tweak.vec = start.tweak,
-                                   F.GRAD.FUN = DTD.grad.wrapper,
-                                   ST.FUN = soft_thresholding,
-                                   FACTOR.FUN = nesterov_faktor,
-                                   EVAL.FUN = DTD.evCor.wrapper,
-                                   line.search.speed = 2,
-                                   maxit = 250,
-                                   save.all.tweaks = TRUE,
-                                   use.restart = TRUE,
-                                   verbose = FALSE)
-
-print(ggplot_convergence(fista.output = catch,
-                         main="additional title")
-     )
+names(start.tweak) <- rownames(X.matrix)
+# Train a deconvolution model:
+catch <- train_correlation_model(
+              tweak = start.tweak,
+              X.matrix = X.matrix,
+              train.data.list = training.data)
 }

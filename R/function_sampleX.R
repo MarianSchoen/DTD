@@ -22,25 +22,28 @@
 sample_random_X <- function(included.in.X,
                             pheno,
                             exp.data,
-                            percentage.of.all.cells = 0.1){
+                            percentage.of.all.cells = 0.1) {
   # initialise empty matrix:
   X.mat <- matrix(NA,
-                  nrow = nrow(exp.data),
-                  ncol = length(included.in.X))
+    nrow = nrow(exp.data),
+    ncol = length(included.in.X)
+  )
   colnames(X.mat) <- included.in.X
   rownames(X.mat) <- rownames(exp.data)
   # Keep track of all samples that have been used while generating X,
   # these have to be removed from the training set afterwards
   samples.to.remove <- c()
 
-  for(l.type in included.in.X){
+  for (l.type in included.in.X) {
     # get sample names of all cells of type "l.type"
     all.of.type <- names(pheno)[which(pheno == l.type)]
 
     # randomly sample some cells
-    chosen.for.X <- sample(x = all.of.type,
-                           size = ceiling(length(all.of.type) * percentage.of.all.cells),
-                           replace = FALSE)
+    chosen.for.X <- sample(
+      x = all.of.type,
+      size = ceiling(length(all.of.type) * percentage.of.all.cells),
+      replace = FALSE
+    )
 
     # Add those cells which will be included in X to the list of samples.to.remove
     samples.to.remove <- c(samples.to.remove, chosen.for.X)

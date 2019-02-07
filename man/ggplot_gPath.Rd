@@ -4,13 +4,14 @@
 \alias{ggplot_gpath}
 \title{Visualize the path of each \eqn{g_i} over all iterations}
 \usage{
-ggplot_gpath(fista.output, number.pics = 3,
+ggplot_gpath(DTD.model, number.pics = 3,
   G.TRANSFORM.FUN = DTD::identity, ITER.TRANSFORM.FUN = log10,
   y.lab = "g", x.lab = "log10(iteration)", subset = NA, main = "",
   plot.legend = FALSE)
 }
 \arguments{
-\item{fista.output}{: list with "Tweak" and "History" entry. The result of a \code{\link{descent_generalized_fista}} call}
+\item{DTD.model}{: list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or\code{\link{descent_generalized_fista}}}
 
 \item{number.pics}{: integer, into how many pictures should the resutlt be split. (defaults to 3)}
 
@@ -47,7 +48,8 @@ In each picture all \eqn{g_i} get collected that end up in the same quantile ran
 E.g if you split into 3 pictures, the first picture includes all genes that result into the
 quantile range from 0% Qu to 33% Qu of all g.
 There are parameters (G.TRANSFORM.FUN and ITER.TRANSFORM.FUN) to transform the g vector, and iteration number.
-These might help to make the plot more understandable, e.g. if the distribution of the g vector is dominated by same outliers, applying a log transformation might help.
+These might help to make the plot more understandable, e.g. if the distribution of the g vector is dominated by
+same outliers, applying a log transformation might help.
 In most of the scenarios the major changes in the g vector occur in the early iterations. Focus on this part via a log transformation.
-For an example see `browseVignettes("DTD")`
+For an example see section "g-Path" in the package vignette `browseVignettes("DTD")`
 }

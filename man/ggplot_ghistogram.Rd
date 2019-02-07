@@ -4,11 +4,12 @@
 \alias{ggplot_ghistogram}
 \title{Histogram of the g/tweak vector}
 \usage{
-ggplot_ghistogram(fista.output, n.bins = 50,
+ggplot_ghistogram(DTD.model, n.bins = 50,
   TRANSFORM.FUN = DTD::identity, main = "", x.lab = "g-vec")
 }
 \arguments{
-\item{fista.output}{: list with "Tweak" entry. The result of a \code{\link{descent_generalized_fista}} call}
+\item{DTD.model}{: list, as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or \code{\link{descent_generalized_fista}}}
 
 \item{n.bins}{: integer, number of bins in the histogram. Defaults to 50}
 
@@ -27,5 +28,5 @@ The resulting distribution of g are visualized best in a histogram.
 As the g vector may get spread over a big range, you can provide a transformation function.
 This will be applied on the g/tweak vector. If the provided transformation function returns NA,
 the function will state the number of NAs in the title of the plot.
-For an example see `browseVignettes("DTD")`
+For an example see section "Histogram of g-vector" in the package vignette `browseVignettes("DTD")`
 }

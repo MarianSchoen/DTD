@@ -11,22 +11,22 @@
 #' @export
 #'
 #' @examples
-#' someMatrix <- matrix(abs(rnorm(1000*5)), ncol=5, nrow=1000)
+#' someMatrix <- matrix(abs(rnorm(1000 * 5)), ncol = 5, nrow = 1000)
 #' # each sample (=column) has different number of total counts:
 #' apply(someMatrix, 2, sum)
-#'
+#' 
 #' normalizedMatrix <- normalize_to_count(someMatrix)
-#'
+#' 
 #' # check:
 #' apply(normalizedMatrix, 2, sum)
-normalize_to_count <- function(mat, count=1e6){
+normalize_to_count <- function(mat, count = 1e6) {
   # get all sum over all columns:
   sums <- colSums(mat)
 
   # for each column ...
-  for(l1 in 1:ncol(mat)){
+  for (l1 in 1:ncol(mat)) {
     # ... norm each column by its sum, then multiply each entry with "count"
-    mat[,l1] <- count * mat[,l1]/sums[l1]
+    mat[, l1] <- count * mat[, l1] / sums[l1]
   }
   return(mat)
 }

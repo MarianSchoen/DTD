@@ -2,7 +2,7 @@
 
 export(DTD_cv_lambda)
 export(descent_generalized_fista)
-export(est_cs)
+export(estimate_c)
 export(evaluate_cor)
 export(generate_random_data)
 export(ggplot_convergence)

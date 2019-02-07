@@ -2,13 +2,30 @@
 % Please edit documentation in R/function_trainCorMod.R
 \name{train_correlation_model}
 \alias{train_correlation_model}
-\title{Title}
+\title{Train a DTD model based on correlation loss function}
 \usage{
 train_correlation_model(tweak, X.matrix, train.data.list, ...)
 }
 \arguments{
-\item{...}{}
+\item{tweak}{numeric vector, starting point for the FISTA optimization.
+Notice, the names of the vector will be kept, and are of use later on.}
+
+\item{X.matrix}{numeric matrix, with features/genes as rows, and cell types as column.
+Each column of X.matrix is a reference expression profile}
+
+\item{train.data.list}{list, with two entries: 'quantities', numeric matrix with as many rows as columns in X.
+Each column of the 'quantities' matrix holds the quantities of the cell types of X in the training mixtures.
+'mixtures', numeric matrix with as many rows as rows in X.matrix. Each column of 'mixtures' is the
+expression profile of a training mixture.}
+
+\item{...}{parameters passed to DTD_cv_lambda}
 }
 \description{
-Title
+This function works as a wrapper for the correlation loss function and its gradient.
+It provides a workaround for digital tissue deconvolution, such that the user only
+has to provide a starting vector (in literature g, in code tweak), a reference matrix X,
+and a training list, including the training mixtures, and their cell type quantities.
+}
+\details{
+For an example see `browseVignettes("DTD")`
 }

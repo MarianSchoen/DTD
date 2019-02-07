@@ -4,10 +4,10 @@
 \alias{ggplot_convergence}
 \title{Plot loss curve}
 \usage{
-ggplot_convergence(fista.output, EVAL.FUN = NA, main = "")
+ggplot_convergence(DTD.model, EVAL.FUN = NA, main = "")
 }
 \arguments{
-\item{fista.output}{list, with "Convergence" entry as return by the descent_generalized_fista function}
+\item{DTD.model}{list, as returned by the train_correlation_model function.}
 
 \item{EVAL.FUN}{function, that takes a single input (the tweak vector of the fista.output),
 and returns the loss function on the test set. Default is NA}
@@ -22,10 +22,10 @@ The "ggplot_convergence" function uses ggplot2 and reshape to visualize the decr
 a model has been trained.
 }
 \details{
-As input parameter it needs the output of \code{\link{descent_generalized_fista}}. If fista has been evoked
-with save_all_tweaks = T, and a evaluation function is available, the loss-function can be evaluated for all
-intermediate tweak vectors,
+As input parameter it needs the output of \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or\code{\link{descent_generalized_fista}}.
+If fista has been evoked with save_all_tweaks = T, and a evaluation function is available,
+the loss-function can be evaluated for all intermediate tweak vectors,
 and both training and test loss curves will be plotted (=> detect overfitting).\cr
-For an example see
-\code{\link{descent_generalized_fista}}
+For an example see section "Visualization of learn curve" in the package vignette `browseVignettes("DTD")`
 }

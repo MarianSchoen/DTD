@@ -17,7 +17,7 @@ Norm a vector such that ||x||_2 = 1 is equal to the length of
 }
 \examples{
 set.seed(1)
-same.values <- rnorm(n=10)
+same.values <- rnorm(n = 10)
 norm(same.values, type = "2")
 normed.values <- n2normed(same.values)
 norm(normed.values, type = "2")

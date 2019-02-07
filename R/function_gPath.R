@@ -8,11 +8,13 @@
 #' E.g if you split into 3 pictures, the first picture includes all genes that result into the
 #' quantile range from 0% Qu to 33% Qu of all g.
 #' There are parameters (G.TRANSFORM.FUN and ITER.TRANSFORM.FUN) to transform the g vector, and iteration number.
-#' These might help to make the plot more understandable, e.g. if the distribution of the g vector is dominated by same outliers, applying a log transformation might help.
+#' These might help to make the plot more understandable, e.g. if the distribution of the g vector is dominated by
+#' same outliers, applying a log transformation might help.
 #' In most of the scenarios the major changes in the g vector occur in the early iterations. Focus on this part via a log transformation.
-#' For an example see `browseVignettes("DTD")`
+#' For an example see section "g-Path" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param fista.output : list with "Tweak" and "History" entry. The result of a \code{\link{descent_generalized_fista}} call
+#' @param DTD.model : list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or\code{\link{descent_generalized_fista}}
 #' @param number.pics : integer, into how many pictures should the resutlt be split. (defaults to 3)
 #' @param G.TRANSFORM.FUN : function, that expects a vector of numerics, and returns a vector of the same length.
 #' Will be applied on fista.output$Tweak. Set G.TRANSFORM.FUN to identity if no transformation is required.
@@ -34,20 +36,34 @@
 #' Depending on "plot.legend" the list has a second entry named "legend". "legend" will be a grid object.
 #' @export
 #'
-ggplot_gpath <- function(fista.output,
-                         number.pics=3,
+ggplot_gpath <- function(DTD.model,
+                         number.pics = 3,
                          G.TRANSFORM.FUN = DTD::identity,
                          ITER.TRANSFORM.FUN = log10,
                          y.lab = "g",
                          x.lab = "log10(iteration)",
                          subset = NA,
                          main = "",
-                         plot.legend = FALSE){
+                         plot.legend = FALSE) {
+
+  if(is.list(DTD.model)){
+    if("best.model" %in% names(DTD.model)){
+      fista.output <- DTD.model$best.model
+    }else{
+      if(all(c("Tweak", "Convergence") %in% names(DTD.model))){
+        stop("ggplot_gpath: DTD.model does not fit")
+      }else{
+        fista.output <- DTD.model
+      }
+    }
+  }else{
+    stop("ggplot_gpath: DTD.model is not a list")
+  }
 
   # safety check (if there is no History for the g_i, then no path can be plotted)
-  if(is.null(fista.output$History)){
+  if (is.null(fista.output$History)) {
     stop("FISTA output must include History!")
-  }else{
+  } else {
     f.history <- fista.output$History
     tweak <- fista.output$Tweak
   }
@@ -55,28 +71,28 @@ ggplot_gpath <- function(fista.output,
   # if:
   # - subset is not na,
   # - any subset is within rownames
-  if(!all(is.na(subset)) && any(subset %in% rownames(f.history))){
+  if (!all(is.na(subset)) && any(subset %in% rownames(f.history))) {
     subset <- subset[subset %in% rownames(f.history)]
-    f.history <- f.history[subset, ]
+    f.history <- f.history[subset, , drop = FALSE]
     tweak <- tweak[subset]
-  }else{
-    if(!all(is.na(subset))){
+  } else {
+    if (!all(is.na(subset))) {
       cat("subset could not be used, therefore complete tweak, and history will be used\n")
     }
   }
 
   # We start by calculating in which quantile range each gene falls:
   # Therefore, we calculate how many quantile ranges are necessary (depending on the number.pics parameter)
-  pic.sep <- as.numeric(format(x=seq(0, 1, length.out = (number.pics +1))[2:(number.pics+1)], digits = 2))
+  pic.sep <- as.numeric(format(x = seq(0, 1, length.out = (number.pics + 1))[2:(number.pics + 1)], digits = 2))
   # Next we calculate the value of the quantiles in our g vector ...
-  quantile.values <- sapply(X = pic.sep, FUN = stats::quantile, x=abs(tweak))
+  quantile.values <- sapply(X = pic.sep, FUN = stats::quantile, x = abs(tweak))
   # ... and name them without the "%" sign
   names(quantile.values) <- gsub("%", "", names(quantile.values))
 
   # Now we know the quantile values, next we have to test in which quantile ranges our value fall.
   # Therefore the following function helps.
   # It takes a numeric value x, and returns the position of the first quantile value that is below it
-  quantile.apply.function <- function(x, values = quantile.values){
+  quantile.apply.function <- function(x, values = quantile.values) {
     winner <- which(values >= abs(x))[1]
     return(winner)
   }
@@ -87,8 +103,9 @@ ggplot_gpath <- function(fista.output,
 
   # For easy visualization with the ggplot2 package we need the f.history matrix in long format:
   f.h.melt <- reshape2::melt(f.history,
-                   varnames =c("geneName", "iteration"),
-                   value.name = "g")
+    varnames = c("geneName", "iteration"),
+    value.name = "g"
+  )
 
   # add the "q"unatile "p"er "g"ene information (with the names, not the positions!)
   f.h.melt$qpg <- factor(as.numeric(names(quantile.values[quantile.per.gene[f.h.melt$geneName]])))
@@ -101,20 +118,22 @@ ggplot_gpath <- function(fista.output,
 
 
   # Plot the picture (notice that this plot is with the legend!)
-  pics <- ggplot2::ggplot(f.h.melt,
-                          aes_string(x="iteration", y="g", group="geneName", colour="geneName")) +
-          ggplot2::geom_line() +
-          ggplot2::ylab(y.lab) +
-          ggplot2::xlab(x.lab) +
-          ggplot2::ggtitle(main) +
-          ggplot2::facet_grid(.~qpg)
+  pics <- ggplot2::ggplot(
+    f.h.melt,
+    aes_string(x = "iteration", y = "g", group = "geneName", colour = "geneName")
+  ) +
+    ggplot2::geom_line() +
+    ggplot2::ylab(y.lab) +
+    ggplot2::xlab(x.lab) +
+    ggplot2::ggtitle(main) +
+    ggplot2::facet_grid(. ~ qpg)
 
   ret <- list()
   # Store the picture WITHOUT the legend
   ret[["gPath"]] <- pics + theme(legend.position = "none")
 
   # Only if required, extract the legend from "pics" and provide as a entry in ret
-  if(plot.legend){
+  if (plot.legend) {
     tmp <- ggplot2::ggplot_gtable(ggplot_build(pics))
     tmp.leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
     legend <- tmp$grobs[[tmp.leg]]

@@ -36,11 +36,13 @@ distribution with the previously sampled lambda.
 }
 \examples{
 library(DTD)
-random.data <- generate_random_data(n.types = 5,
-                                    n.samples.per.type = 10,
-                                    n.features = 100,
-                                    sample.type = "Cell",
-                                    feature.type = "gene")
+random.data <- generate_random_data(
+  n.types = 5,
+  n.samples.per.type = 10,
+  n.features = 100,
+  sample.type = "Cell",
+  feature.type = "gene"
+)
 
 # normalize all samples to the same amount of counts:
 random.data <- normalize_to_count(random.data)

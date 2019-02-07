@@ -1,16 +1,20 @@
 #' Estimating C
 #'
-#' Given a reference matrix X, a matrix of bulks and a g-vector, "est_cs" finds
+#' Given a reference matrix X, a matrix of bulks Y and a g-vector, "estimate_c" finds
 #' the solution of \deqn{arg min || diag(g) (Y - XC) ||_2} over all C using
 #' direct analytical solution: (see Goertler et al. 2018)
 #' \deqn{ C(g) = (X^T \Gamma X )^(-1) X^T \Gamma Y}
+#' with \eqn{\Gamma} = diag(g)
 #'
-#'
-#' @param X numeric matrix with cells as columns, and features as rows.
-#'   Reference matrix X of the DTD problem.
-#' @param Y numeric matrix with samples as columns, and features as rows.
-#' @param gamma.vec numeric vector with length of nrow(X). In the equation above
-#'   the gamma.vec is denotated as g.
+#' @param X.matrix numeric matrix with cells as columns, and features as rows.
+#'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
+#'  includes the reference matrix X (default for \code{\link{train_correlatio_model}})
+#' @param new.data numeric matrix with samples as columns, and features as rows.
+#' In the formula above denoated as Y.
+#' @param DTD.model either a numeric vector with length of nrow(X),
+#' or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or\code{\link{descent_generalized_fista}}. In the equation above
+#'   the DTD.model provides the vector g.
 #'
 #' @return numeric matrix with ncol(X) rows, and ncol(Y) columns
 #'
@@ -19,36 +23,63 @@
 #'
 #' @examples
 #' library(DTD)
-#'
+#' 
 #' # simulate random data:
-#' random.data <- generate_random_data(n.types = 5,
-#'                                     n.samples.per.type = 1,
-#'                                     n.features = 100)
-#'
+#' random.data <- generate_random_data(
+#'   n.types = 5,
+#'   n.samples.per.type = 1,
+#'   n.features = 100
+#' )
+#' 
 #' # simulate a true c
-#' # (this is not used by the est_cs function, it is only used to show the result!)
+#' # (this is not used by the estimate_c function, it is only used to show the result!)
 #' true.c <- rnorm(n = ncol(random.data), mean = 1, sd = 0.5)
-#'
+#' 
 #' # calculate bulk y = Xc * some_error
 #' bulk <- random.data %*% true.c * rnorm(n = nrow(random.data), mean = 1, sd = 0.01)
-#'
-#' #estimate c
-#' estimated.c <- est_cs(X = random.data,
-#'                       Y = bulk,
-#'                       gamma.vec = rep(1, nrow(random.data)))
-#'
+#' 
+#' # estimate c
+#' estimated.c <- estimate_c(
+#'   X.matrix = random.data,
+#'   new.data = bulk,
+#'   DTD.model = rep(1, nrow(random.data))
+#' )
+#' 
 #' # visualize that the estimated c are close to the true c
 #' plot(true.c, estimated.c)
-#'
-est_cs <- function(X, Y, gamma.vec){
+estimate_c <- function(X.matrix = NA,
+                       new.data,
+                       DTD.model) {
 
-  if(length(gamma.vec) != nrow(X) || nrow(X) != nrow(Y)){
-    stop("est_cs: dimension of provided input does not match")
+  # the reference matrix can either be included in the DTD.model, or has to be past
+  # via the X.matrix argument:
+  if (any(is.na(X.matrix)) && is.list(DTD.model) && "reference.X" %in% names(DTD.model)) {
+    X <- DTD.model$reference.X
+  } else {
+    X <- X.matrix
+  }
+  # as a DTD.model either a list, or only the tweak vector can be used:
+  if (is.list(DTD.model)) {
+    if ("best.model" %in% names(DTD.model)) {
+      fista.output <- DTD.model$best.model
+    } else {
+      if ("Tweak" %in% names(DTD.model)) {
+        stop("estimate_c: DTD.model does not fit")
+      } else {
+        fista.output <- DTD.model
+      }
+    }
+  } else {
+    gamma.vec <- DTD.model
+  }
+  Y <- new.data
+  if (length(gamma.vec) != nrow(X) || nrow(X) != nrow(Y)) {
+    stop("estimate_c: dimension of provided input (X, Y, g) does not match")
   }
 
   # transform gamma.vec into a diagonal matrix (everything but diagonal is zero)
   Gamma <- diag(gamma.vec)
   # anallytical solution from formula in description:
-  sol <- solve(t(X)%*%Gamma%*%X)%*%t(X)%*%Gamma %*% Y
+  sol <- solve(t(X) %*% Gamma %*% X) %*% t(X) %*% Gamma %*% Y
   return(sol)
 }

@@ -11,14 +11,14 @@
 #' @examples
 #' set.seed(1)
 #' soft_thresholding(x = runif(10) - rnorm(10), lambda = 0.2)
-soft_thresholding <- function(x, lambda){
-  if(length(lambda) == length(x)){
+soft_thresholding <- function(x, lambda) {
+  if (length(lambda) == length(x)) {
     ret <- sign(x) * pmax(abs(x) - lambda, 0)
   }
-  if(length(lambda) == 1){
+  if (length(lambda) == 1) {
     ret <- sign(x) * pmax(abs(x) - rep(lambda, length(x)), 0)
   }
-  if(!exists("ret")){
+  if (!exists("ret")) {
     stop("Error: soft_thresholding, length of lambda must either be 1 or same as x.")
   }
   return(ret)

@@ -32,6 +32,5 @@ ggplot object
 \description{
 'ggplot_true_vs_esti' can be used to evaluate a trained DTD model, in the way that
 it plots known/true quantities versus estimated quantities per cell type. Its main inputs are two quantity matrices.
-For an example see
-\code{\link{descent_generalized_fista}}
+For an example see section "Correlation per cell type" in the package vignette `browseVignettes("DTD")`
 }

@@ -3,16 +3,18 @@
 #' The loss-function learning digital tissue deconvolution finds a vector g which minimizes the Loss function L\cr
 #' \deqn{L(g) = - \sum cor(true_C, estimatd_C(g))}
 #' The evaluate_cor function returns the value of the Loss function.
-#' The evaluate_cor function takes 4 arguments. However, we wrote the FISTA implementation in a way that both the
-#' gradient and the evaluation function only take one argument, which is the g vector. In order to use this function
-#' within the `descent_generalized_fista` function, you need a wrapper function (see \code{\link{descent_generalized_fista}})
 #'
-#' @param X numeric matrix with cells as columns, and features as rows. Reference matrix X of the DTD problem.
-#' @param Y numeric matrix with samples as columns, and features as rows. Each sample in Y is a bulk measurement,
-#' for which the quantity of the cells in X are known (and saved in C)
-#' @param C numeric matrix with cells as rows, and mixtures as columns.
+#' @param X.matrix numeric matrix with cells as columns, and features as rows.
+#'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
+#'  includes the reference matrix X (default for \code{\link{train_correlatio_model}})
+#' @param new.data numeric matrix with samples as columns, and features as rows.
+#' In the formula above denoated as Y.
+#' @param DTD.model either a numeric vector with length of nrow(X),
+#' or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or\code{\link{descent_generalized_fista}}. In the equation above
+#'   the DTD.model provides the vector g.
+#' @param true.compositions numeric matrix with cells as rows, and mixtures as columns.
 #' Each row of C holds the distribution of the cell over all mixtures.
-#' @param tweak numeric vector with length of nrow(X).
 #'
 #' @return float, value of the Loss function
 #'
@@ -46,65 +48,54 @@
 #' X.matrix <- sample.X$X.matrix
 #' samples.to.remove <- sample.X$samples.to.remove
 #'
-#' # all samples that have been used in the reference matrix, must not be included in
-#' # the test/training set
-#' remaining.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
-#' train.samples <- sample(x = colnames(remaining.mat),
-#'                        size = ceiling(ncol(remaining.mat)/2),
-#'                        replace = FALSE)
-#' test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
-#'
-#' train.mat <- remaining.mat[, train.samples]
-#' test.mat <- remaining.mat[, test.samples]
 #'
 #' indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
-#' training.data <- mix_samples(gene.mat = train.mat,
+#' training.data <- mix_samples(gene.mat = remaining.mat,
 #'                              pheno = indicator.train,
 #'                              included.in.X = include.in.X,
 #'                              n.samples = 500,
 #'                              n.per.mixture = 100,
 #'                              verbose = FALSE)
 #'
-#' indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
-#' test.data <-  mix_samples(gene.mat = test.mat,
-#'                           pheno = indicator.test,
-#'                           included.in.X = include.in.X,
-#'                           n.samples = 500,
-#'                           n.per.mixture = 100,
-#'                           verbose = FALSE)
+#'  start.tweak <- rep(1, nrow(X.matrix))
+#'  sum.cor <- evaluate_cor(X = X.matrix,
+#'                       new.data = training.data$mixtures,
+#'                       true.compositions = training.data$quantities,
+#'                       DTD.model = start.tweak)
 #'
-#' # The descent_generalized_fista optimizer finds the minimum iteratively
-#' # using accelareted gradient descent.
-#' # Therefore a gradient, and an evaluation function must be provided.
-#' # Within the fista implementation the gradient/evalution functions get evoked
-#' # with only one parameter.
-#' # All other parameters for the gradient (in the following example X, Y and C) must
-#' # be set using default parameter
-#' # This can be done using wrappers:
-#'
-#' # wrapper for gradient:
-#' DTD.grad.wrapper <- function(tweak,
-#'                              X = X.matrix,
-#'                              Y = training.data$mixtures,
-#'                              C = training.data$quantities){
-#'    grad <- gradient_cor_trace(X = X, Y = Y, C = C, tweak = tweak)
-#'    return(grad)
-#' }
-#' # wrapper for evaluate corelation:
-#' DTD.evCor.wrapper <- function(tweak,
-#'                              X = X.matrix,
-#'                              Y = training.data$mixtures,
-#'                              C = training.data$quantities){
-#'    loss <- evaluate_cor(X = X, Y = Y, C = C, tweak = tweak)/ncol(X)
-#'    return(loss)
-#' }
-#'
-#' start.tweak <- rep(1, nrow(X.matrix))
-#' start.cor <- DTD.evCor.wrapper(start.tweak)
-#' cat("Starting correlation: ", -start.cor, "\n")
-evaluate_cor <- function(X, Y, C, tweak){
+#'  rel.cor <- sum.cor/ncol(X.matrix)
+#' cat("Relative correlation: ", -rel.cor, "\n")
+evaluate_cor <- function(X.matrix = NA,
+                         new.data,
+                         true.compositions,
+                         DTD.model){
+
+  # the reference matrix can either be included in the DTD.model, or has to be past
+  # via the X.matrix argument:
+  if(any(is.na(X.matrix)) && is.list(DTD.model) && "reference.X" %in% names(DTD.model)){
+    X <- DTD.model$reference.X
+  }else{
+    X <- X.matrix
+  }
+  # as a DTD.model either a list, or only the tweak vector can be used:
+  if(is.list(DTD.model)){
+    if("best.model" %in% names(DTD.model)){
+      fista.output <- DTD.model$best.model
+    }else{
+      if("Tweak" %in% names(DTD.model)){
+        stop("evaluate_cor: DTD.model does not fit")
+      }else{
+        fista.output <- DTD.model
+      }
+    }
+  }else{
+    tweak <- DTD.model
+  }
+
+  Y <- new.data
+  C <- true.compositions
   # estimate C using reference matrix, bulks and the tweak vector:
-  esti.cs <- est_cs(X, Y, tweak)
+  esti.cs <- estimate_c(X, Y, tweak)
 
   if(any(dim(esti.cs) != dim(C))){
     stop("evaluate_cor: dimension of estimated C do not fit")

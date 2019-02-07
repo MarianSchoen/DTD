@@ -20,7 +20,7 @@ For every sample i, each feature j gets scaled to
  \deqn{mat[j, i] = (count * mat[j, i]) / sum(mat[, i])}
 }
 \examples{
-someMatrix <- matrix(abs(rnorm(1000*5)), ncol=5, nrow=1000)
+someMatrix <- matrix(abs(rnorm(1000 * 5)), ncol = 5, nrow = 1000)
 # each sample (=column) has different number of total counts:
 apply(someMatrix, 2, sum)
 
