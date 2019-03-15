@@ -4,8 +4,8 @@
 \alias{DTD_cv_lambda}
 \title{Cross-validation for digital tissue deconvolution}
 \usage{
-DTD_cv_lambda(lambda.seq = NULL, tweak.start = NULL, nfolds = 10,
-  lambda.length = 20, train.list, F.GRAD.FUN, EVAL.FUN,
+DTD_cv_lambda(lambda.seq = NULL, tweak.start = NULL, n.folds = 5,
+  lambda.length = 10, train.data.list, F.GRAD.FUN, EVAL.FUN,
   cv.verbose = TRUE, warm.start = FALSE, ...)
 }
 \arguments{
@@ -15,22 +15,22 @@ of the training set -  will be generated. Default: NULL}
 
 \item{tweak.start}{numeric vector, starting vector for the DTD algorithm. Default: NULL.}
 
-\item{nfolds}{integer, number of buckets in the cross validation. Defaults to 10}
+\item{n.folds}{integer, number of buckets in the cross validation. Defaults to 10}
 
 \item{lambda.length}{integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 20}
 
-\item{train.list}{list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
+\item{train.data.list}{list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
 Within this list the train/test cross validation will be done.
-Notice, that the train.list must have an entry named "mixtues". In this entry, the matrix containing the
+Notice, that the train.data.list must have an entry named "mixtues". In this entry, the matrix containing the
 training samples (as columns) and all features (as rows) must be present. (see Vignette for details)}
 
 \item{F.GRAD.FUN}{gradient function, see \code{\link{descent_generalized_fista}}}
 
 \item{EVAL.FUN}{evaluation function, see \code{\link{descent_generalized_fista}}}
 
-\item{cv.verbose}{boolean, should information about the cv process be printed to the screen? (Defaults to TRUE)}
+\item{cv.verbose}{logical, should information about the cv process be printed to the screen? (Defaults to TRUE)}
 
-\item{warm.start}{boolean, should the solution of a previous model of the cross validation be used as a start
+\item{warm.start}{logical, should the solution of a previous model of the cross validation be used as a start
 in the next model. Defaults to FALSE}
 
 \item{...}{all parameters that are passed to the \code{\link{descent_generalized_fista}} function.

@@ -15,7 +15,7 @@ Information about the cell type (values of vector) for each sample (names of vec
 
 \item{exp.data}{numeric matrix with features as rows, and samples as columns}
 
-\item{percentage.of.all.cells}{float, which percentage of all possible cells should
+\item{percentage.of.all.cells}{0 < float < 1, which percentage of all possible cells should
 be use to generate a cell type profile? Defaults to 0.1}
 }
 \value{

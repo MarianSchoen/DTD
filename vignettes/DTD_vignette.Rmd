@@ -12,21 +12,21 @@
     %\VignetteEncoding{UTF-8}
 ---
 ```{r setup, include = FALSE}
-  knitr::opts_chunk$set(
-    collapse = TRUE,
-    comment = "#>", 
-    fig.align = "center"
-  )
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center"
+)
 ```
 # What is DTD? 
 
 The gene expression profile of a tissue averages the expression profiles of all cells in this tissue. Digital tissue deconvolution (DTD) addresses the following inverse problem: Given the expression profile $y$ of a tissue, what is the cellular composition $c$ of cells $X$ in that tissue? The cellular composition $c$ can be estimated by 
 \begin{equation}
-  arg~ min_c ~|| y - Xc|| 
+  arg~ min_c ~|| y - Xc||_2^2
 \end{equation}
 @Goertler2018 generalized this formula by introducing a vector $g$ 
 \begin{equation}
-  arg~ min_c ~|| diag(g) (y - Xc)|| ~~~~~~~~~~ (2)
+  arg~ min_c ~|| diag(g) (y - Xc)||_2^2 ~~~~~~~~~~ (2)
 \end{equation}
 Every entry $g_i$ of $g$ holds the information how important gene i is for the deconvolution process. The information stored in $g$ can be gained from a loss-function learning approach. 
 This idea and the mathematical background of loss-function learning DTD approach has been published by @Goertler2018. With this "DTD" package we provide all necessary R functions and routines to train and use a loss-function learning digital tissue deconvolution model. 
@@ -39,81 +39,102 @@ The underlying idea of loss-function learning DTD is to gain the vector $g$ by m
 For the loss function $L$ the correlation between the known quantities $C_{j,.}$ and the estimated quantities $\widehat{C_{j,.}}(g)$ (solution of equation (2) ) is calculated per reference profile j. Therefore, the training set consists of a matrix Y with bulk profiles, for which the cellular compositions $C$ of the cells in $X$ should be estimated. In the composition matrix $C$ every column $C_{.,k}$ holds the distribution of the reference cells X in the bulk profile $Y_{.,k}$. Notice, that a $g$ vector that contributes to the deconvoluting process perfectly will result in a $\widehat{C_{j,.}}(g)$ that perfectly correlates with $C_{j,.}$, and therefore minimizes the Loss function L. 
 In the package DTD we provide functions to generate a reference matrix, training and test set, and a FISTA implementation to minimize the loss function L iteratively. 
 ```{r include=FALSE}
-  # I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
-  library(DTD)
-# fast testing: 
-  number.types <- 25
-  n.features <- 100
-  n.per.type <- 100
-  nPerMixture <- 100
-  maxit <- 25
-  nSamples <- n.features
-  random.data <- generate_random_data(n.types = number.types, 
-                                      n.samples.per.type = n.per.type, 
-                                      n.features = n.features)
-  normalized.data <- normalize_to_count(random.data)
-  indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
-  names(indicator.list) <- colnames(normalized.data)
-  perc.of.all.cells <- 0.1
-  include.in.X <- paste0("Type", 1:5)
-  sample.X <- sample_random_X(included.in.X = include.in.X, 
-                              pheno = indicator.list, 
-                              exp.data = normalized.data, 
-                              percentage.of.all.cells = perc.of.all.cells)
-  X.matrix <- sample.X$X.matrix
-  samples.to.remove <- sample.X$samples.to.remove
-  remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
-  train.samples <- sample(x = colnames(remaining.mat), 
-                          size = ceiling(ncol(remaining.mat)/2), 
-                          replace = FALSE)
-  test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
-  
-  train.mat <- remaining.mat[, train.samples]
-  test.mat <- remaining.mat[, test.samples]
-  indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
-  training.data <- mix_samples(gene.mat = train.mat,
-                               pheno = indicator.train,
-                               included.in.X = include.in.X, 
-                               n.samples = nSamples, 
-                               n.per.mixture = nPerMixture, 
-                               verbose = FALSE)
-  indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
-  test.data <- mix_samples(gene.mat = test.mat,
-                           pheno = indicator.test,
-                           included.in.X = include.in.X, 
-                           n.samples = nSamples, 
-                           n.per.mixture = nPerMixture, 
-                           verbose = FALSE)
-  start.tweak <- rep(1, nrow(X.matrix)); names(start.tweak) <- rownames(X.matrix)
-  catch <- train_correlation_model(tweak = start.tweak, 
-                                   X.matrix = X.matrix, 
-                                   train.data.list = training.data, 
-                                   cv.verbose = FALSE, 
-                                   verbose = FALSE,
-                                   maxit = maxit)
+# I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
+library(DTD)
+# fast testing:
+lambda.len <- 4
+n.folds <- 2
+###
+number.types <- 25
+n.features <- 100
+n.per.type <- 100
+n.per.mixtures <- 100
+maxit <- 25
+n.samples <- n.features
+random.data <- generate_random_data(
+  n.types = number.types,
+  n.samples.per.type = n.per.type,
+  n.features = n.features
+)
+normalized.data <- normalize_to_count(random.data)
+indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
+names(indicator.list) <- colnames(normalized.data)
+perc.of.all.cells <- 0.1
+include.in.X <- paste0("Type", 1:5)
+sample.X <- sample_random_X(
+  included.in.X = include.in.X,
+  pheno = indicator.list,
+  exp.data = normalized.data,
+  percentage.of.all.cells = perc.of.all.cells
+)
+X.matrix <- sample.X$X.matrix
+samples.to.remove <- sample.X$samples.to.remove
+remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
+train.samples <- sample(
+  x = colnames(remaining.mat),
+  size = ceiling(ncol(remaining.mat) / 2),
+  replace = FALSE
+)
+test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
+
+train.mat <- remaining.mat[, train.samples]
+test.mat <- remaining.mat[, test.samples]
+indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
+training.data <- mix_samples(
+  exp.data = train.mat,
+  pheno = indicator.train,
+  included.in.X = include.in.X,
+  n.samples = n.samples,
+  n.per.mixture = n.per.mixtures,
+  verbose = FALSE
+)
+indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
+test.data <- mix_samples(
+  exp.data = test.mat,
+  pheno = indicator.test,
+  included.in.X = include.in.X,
+  n.samples = n.samples,
+  n.per.mixture = n.per.mixtures,
+  verbose = FALSE
+)
+start.tweak <- rep(1, nrow(X.matrix))
+names(start.tweak) <- rownames(X.matrix)
+model <- train_correlation_model(
+  tweak = start.tweak,
+  X.matrix = X.matrix,
+  train.data.list = training.data,
+  test.data.list = test.data,
+  estimate.c.type = "direct",
+  maxit = maxit,
+  n.folds = n.folds,
+  lambda.len = lambda.len,
+  cv.verbose = FALSE,
+  verbose = FALSE
+)
 ```
 The crucial function in the DTD package is the `train_correlation_model` function, which minimizes the vector $g$ over a training set. After some preliminary work it can be called via: 
 ```{r, fig.width = 7, fig.align="center"}
-  catch <- train_correlation_model(tweak = start.tweak, 
-                                   X.matrix = X.matrix, 
-                                   train.data.list = training.data, 
-                                   maxit = maxit, 
-                                   cv.verbose = FALSE, 
-                                   verbose = FALSE
-                                   )
-
-  print(ggplot_convergence(DTD.model = catch, 
-                         main = "DTD Vignette"))
+model <- train_correlation_model(
+  tweak = start.tweak,
+  X.matrix = X.matrix,
+  train.data.list = training.data,
+  test.data.list = test.data,
+  estimate.c.type = "direct",
+  maxit = maxit,
+  cv.verbose = FALSE,
+  verbose = FALSE
+)
+print(model$pics$convergence)
 ```
 
-Here, we trained the $g$-vector for `r maxit` iterations, which decreased the loss function from `r format(max(catch$best.model$Convergence), digits = 3)`  to `r format(min(catch$best.model$Convergence), digits = 3)` on the training data.
+Here, we trained the $g$-vector for `r maxit` iterations, which decreased the loss function from `r format(max(model$best.model$Convergence), digits = 3)`  to `r format(min(model$best.model$Convergence), digits = 3)` on the training data.
 
 # How to use? 
 
 In the following examples, we demonstrate how data has to look like in order to be used for loss-function learning digital tissue deconvolution. After that, we give examples on how to process the data, how to generate a test and training set, how to train the $g$ vector, and finally, how to visualize the results. 
 First of all, load the library: 
 ```{r}
-  library(DTD)
+library(DTD)
 ```
 
 ## Data generation 
@@ -126,30 +147,34 @@ The DTD package needs expression measurements of sorted cells to train a $g$-vec
 
 In the following we generate data consisting of `r number.types` different cell types, with `r n.features` features. For each cell type we generate `r n.per.type` samples. 
 ```{r echo=FALSE, results = "asis"}
-  cat("```\n")
-  cat(" number.types <- " , number.types, "\n",
-      "n.features <- ", n.features, "\n",
-      "n.per.type <- ", n.per.type, "\n")
-  cat("```\n")
+cat("```\n")
+cat(
+  " number.types <- ", number.types, "\n",
+  "n.features <- ", n.features, "\n",
+  "n.per.type <- ", n.per.type, "\n"
+)
+cat("```\n")
 ```
 
 ```{r}
-  random.data <- generate_random_data(n.types = number.types, 
-                                      n.samples.per.type = n.per.type, 
-                                      n.features = n.features)
+random.data <- generate_random_data(
+  n.types = number.types,
+  n.samples.per.type = n.per.type,
+  n.features = n.features
+)
 ```
 The object `random.data` is a numeric matrix with `r nrow(random.data)` rows (features), and `r ncol(random.data)` columns (samples).
 ```{r}
-  print(random.data[1:5, 1:5])
+print(random.data[1:5, 1:5])
 ```
 ```{r include=FALSE}
-  # for further exemplary visualization 
-  example.index <- c(1, n.per.type + 1, 2*n.per.type + 1, 3 * n.per.type+1)
+# for further exemplary visualization
+example.index <- c(1, n.per.type + 1, 2 * n.per.type + 1, 3 * n.per.type + 1)
 ```
 
  Notice that the colnames of `random.data` indicate the type of the cell:
 ```{r}
-  print(colnames(random.data)[example.index])
+print(colnames(random.data)[example.index])
 ```
 
 The randomly generated expression matrix `random.data` looks similar to single-cell RNA sequencing data.
@@ -159,18 +184,18 @@ The randomly generated expression matrix `random.data` looks similar to single-c
 Notice that the loss-function learning DTD approach works on an additive, not a multiplicative scale. Therefore, any type log transformation needs to be undone. 
 Next, we scale every sample of the data set to a fixed number of counts. Using the provided `normalize_to_count` function, every sample gets scaled such that the sum over all counts equals $10^6$:
 ```{r}
-  # In random.data the number of counts differs over all samples: 
-  apply(random.data, 2, sum)[example.index]
-  normalized.data <- normalize_to_count(random.data)
-  # In normalized.data all samples share the same number of counts: 
-  apply(normalized.data, 2, sum)[example.index]
+# In random.data the number of counts differs over all samples:
+apply(random.data, 2, sum)[example.index]
+normalized.data <- normalize_to_count(random.data)
+# In normalized.data all samples share the same number of counts:
+apply(normalized.data, 2, sum)[example.index]
 ```
 
 In addition to the normalized data matrix the DTD algorithm needs an `indicator.list`:
 ```{r}
- indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
- names(indicator.list) <- colnames(normalized.data)
- print(indicator.list[example.index])
+indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
+names(indicator.list) <- colnames(normalized.data)
+print(indicator.list[example.index])
 ```
 `indicator.list` needs to be a named list. Each entry assigns the cell type (as value of the list) to every sample (names of the list) in the `normalized.data`. It is used in the training process of the algorithm. 
 
@@ -178,35 +203,39 @@ In addition to the normalized data matrix the DTD algorithm needs an `indicator.
 
  Next, we select the reference matrix $X$. Basically, samples that are used within the reference matrix $X$ are either selected via external knowledge, or chosen randomly out of the data-set. Within the DTD package we provide the `sample_random_X` function, which generates a reference matrix by randomly selecting samples of the same type, and then averages over them. Notice, that the loss-function learning DTD approach may lack cell types that are within the data. Therefore the `sample_random_X` takes an extra `included.in.X` parameter. In the following example we do not distinguish between all of them. The types we want to deconvolute are:  
 ```{r echo=FALSE, results = "asis"}
-  cat("```\n")
-  cat(" include.in.X <- " , paste0("c(\"", paste(include.in.X ,collapse = "\", \""), "\")"), "\n")
-  cat(" perc.of.all.cells <- ", perc.of.all.cells,  "\n")
-  cat("```\n")
+cat("```\n")
+cat(" include.in.X <- ", paste0("c(\"", paste(include.in.X, collapse = "\", \""), "\")"), "\n")
+cat(" perc.of.all.cells <- ", perc.of.all.cells, "\n")
+cat("```\n")
 ```  
 
 ```{r}
-  sample.X <- sample_random_X(included.in.X = include.in.X, 
-                              pheno = indicator.list, 
-                              exp.data = normalized.data, 
-                              percentage.of.all.cells = perc.of.all.cells)
-  X.matrix <- sample.X$X.matrix
-  samples.to.remove <- sample.X$samples.to.remove
+sample.X <- sample_random_X(
+  included.in.X = include.in.X,
+  pheno = indicator.list,
+  exp.data = normalized.data,
+  percentage.of.all.cells = perc.of.all.cells
+)
+X.matrix <- sample.X$X.matrix
+samples.to.remove <- sample.X$samples.to.remove
 ```
 Notice that every sample which has been used in the reference matrix $X$ must not be included in the training or test set! In order to keep track of samples which must not be used further on the `sample_random_X` function keeps track on all used samples, and gathers them in the variable `samples.to.remove`. Using this vector, we remove all samples that have been used for generating $X$, and split the remaining samples into a training and a test set.
 ```{r}
-  # removing samples that have been used in X.matrix
-  remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
+# removing samples that have been used in X.matrix
+remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
 
-  # sampling training samples: (notice, that train test seperation is 50:50)
-  train.samples <- sample(x = colnames(remaining.mat), 
-                          size = ceiling(ncol(remaining.mat)/2), 
-                          replace = FALSE)
-  # selecting test samples: 
-  test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
-  
-  # extract data matrices for training and testing: 
-  train.mat <- remaining.mat[, train.samples]
-  test.mat <- remaining.mat[, test.samples]
+# sampling training samples: (notice, that train test seperation is 50:50)
+train.samples <- sample(
+  x = colnames(remaining.mat),
+  size = ceiling(ncol(remaining.mat) / 2),
+  replace = FALSE
+)
+# selecting test samples:
+test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
+
+# extract data matrices for training and testing:
+train.mat <- remaining.mat[, train.samples]
+test.mat <- remaining.mat[, test.samples]
 ```
 All previous steps depend on format (e.g. numeric matrix or expression set), and preprocessing of the used data-set. In contrast, all following steps do not depend on the used data-set. 
 
@@ -215,7 +244,7 @@ All previous steps depend on format (e.g. numeric matrix or expression set), and
 The loss-function learning DTD algorithm trains a g-vector on a training set. Basically, the training set is a list of two matrices. 
 
 - Y, or mixtures matrix. Y has as many rows (=features) as `X.matrix` or `normalized.data`. Every column y of Y is a in-silicio mixture of the cells in the data set.
-- C, or quantities matrix. C has as many rows as there are cells in `X.matrix`. Every column of C holds the distribution of the cells in each mixture of Y. 
+- C, or compositions matrix. C has as many rows as there are cells in `X.matrix`. Every column of C holds the distribution of the cells in each mixture of Y. 
 
 In this package we provide two methods to generate the training set. One method randomly samples many cells of the complete data set, and averages over them. This is the prefered method. However, if there are only a few samples per cell type (in average below 10 samples per type) we recommend to mix samples using a jitter method. For both methods we provide functions within the DTD package.
 
@@ -230,32 +259,38 @@ The `mix_samples` function needs the following arguments:
 - n.per.mixture: integer, how many cells should be included in each mixture
 - verbose: boolean, should output be printed. 
 ```{r echo=FALSE, results = "asis"}
-  cat("```\n")
-  cat(" nSamples <- ", nSamples,  "\n",
-      "nPerMixture <- ", nPerMixture,  "\n")
-  cat("```\n")
+cat("```\n")
+cat(
+  " n.samples <- ", n.samples, "\n",
+  "n.per.mixtures <- ", n.per.mixtures, "\n"
+)
+cat("```\n")
 ```  
 ```{r}
-  indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
-  training.data <- mix_samples(gene.mat = train.mat,
-                               pheno = indicator.train,
-                               included.in.X = include.in.X, 
-                               n.samples = nSamples, 
-                               n.per.mixture = nPerMixture, 
-                               verbose = FALSE)
-  str(training.data)
+indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
+training.data <- mix_samples(
+  exp.data = train.mat,
+  pheno = indicator.train,
+  included.in.X = include.in.X,
+  n.samples = n.samples,
+  n.per.mixture = n.per.mixtures,
+  verbose = FALSE
+)
+str(training.data)
 ```
 Remark that all types are included in the mixtures, but only the distributions of the cell within $X$  are reported in the composition matrix $C$. 
 With the same function we generate a test set. Notice that a sample is  either in the reference matrix $X$, in the test set or in the training set. 
 
 ```{r}
-  indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
-  test.data <- mix_samples(gene.mat = test.mat,
-                           pheno = indicator.test,
-                           included.in.X = include.in.X, 
-                           n.samples = nSamples, 
-                           n.per.mixture = nPerMixture, 
-                           verbose = FALSE)
+indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
+test.data <- mix_samples(
+  exp.data = test.mat,
+  pheno = indicator.test,
+  included.in.X = include.in.X,
+  n.samples = n.samples,
+  n.per.mixture = n.per.mixtures,
+  verbose = FALSE
+)
 ```
 
 ### Less samples --> with jitter
@@ -281,23 +316,25 @@ In the training set imbalanced quantities should be reflected.
 - included.in.X: list of strings, here include.in.X
 
 ```{r}
-  # Here, we set "Type1" to be special:
-  special.samples <- c("Type1")
-  # and all other to be normal: 
-  all.samples <- unique(indicator.list)
-  sample.names <- all.samples[- which(all.samples %in% special.samples)]
-  
-  # reduce indicator list to those samples included in training: 
-  indicator.list <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
-  
-  training.data.jitter <- mix_samples_with_jitter(sample.names = sample.names,
-                                             special.samples = special.samples, 
-                                             n.samples = nSamples, 
-                                             datamatrix = train.mat, 
-                                             pheno = indicator.list, 
-                                             verbose = FALSE, 
-                                             add.jitter = TRUE, 
-                                             included.in.X = include.in.X)
+# Here, we set "Type1" to be special:
+special.samples <- c("Type1")
+# and all other to be normal:
+all.samples <- unique(indicator.list)
+sample.names <- all.samples[-which(all.samples %in% special.samples)]
+
+# reduce indicator list to those samples included in training:
+indicator.list <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
+
+training.data.jitter <- mix_samples_with_jitter(
+  sample.names = sample.names,
+  special.samples = special.samples,
+  n.samples = n.samples,
+  datamatrix = train.mat,
+  pheno = indicator.list,
+  verbose = FALSE,
+  add.jitter = TRUE,
+  included.in.X = include.in.X
+)
 ```
 
 ## Train g vector
@@ -310,99 +347,148 @@ This optimization is done iteratively by gradient descent, using an implementati
 
 - tweak: numeric vector, with which the minimization starts. Notice, that the names of tweak will be kept during optimization, and might be helpful for further visualizations.  
 - X.matrix: numeric matrix, with as many rows as length(tweak). Each column of X.matrix holds a cell type specific reference profile. 
-- train.data.list: list of training mixtures, and quantities.  
+- train.data.list: list of training mixtures, and quantities. 
+- test.data.list: list of test mixtures, and quantities
 
 ```{r}
-  start.tweak <- rep(1, nrow(X.matrix))
-  names(start.tweak) <- rownames(X.matrix)
-  catch <- train_correlation_model(tweak = start.tweak, 
-                                   X.matrix = X.matrix, 
-                                   train.data.list = training.data, 
-                                   maxit = maxit, 
-                                   cv.verbose = TRUE, 
-                                   verbose = FALSE)
+start.tweak <- rep(1, nrow(X.matrix))
+names(start.tweak) <- rownames(X.matrix)
+model <- train_correlation_model(
+  tweak = start.tweak,
+  X.matrix = X.matrix,
+  train.data.list = training.data,
+  test.data.list = test.data,
+  estimate.c.type = "direct",
+  maxit = maxit,
+  cv.verbose = TRUE,
+  verbose = FALSE
+)
 ```
-The output of the `train_correlation_model` algorithm is a list. The entry 'cv.obj' holds a data.frame with information about the cross validation. The entry 'best.model' contains a model trained on the full trainings data set with the best lambda of the cross validation. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function best), and a convergence vector. Within the convergence vector there are the evaluations of the `EVAL.FUN` in every step. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found.
+The output of the `train_correlation_model` algorithm is a list. The entry 'cv.obj' holds a data.frame with information about the cross validation. The entry 'best.model' contains a model trained on the full trainings data set with the best lambda of the cross validation. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function best), and a convergence vector. Within the convergence vector there are the evaluations of the `EVAL.FUN` in every step. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found. Additionally, in the 'model' object there is a entry named 'reference.X' and 'pics'. 'reference.X' holds the used reference matrix X, in 'pics' there are several ggplot figures to assess the quality of the model. 
 
 ## Visualize results
-### Visualization of learn curve
-During the training step, the algorithm finds a $g$-vector which minimzes the Loss-function. In order to visualize the training curve, the function `ggplot_correlation` can be used. With the objective to validate the model in sense of overfitting you can provide a test set evaluation wrapper function: 
+
+Each of the following visualizations is called automatically after training a model with the `train_correlation_model` function. They are stored as a list of ggplot object, and can be found in the `pics` entry of the model.   
+
+### Visualization of learn curve  
+
+During the training step, the algorithm finds a $g$-vector which minimzes the Loss-function. In order to visualize the training curve, the function `ggplot_correlation` can be used. With the objective to validate the model in sense of overfitting you can provide a test-data: 
 ```{r, fig.width = 7, fig.align="center"}
-  DTD.evCor.wrapper.test <- function(tweak, 
-                                X = X.matrix, 
-                                test.list = test.data){
-      Y <- test.list$mixtures 
-      C <- test.list$quantities
-      loss <- evaluate_cor(X.matrix = X, 
-                           new.data = Y,
-                           true.compositions = C, 
-                           DTD.model = tweak)
-      rel.loss <- loss/ncol(X)
-      return(rel.loss)
-  }
-  print(ggplot_convergence(DTD.model = catch, 
-                           EVAL.FUN = DTD.evCor.wrapper.test,
-                           main = "DTD Vignette"))
+# print via model$pics list:
+print(model$pics$convergence)
+
+# or via function call:
+print(
+  ggplot_convergence(
+    DTD.model = model,
+    X.matrix = X.matrix,
+    test.data = test.data,
+    estimate.c.type = "direct",
+    main = "DTD Vignette"
+  )
+)
 ```
 
 ### Correlation per cell type
-The loss-function plot above shows the average negative correlation over all cell types. With the aim of assessing the models performance per cell type, the `ggplot_true_vs_esti` function can be used. 
-As input it takes the cell estimations of the DTD model on the test set, and the true cell compositions of the test set.
+The loss-function plot above shows the average negative correlation over all cell types for each intermediate step of the optimization With the aim of assessing the models performance per cell type, the `ggplot_true_vs_esti` function can be used. 
+As input it takes the DTD model and a test set. 
 
-```{r, fig.width=7}
-  test.estimations <- estimate_c(X.matrix = X.matrix, 
-                                 new.data = test.data$mixtures,
-                                 DTD.model = catch$best.model$Tweak
-                            )
-  print(ggplot_true_vs_esti(estimated.c = test.estimations,
-                             true.c = test.data$quantities)
-       )
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$true_vs_esti)
+
+# or via function call:
+print(
+  ggplot_true_vs_esti(
+    DTD.model = model,
+    X.matrix = X.matrix,
+    test.data = test.data,
+    estimate.c.type = "direct"
+  )
+)
 ```
 
 ### Histogram of g-vector
 The loss-function learning DTD algorithm results in a model that predicts cell compositions well. Another benefit of it is the information stored in the $g$-vector. If gene i contributes strongly to the deconvolution process the algorithm tends to assign a higher entry to $g_i$. As a consequence taking a closer look on the distribution of the $g$-vector is important. In the DTD package, the function `ggplot_ghistogram` can be used. As input parameters it takes the output of a `train_correlation_model` call. 
-```{r}
-    print(ggplot_ghistogram(DTD.model = catch))
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$histogram)
+# or via function call:
+print(
+  ggplot_ghistogram(
+    DTD.model = model
+  )
+)
 ```
 
 ### g-Path
 Another useful information that can be gained from the `History` of the `tweak.vec` can be visualized using the `ggplot_gpath` function: 
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$path)
+# or via function call:
 
-```{r, fig.show="hold", fig.width=3}
-  singlePic <- ggplot_gpath(DTD.model = catch, 
-                            number.pics = 1, 
-                            main="All genes",
-                            G.TRANSFORM.FUN = log2, 
-                            y.lab = "log2(g)")
-   print(singlePic$gPath)
+singlePic <- ggplot_gpath(
+  DTD.model = model,
+  number.pics = 1,
+  main = "All genes",
+  G.TRANSFORM.FUN = log2,
+  y.lab = "log2(g)"
+)
+print(singlePic$gPath)
 ```  
-In this plots each line tracks the change of one $g_i$ during all iterations. Notice, that most of the change in $g$ takes place in the early steps of the algorihtm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10) to transform the iteration axis.  \cr
-In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. In the `ggplot_gPath` function, each $g$ is visualized with one line. To visualize only a subset of $g$, selected features can be indicated by the option `subset`: 
-```{r}
-  singlePic.subset <- ggplot_gpath(DTD.model = catch,
-                                   number.pics = 1, 
-                                   main = "Gene Subset", 
-                                   G.TRANSFORM.FUN = log2, 
-                                   y.lab = "log2(g)",
-                                   subset = c("gene22", "gene37"))
-   print(singlePic.subset$gPath)
+In this plots each line tracks the change of one $g_i$ during all iterations. In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. Accordingly, there are `r nrow(X.matrix)` lines in the plot. Notice, that most of the change in $g$ takes place in the early steps of the algorihtm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10) to transform the iteration axis.  \cr
+In the `ggplot_gPath` function, each $g$ is visualized with one line. To visualize only a subset of $g$, selected features can be indicated by the option `subset`: 
+```{r, fig.width = 7, fig.align="center"}
+singlePic.subset <- ggplot_gpath(
+  DTD.model = model,
+  number.pics = 1,
+  main = "Gene Subset",
+  G.TRANSFORM.FUN = log2,
+  y.lab = "log2(g)",
+  subset = c("gene22", "gene37")
+)
+print(singlePic.subset$gPath)
 ```
 Alternatively, you can specify into how many pictures the plot should be split. For example, if you split the plot into 2 pictures, the function groups all $g$ who result below the median all $g$ into the first picture, and all $g$ that result above the median into the second picture:
-```{r, fig.width=5}
-  multPic <- ggplot_gpath(DTD.model = catch, 
-                          number.pics = 2,  
-                          main = "All Genes, split into 2",  
-                          G.TRANSFORM.FUN = log2, 
-                          y.lab = "log2(g)")
-  print(multPic$gPath)
+```{r, fig.width = 7, fig.align="center"}
+multPic <- ggplot_gpath(
+  DTD.model = model,
+  number.pics = 2,
+  main = "All Genes, split into 2",
+  G.TRANSFORM.FUN = log2,
+  y.lab = "log2(g)"
+)
+print(multPic$gPath)
 ```
+
+### Explained correlation  
+
+In order to assess the effect of each feature in the deconvolution process we introduce the concept of 'explained correlation': 
+Given a trained model, we can iteratively manipulate the model by excluding a feature. This means, its entry in the g-vector is set to zero. Then we deconvolute the test set with the manipulated model, and observe a decrease in correlation. The higher the decrease is, the more important the gene is in the deconvolution process. In the following figure, the y-axis holds the percentage of explained correlation per feature.
+
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$explained.correlation)
+# or via function call:
+print(
+  ggplot_explained_correlation(
+    DTD.model = model,
+    X.matrix = X.matrix,
+    test.data = test.data,
+    estimate.c.type = "direct",
+    print.labels = TRUE
+  )
+)
+```
+
 
 ## Cross validation
 The loss function  includes a l1 regularization term, controlled by the regularization parameter \lambda. 
 In order to find the optimal size of the regularization parameter we implemented a k-fold 
 cross validation. The crucial arguments of the cross validation are the following. These can be passed as '...' to the `train_correlation_model` function:
 
-- nfolds: integer, how many buckets in the cross validation 
+- n.folds: integer, how many buckets in the cross validation 
 - lambda.seq: numeric vector or NULL. For these lambda values, models are trained. For each lambda value `nfolds` models are trained, and tested in a sense of k-fold cross validation.  If `lambda.seq` is set to NULL, a lambda sequence will be generated based on the dimension of the training set. 
 - lambda.length: integer, how many lamdbas will be generated (only used if lambda.seq is NULL)
 - train.list: list with two entries (`mixtures` and `quantities`, as described previously). The entry `mixtures` must be a numeric matrix, with training samples as columns. The cross validation folds are assigned using these column names. During the cross validation a copy of the train.list will be used, in which only samples of the current fold are present. Sample selection is done via column names for matrices, and via names for vectors.  
@@ -411,6 +497,21 @@ For each fold and every lambda a model is trained.
 The return object from the cross validation is a list with 2 entries. The `cv.obj` entry holds a data.frame with information about the cross validation over the lambda.sequence. Pass this data frame to the `ggplot_cv` function for visualization. The second entry `best.model` of the `cv.obj` is a trained model which uses the lambda with minimal loss function during the cross validation. Notice that this model is trained on the complete trainings data set. 
 Visualize the cross-validation result via:
 ```{r, fig.width = 7, fig.align='center'}
- print(ggplot_cv(catch))
+# print via model$pics list:
+print(model$pics$cv)
+# or via function call:
+print(
+  ggplot_cv(
+    DTD.model = model,
+    main = "DTD Vignette"
+  )
+)
 ```
-# References
+
+## Session Info  
+
+```{r}
+sessionInfo()
+```
+
+# References  

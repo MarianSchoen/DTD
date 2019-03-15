@@ -3,16 +3,17 @@
 #' mix_samples takes a gene expresssion matrix, and pheno information.
 #' It then mixes the samples with known quantities such that it can be
 #' used for loss-function learning digital tissue deconvolution.
-#' For mixture it randomly selects "n.samples" samples from "gene.mat", and averages over them.
+#' For mixture it randomly selects "n.samples" samples from "exp.data", and averages over them.
 #' Using the information stored in pheno, it can get the quantities per cell in each mixture.
 #'
-#' @param gene.mat numeric matrix, with features as rows and samples as columns
-#' @param pheno named vector, with pheno information for each sample in gene.mat
-#' @param n.samples integer, numbers of samples to be drawn (defaults to 1000)
-#' @param n.per.mixture integer, how many samples should be included per mixutre. (Default: 100)
+#' @param exp.data numeric matrix, with features as rows and samples as columns
+#' @param pheno named vector, with pheno information for each sample in exp.data
+#' @param n.samples integer above 0, numbers of samples to be drawn (defaults to 1000)
+#' @param n.per.mixture integer above 0, below ncol(exp.data),
+#'  how many samples should be included per mixutre. (Default: 100)
 #' @param included.in.X named vector of strings, indicating types that are in the reference matrix.
 #' Only those types, and sorted in that order, will be included in the quantity matrix
-#' @param verbose boolean, should information be printed (Default: FALSE)
+#' @param verbose logical, should information be printed? (Default: FALSE)
 #'
 #' @return list with random profiles, and their quantity matrix
 #'
@@ -59,7 +60,7 @@
 #' test.mat <- remaining.mat[, test.samples]
 #'
 #' indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
-#' training.data <- mix_samples(gene.mat = train.mat,
+#' training.data <- mix_samples(exp.data = train.mat,
 #'                              pheno = indicator.train,
 #'                              included.in.X = include.in.X,
 #'                              n.samples = 500,
@@ -67,26 +68,57 @@
 #'                              verbose = FALSE)
 #'
 #' indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
-#' test.data <-  mix_samples(gene.mat = test.mat,
+#' test.data <-  mix_samples(exp.data = test.mat,
 #'                           pheno = indicator.test,
 #'                           included.in.X = include.in.X,
 #'                           n.samples = 500,
 #'                           n.per.mixture = 100,
 #'                           verbose = FALSE)
-mix_samples <- function(gene.mat,
+mix_samples <- function(exp.data,
                        pheno,
                        included.in.X,
                        n.samples = 1e3,
                        n.per.mixture = 100,
                        verbose = FALSE){
 
-  if(any(!names(pheno) %in% colnames(gene.mat))){
-    stop("pheno does not match colnames of gene mat")
+  # Safety checks
+  if(!any(included.in.X %in% pheno)){
+    stop("in mix_samples: no cell type in 'included.in.X' fits 'pheno'")
   }
 
+  if(!(all(names(pheno) %in% colnames(exp.data)) && length(pheno) == ncol(exp.data))){
+    stop("in mix_samples: 'names(pheno)' do not fit 'colnames(exp.data)'.
+         For every entry of 'colnames(exp.data)' there has to be a entry in 'pheno'")
+  }
+
+  if(!is.matrix(exp.data)){
+    stop("in mix_samples: 'exp.data' is no matrix")
+  }
+
+  # safety checks: n.samples
+  test <- test_integer(test.value = n.samples,
+                       output.info = c("mix_samples", "n.samples"),
+                       min = 1,
+                       max = Inf)
+  # end -> n.samples
+
+  # safety checks: n.per.mixture
+  test <- test_integer(test.value = n.per.mixture,
+                       output.info = c("mix_samples", "n.per.mixutre"),
+                       min = 1,
+                       max = ncol(exp.data))
+
+  # end -> n.per.mixture
+
+  # safety checks: verbose
+  test <- test_logical(test.value = verbose,
+                       output.info = c("mix_samples", "verbose")
+                       )
+  # end -> verbose
+
   # initialise geneExpression matrix (here, the mixtures will be stored)
-  geneExpression <- matrix(NA, nrow=nrow(gene.mat), ncol=n.samples)
-  rownames(geneExpression) <- rownames(gene.mat)
+  geneExpression <- matrix(NA, nrow=nrow(exp.data), ncol=n.samples)
+  rownames(geneExpression) <- rownames(exp.data)
   colnames(geneExpression) <- paste0("mixtures", 1:n.samples)
 
   # which types are within the pheno?
@@ -101,11 +133,11 @@ mix_samples <- function(gene.mat,
 
   for(lsample in 1:n.samples){
     # randomly select 'n.per.mixture' samples (without replacing!)
-    randomSamples <- sample(x = colnames(gene.mat),
+    randomSamples <- sample(x = colnames(exp.data),
                             size = n.per.mixture,
                             replace = FALSE)
     # average over the selected samples ...
-    avg <- rowSums(gene.mat[, randomSamples])
+    avg <- rowSums(exp.data[, randomSamples])
     # ... store the result in the geneExpression matrix:
     geneExpression[,lsample] <- avg
 

@@ -5,17 +5,17 @@
 \title{Descent generalized FISTA \cr
 (fast iterative shrinkage thresholding algorithm)}
 \usage{
-descent_generalized_fista(tweak.vec = NA, lambda = 0, maxit = 1000,
+descent_generalized_fista(tweak.vec, lambda = 0, maxit = 100,
   learning.rate = NA, F.GRAD.FUN, ST.FUN = soft_thresholding,
   FACTOR.FUN = nesterov_faktor, EVAL.FUN, NORM.FUN = identity,
-  line.search.speed = 2, cycles = 50, save.all.tweaks = FALSE,
+  line.search.speed = 2, cycles = 5, save.all.tweaks = FALSE,
   use.restart = TRUE, verbose = TRUE,
   NESTEROV.FUN = positive_subspace_pmax)
 }
 \arguments{
-\item{tweak.vec}{numeric vector, with which the minimization algorithm starts, defaults to NA}
+\item{tweak.vec}{numeric vector, with which the minimization algorithm starts}
 
-\item{lambda}{float, regularization factor for ST.FUN function, defaults to 0}
+\item{lambda}{non-negative float, regularization factor for ST.FUN function, defaults to 0}
 
 \item{maxit}{integer, maximum number of iterations for the iterative
 minimization, defaults to 1000}
@@ -48,7 +48,7 @@ if the optimium has not been found. Defaults to 2.}
 
 \item{cycles}{integer, in each iteration one gradient is calculated. To find the
 best step size, we do "cycles" steps, and evaluate each of them to find the best step size.
-Defaults to 50}
+Defaults to 5}
 
 \item{save.all.tweaks}{boolean, should all tweak vectores during all iterations be stored. Defaults to FALSE}
 

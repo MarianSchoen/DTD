@@ -8,10 +8,10 @@
 #' Then it generates multiple samples per type. Each feature in every sample will be drawn from a poisson
 #' distribution with the previously sampled lambda.
 #'
-#' @param n.types integer, how many different types should be included in the data set (default 5)
-#' @param n.samples.per.type integer, how many samples should be generated per type (default 10)
+#' @param n.types integer >= 2, how many different types should be included in the data set (default 5)
+#' @param n.samples.per.type integer >= 1, how many samples should be generated per type (default 10)
 #' Notice, for each type, the number of samples will be randomized a bit
-#' @param n.features integer, how many features should be included (default 1000)
+#' @param n.features integer >= 1, how many features should be included (default 1000)
 #' @param sample.type string, name of samples, defaults to "Cell"
 #' @param feature.type string, name of features, defaults to "gene"
 #' @param seed integer, to which the seed will be set, defaults to 1310
@@ -28,7 +28,7 @@
 #'   sample.type = "Cell",
 #'   feature.type = "gene"
 #' )
-#' 
+#'
 #' # normalize all samples to the same amount of counts:
 #' random.data <- normalize_to_count(random.data)
 generate_random_data <- function(n.types = 5,
@@ -38,24 +38,49 @@ generate_random_data <- function(n.types = 5,
                                  feature.type = "gene",
                                  seed = 1310) {
 
-  # Check if input is valid:
-  if (!is.numeric(n.types) || !is.numeric(n.samples.per.type) || !is.numeric(n.features)) {
-    stop("Set input parameters (n.types, n.samples.per.type, n.features) to valid numeric values")
-  }
-  if (!is.character(sample.type)) {
+  # safety check: n.types
+  test <- test_integer(test.value = n.types,
+                       output.info = c("generate_random_data", "n.types"),
+                       min = 2,
+                       max = Inf)
+  # end -> n.types
+
+  # safety check: n.samples.per.type
+  test <- test_integer(test.value = n.samples.per.type,
+                       output.info = c("generate_random_data", "n.samples.per.type"),
+                       min = 1,
+                       max = Inf)
+  # end -> n.samples.per.type
+
+  # safety check: n.features
+  test <- test_integer(test.value = n.features,
+                       output.info = c("generate_random_data", "n.features"),
+                       min = 1,
+                       max = Inf)
+  # end -> n.features
+
+  if (!is.character(sample.type) || length(sample.type) != 1) {
+    message("sample.type is not a single 'character', therefore set to 'Cell'\n")
     sample.type <- "Cell"
   }
-  if (!is.character(feature.type)) {
+  if (!is.character(feature.type) || length(feature.type) != 1) {
+    message("feature.type  is not a single 'character', therefore set to 'gene'\n")
     feature.type <- "gene"
   }
 
   # set seed, notice that if the provided seed is not numeric, seed will be set to 1310
-  if (is.numeric(seed)) {
-    set.seed(seed)
-  } else {
-    cat("The provided seed could not be used! Therefore, set it to default \n")
-    set.seed(1310)
+  if(is.numeric(seed)){
+    if (round(seed) == seed || length(seed) == 1) {
+      set.seed(seed)
+    } else {
+      message("The provided seed could not be used! Therefore, set it to default \n")
+      seed <- 1310
+    }
+  }else{
+    message("The provided seed could not be used! Therefore, set it to default \n")
+    seed <- 1310
   }
+  set.seed(seed)
 
   n.totalSamples <- n.types * n.samples.per.type
   expression.matrix <- matrix(NA, nrow = n.features, ncol = n.totalSamples)

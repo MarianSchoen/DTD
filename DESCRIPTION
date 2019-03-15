@@ -3,7 +3,7 @@ Title: Digital Tissue Deconvolution
 Version: 0.9
 Authors@R: person("Marian", "Sch<U+00F6>n", email = "marian.schoen@klinik.uni-regensburg.de", role = c("aut", "cre"))
 Description: Digital Tissue Deconvolution (DTD) estimates the cellular composition c of reference profiles X in a tissue sample y. Here we provide functions and routines to a loss-function learning DTD approach published by Goertler et al 2018. 
-License: GPL-2
+License: MIT
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
@@ -14,7 +14,10 @@ Depends:
 	matrixStats,
 	Matrix, 
 	ggplot2, 
-	reshape2
-Suggests: knitr,
-   	  rmarkdown
+	reshape2,
+	nnls
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat
 VignetteBuilder: knitr

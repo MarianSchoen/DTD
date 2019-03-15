@@ -1,6 +1,7 @@
 #' Visualizing cross validation output
 #'
 #' Plot the regularization parameter lambda vs the resulting loss function value.
+#' The lambda with the minimal mean loss in cross validation is marked with a red dot
 #' For an example see " Cross validation" in the package vignette `browseVignettes("DTD")`
 #'
 #' @param DTD.model : list as returned by \code{\link{train_correlatio_model}} or \code{\link{DTD_cv_lambda}}
@@ -29,17 +30,36 @@ ggplot_cv <- function(DTD.model,
     }
   }
   if (!exists("cross.val.frame")) {
-    stop("ggplot_cv: DTD.model does not fit")
+    stop("In ggplot_cv: 'DTD.model' does not fit")
   }
 
   # safety checks:
   if (!is.data.frame(cross.val.frame) ||
     !any(grepl("nonZero", rownames(cross.val.frame))) ||
-    !any(grepl("nFoundModels", rownames(cross.val.frame))) ||
-    !is.numeric(LAMBDA.TRANS.FUN(2))
+    !any(grepl("nFoundModels", rownames(cross.val.frame)))
   ) {
-    stop("In ggplot_cv: passed \"cross.val.frame\" frame does not fit or LAMBDA.TRANS.FUN does not return numeric.")
+    stop("In ggplot_cv: passed 'cross.val.frame' frame does not fit. It has to include the rows 'nonZero' and 'nFoundModels'")
   }
+
+  useable.lambda.trans.fun <- try(LAMBDA.TRANS.FUN(2), silent = TRUE)
+  if(any(grepl(x = useable.lambda.trans.fun, pattern = "Error"))){
+    stop("In ggplot_cv: provided 'LAMBDA.TRANS.FUN' does not return a numeric, if called with '2'.")
+  }
+
+  useable.main <- try(as.character(main), silent = TRUE)
+  if(any(grepl(x = useable.main, pattern = "Error"))){
+    stop("In ggplot_cv: provided 'main' can not be used as.character.")
+  }
+
+  useable.xlab <- try(as.character(x.lab), silent = TRUE)
+  if(any(grepl(x = useable.xlab, pattern = "Error"))){
+    stop("In ggplot_cv: provided 'x.lab' can not be used as.character.")
+  }
+  useable.ylab <- try(as.character(y.lab), silent = TRUE)
+  if(any(grepl(x = useable.ylab, pattern = "Error"))){
+    stop("In ggplot_cv: provided 'y.lab' can not be used as.character.")
+  }
+
 
   # Extract number of zero coefficient per lambda,
   tmp.nZero <- cross.val.frame["nonZero", ]
@@ -48,6 +68,12 @@ ggplot_cv <- function(DTD.model,
 
   # transpose the data frame, and remove the "nonZero" and "nFoundModels" entries
   tmp.crossValFrame <- as.data.frame(t(cross.val.frame[-which(rownames(cross.val.frame) %in% c("nonZero", "nFoundModels")), ]))
+  # find mean per lambda:
+  tmp.mean.frame <- tmp.crossValFrame[, -which(colnames(tmp.crossValFrame) == "lambda")]
+  mean.per.lambda <- apply(tmp.mean.frame, 1, mean, na.rm = TRUE)
+  used.lambda.tmp <- as.numeric(names(which.min(mean.per.lambda)))
+  used.lambda <- LAMBDA.TRANS.FUN(used.lambda.tmp)
+  used.mean.lambda <- min(mean.per.lambda, na.rm = TRUE)
 
   # add the used lambdas as a numeric column
   tmp.crossValFrame$lambda <- as.numeric(rownames(tmp.crossValFrame))
@@ -73,7 +99,11 @@ ggplot_cv <- function(DTD.model,
       labels = tmp.nZero,
       name = "# of non-zero-coefficients"
     )) +
-    ggplot2::ggtitle(main)
+    ggplot2::ggtitle(main) +
+    ggplot2::geom_point(data = NULL,
+                        aes(x = used.lambda,
+                            y = used.mean.lambda),
+                        color = "red")
 
   # ... and return it
   return(pic)

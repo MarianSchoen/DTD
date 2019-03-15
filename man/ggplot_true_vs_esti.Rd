@@ -4,25 +4,38 @@
 \alias{ggplot_true_vs_esti}
 \title{Plot true vs estimated cell composition}
 \usage{
-ggplot_true_vs_esti(estimated.c, true.c, norm.mixturewise = FALSE,
-  norm.typewise = FALSE, title = "", shape.indi = NA,
-  show.legend = FALSE)
+ggplot_true_vs_esti(DTD.model, X.matrix = NA, test.data,
+  norm.mixturewise = FALSE, norm.typewise = FALSE, estimate.c.type,
+  title = "", shape.indi = NA, show.legend = FALSE)
 }
 \arguments{
-\item{estimated.c}{matrix, with cell types as rows, and mixtures as columns}
+\item{DTD.model}{either a numeric vector with length of nrow(X),
+or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or\code{\link{descent_generalized_fista}}.}
 
-\item{true.c}{matrix, with cell types as rows, and mixtures as columns}
+\item{X.matrix}{numeric matrix with cells as columns, and features as rows.
+Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
+includes the reference matrix X (default for \code{\link{train_correlatio_model}})}
 
-\item{norm.mixturewise}{boolean, should every sample (=> column) be normalized to sum of 1? (Defaults to FALSE)}
+\item{test.data}{numeric matrix with samples as columns, and features as rows.
+In the deconvolution formula 'test.data' is denoated as Y.}
+
+\item{norm.mixturewise}{logical, should every sample (=> column) be normalized to sum of 1? (Defaults to FALSE)}
 
 \item{norm.typewise}{boolean, should every type (=> row) be normalized to range from 0 to 1? (Defaults to FALSE)}
+
+\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
+\eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
+(see \code{\link{estimate_c}}),
+if estimate.c.type is set to "non_negative" the estimates "C"
+must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
 
 \item{title}{string, title for plot (Defaults to "")}
 
 \item{shape.indi}{vector with length of ncol(true.c), used as parameter shape in ggplot.
 Idea is to mark samples from different origin. If no additional(Defaults to NA)}
 
-\item{show.legend}{boolean, should an additional legend be plotted? Notice, in this function a figure per type will be generated.
+\item{show.legend}{logical, should an additional legend be plotted? Notice, in this function a figure per type will be generated.
 In the title of each subfigure the correlation of the included type and the type is shown.
 This parameter only sets the additional overall legend(Defaults to FALSE)}
 }

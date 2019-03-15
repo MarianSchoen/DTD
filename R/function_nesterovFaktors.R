@@ -12,6 +12,10 @@
 #' @examples
 #' nesterov_faktor(2)
 nesterov_faktor <- function(k) {
+  test <- test_integer(test.value = k,
+                       output.info = c("nesterov_faktor", "k"),
+                       min = 1,
+                       max = Inf)
   return(2 / (k + 1))
 }
 #' Wrapper for pmax
@@ -31,5 +35,7 @@ nesterov_faktor <- function(k) {
 #' vec.without.neg <- positive_subspace_pmax(vec.with.neg)
 #' range(vec.without.neg)
 positive_subspace_pmax <- function(x) {
+  test <- test_tweak_vec(tweak.vec = x,
+                         output.info = c("positive_subspace_pmax", "x"))
   return(pmax(x, 0))
 }

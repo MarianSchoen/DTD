@@ -4,7 +4,8 @@
 \alias{evaluate_cor}
 \title{Evaluate correlation}
 \usage{
-evaluate_cor(X.matrix = NA, new.data, true.compositions, DTD.model)
+evaluate_cor(X.matrix = NA, new.data, true.compositions, DTD.model,
+  estimate.c.type)
 }
 \arguments{
 \item{X.matrix}{numeric matrix with cells as columns, and features as rows.
@@ -21,6 +22,11 @@ Each row of C holds the distribution of the cell over all mixtures.}
 or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
 or\code{\link{descent_generalized_fista}}. In the equation above
   the DTD.model provides the vector g.}
+
+\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
+\eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
+(see \code{\link{estimate_c}}),
+if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
 }
 \value{
 float, value of the Loss function

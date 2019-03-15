@@ -4,7 +4,8 @@
 \alias{train_correlation_model}
 \title{Train a DTD model based on correlation loss function}
 \usage{
-train_correlation_model(tweak, X.matrix, train.data.list, ...)
+train_correlation_model(tweak, X.matrix, train.data.list,
+  test.data.list = NULL, estimate.c.type, ...)
 }
 \arguments{
 \item{tweak}{numeric vector, starting point for the FISTA optimization.
@@ -16,9 +17,25 @@ Each column of X.matrix is a reference expression profile}
 \item{train.data.list}{list, with two entries: 'quantities', numeric matrix with as many rows as columns in X.
 Each column of the 'quantities' matrix holds the quantities of the cell types of X in the training mixtures.
 'mixtures', numeric matrix with as many rows as rows in X.matrix. Each column of 'mixtures' is the
-expression profile of a training mixture.}
+expression profile of a training mixture. This data is used to train the deconvolution model}
+
+\item{test.data.list}{list, with two entries, same structure as train.data.list:
+'quantities', numeric matrix with as many rows as columns in X. Each column of the 'quantities' matrix
+ holds the quantities of the cell types of X in the test mixtures.
+'mixtures', numeric matrix with as many rows as rows in X.matrix. Each column of 'mixtures' is the
+ expression profile of a test mixture. After learning, this data is used to validate the model}
+
+\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
+\eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
+(see \code{\link{estimate_c}}),
+if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
 
 \item{...}{parameters passed to DTD_cv_lambda}
+}
+\value{
+list, including 4 entries: 'cv.obj' (see \code{\link{DTD_cv_lambda}}),
+'best.model' (see \code{\link{DTD_cv_lambda}}),
+'reference.X' and 'pics' (see `browseVignettes("DTD")`)
 }
 \description{
 This function works as a wrapper for the correlation loss function and its gradient.

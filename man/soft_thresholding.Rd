@@ -7,7 +7,7 @@
 soft_thresholding(x, lambda)
 }
 \arguments{
-\item{x}{list of numerics, x = g - step.size * gradient(g)}
+\item{x}{vector of numerics, x = g - step.size * gradient(g)}
 
 \item{lambda}{float or list of floats, regularization parameter}
 }

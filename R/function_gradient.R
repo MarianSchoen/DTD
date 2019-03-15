@@ -8,6 +8,7 @@
 #' @param Y numeric matrix with features as rows, and samples as columns
 #' @param C numeric matrix with reference samples as rows, and samples as columns
 #' @param tweak numeric vector with length of nrow(X).
+#' @param estimate.c.type string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
 #' In the Loss function above tweak is named "g"
 #'
 #' @export
@@ -17,9 +18,39 @@
 #'
 #' @return numeric list, same length as "tweak"
 
-gradient_cor_trace <- function(X, Y, C, tweak) {
+gradient_cor_trace <- function(X, Y, C, tweak, estimate.c.type) {
+  # safety check: tweak
+  test <- test_tweak_vec(tweak.vec = tweak,
+                         output.info = c("gradient_cor_trace", "tweak"))
+  # end -> tweak
+  # safety check X
+  if(!any(is.numeric(X))){
+    stop("In gradient_cor_trace: X is not numeric")
+  }
+  # end --> X
+  # safety check C
+  if(!any(is.numeric(C))){
+    stop("In gradient_cor_trace: C is not numeric")
+  }
+  # end --> C
+  # safety check Y
+  if(!any(is.numeric(Y))){
+    stop("In gradient_cor_trace: Y is not numeric")
+  }
+  # end --> Y
+
+  if(estimate.c.type %in% c("non_negative", "direct")){
+    if(estimate.c.type == "non_negative"){
+      ESTIMATE.C.FUN <- estimate_nn_c
+    }else{
+      ESTIMATE.C.FUN <- estimate_c
+    }
+  }else{
+    stop("In train_correlation_model: estimate.c.type does not match 'non_negative' or 'direct.")
+  }
+
   Gamma <- Matrix::Matrix(diag(tweak))
-  estimates.cs <- estimate_c(
+  estimates.cs <- ESTIMATE.C.FUN(
     X.matrix = X,
     new.data = Y,
     DTD.model = tweak

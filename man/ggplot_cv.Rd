@@ -24,5 +24,6 @@ a ggplot plot object
 }
 \description{
 Plot the regularization parameter lambda vs the resulting loss function value.
+The lambda with the minimal mean loss in cross validation is marked with a red dot
 For an example see " Cross validation" in the package vignette `browseVignettes("DTD")`
 }

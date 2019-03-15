@@ -4,22 +4,23 @@
 \alias{mix_samples}
 \title{Mix samples for loss-function learning DTD}
 \usage{
-mix_samples(gene.mat, pheno, included.in.X, n.samples = 1000,
+mix_samples(exp.data, pheno, included.in.X, n.samples = 1000,
   n.per.mixture = 100, verbose = FALSE)
 }
 \arguments{
-\item{gene.mat}{numeric matrix, with features as rows and samples as columns}
+\item{exp.data}{numeric matrix, with features as rows and samples as columns}
 
-\item{pheno}{named vector, with pheno information for each sample in gene.mat}
+\item{pheno}{named vector, with pheno information for each sample in exp.data}
 
 \item{included.in.X}{named vector of strings, indicating types that are in the reference matrix.
 Only those types, and sorted in that order, will be included in the quantity matrix}
 
-\item{n.samples}{integer, numbers of samples to be drawn (defaults to 1000)}
+\item{n.samples}{integer above 0, numbers of samples to be drawn (defaults to 1000)}
 
-\item{n.per.mixture}{integer, how many samples should be included per mixutre. (Default: 100)}
+\item{n.per.mixture}{integer above 0, below ncol(exp.data),
+how many samples should be included per mixutre. (Default: 100)}
 
-\item{verbose}{boolean, should information be printed (Default: FALSE)}
+\item{verbose}{logical, should information be printed? (Default: FALSE)}
 }
 \value{
 list with random profiles, and their quantity matrix
@@ -28,7 +29,7 @@ list with random profiles, and their quantity matrix
 mix_samples takes a gene expresssion matrix, and pheno information.
 It then mixes the samples with known quantities such that it can be
 used for loss-function learning digital tissue deconvolution.
-For mixture it randomly selects "n.samples" samples from "gene.mat", and averages over them.
+For mixture it randomly selects "n.samples" samples from "exp.data", and averages over them.
 Using the information stored in pheno, it can get the quantities per cell in each mixture.
 }
 \examples{
@@ -72,7 +73,7 @@ train.mat <- remaining.mat[, train.samples]
 test.mat <- remaining.mat[, test.samples]
 
 indicator.train <- indicator.list[names(indicator.list) \%in\% colnames(train.mat)]
-training.data <- mix_samples(gene.mat = train.mat,
+training.data <- mix_samples(exp.data = train.mat,
                              pheno = indicator.train,
                              included.in.X = include.in.X,
                              n.samples = 500,
@@ -80,7 +81,7 @@ training.data <- mix_samples(gene.mat = train.mat,
                              verbose = FALSE)
 
 indicator.test <- indicator.list[names(indicator.list) \%in\% colnames(test.mat)]
-test.data <-  mix_samples(gene.mat = test.mat,
+test.data <-  mix_samples(exp.data = test.mat,
                           pheno = indicator.test,
                           included.in.X = include.in.X,
                           n.samples = 500,

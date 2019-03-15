@@ -4,28 +4,28 @@
 \alias{normalize_to_count}
 \title{normalize_to_count}
 \usage{
-normalize_to_count(mat, count = 1e+06)
+normalize_to_count(exp.data, count = 1e+06)
 }
 \arguments{
-\item{mat}{numeric matrix, with samples as columns and features as columns}
+\item{exp.data}{positive numeric matrix, with samples as columns and features as columns}
 
-\item{count}{float , to which every sample of mat will be scaled}
+\item{count}{float , to which every sample of exp.data will be scaled}
 }
 \value{
-"ret", matrix with same dimension as "mat"
+"ret", matrix with same dimension as "exp.data"
 }
 \description{
-'normalize_to_count' takes a numeric matrix mat and normalizes each column (=> sample) to a fix number of counts.\cr
+'normalize_to_count' takes a numeric matrix 'exp.data' with only non-negative entries and normalizes each column (=> sample) to a fix number of counts.\cr
 For every sample i, each feature j gets scaled to
- \deqn{mat[j, i] = (count * mat[j, i]) / sum(mat[, i])}
+ \deqn{exp.data[j, i] = (count * exp.data[j, i]) / sum(exp.data[, i])}
 }
 \examples{
-someMatrix <- matrix(abs(rnorm(1000 * 5)), ncol = 5, nrow = 1000)
+some.matrix <- matrix(abs(rnorm(1000 * 5)), ncol = 5, nrow = 1000)
 # each sample (=column) has different number of total counts:
-apply(someMatrix, 2, sum)
+apply(some.matrix, 2, sum)
 
-normalizedMatrix <- normalize_to_count(someMatrix)
+normalized.matrix <- normalize_to_count(some.matrix)
 
 # check:
-apply(normalizedMatrix, 2, sum)
+apply(normalized.matrix, 2, sum)
 }

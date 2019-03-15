@@ -1,10 +1,4 @@
-#' Estimating C
-#'
-#' Given a reference matrix X, a matrix of bulks Y and a g-vector, "estimate_c" finds
-#' the solution of \deqn{arg min || diag(g) (Y - XC) ||_2} over all C using
-#' direct analytical solution: (see Goertler et al. 2018)
-#' \deqn{ C(g) = (X^T \Gamma X )^(-1) X^T \Gamma Y}
-#' with \eqn{\Gamma} = diag(g)
+#' non negative c
 #'
 #' @param X.matrix numeric matrix with cells as columns, and features as rows.
 #'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
@@ -19,8 +13,6 @@
 #' @return numeric matrix with ncol(X) rows, and ncol(Y) columns
 #'
 #' @export
-#'
-#'
 #' @examples
 #' library(DTD)
 #'
@@ -33,13 +25,14 @@
 #'
 #' # simulate a true c
 #' # (this is not used by the estimate_c function, it is only used to show the result!)
-#' true.c <- rnorm(n = ncol(random.data), mean = 1, sd = 0.5)
+#' true.c <- abs(rnorm(n = ncol(random.data), mean = 1, sd = 0.5))
 #'
 #' # calculate bulk y = Xc * some_error
-#' bulk <- random.data %*% true.c * rnorm(n = nrow(random.data), mean = 1, sd = 0.01)
+#' bulk <- as.matrix(random.data %*% true.c * rnorm(n = nrow(random.data), mean = 1, sd = 0.01), ncol = 1)
+#' colnames(bulk) <- "mixture1"
 #'
 #' # estimate c
-#' estimated.c <- estimate_c(
+#' estimated.c <- estimate_nn_c(
 #'   X.matrix = random.data,
 #'   new.data = bulk,
 #'   DTD.model = rep(1, nrow(random.data))
@@ -47,18 +40,14 @@
 #'
 #' # visualize that the estimated c are close to the true c
 #' plot(true.c, estimated.c)
-estimate_c <- function(X.matrix = NA,
-                       new.data,
-                       DTD.model) {
-
-  # the reference matrix can either be included in the DTD.model, or has to be past
-  # via the X.matrix argument:
-  if (any(is.na(X.matrix)) && is.list(DTD.model) && "reference.X" %in% names(DTD.model)) {
+estimate_nn_c <- function(X.matrix = NA, new.data, DTD.model){
+  if (any(is.na(X.matrix)) && is.list(DTD.model) && "reference.X" %in%
+      names(DTD.model)) {
     X <- DTD.model$reference.X
-  } else {
+  }
+  else {
     X <- X.matrix
   }
-  # as a DTD.model either a list, or only the tweak vector can be used:
   if (is.list(DTD.model)) {
     if ("best.model" %in% names(DTD.model)) {
       gamma.vec <- DTD.model$best.model$Tweak
@@ -75,15 +64,15 @@ estimate_c <- function(X.matrix = NA,
   else {
     gamma.vec <- DTD.model
   }
-  Y <- new.data
-  if (length(gamma.vec) != nrow(X) || nrow(X) != nrow(Y)) {
-    stop("estimate_c: dimension of provided input (X, Y, g) does not match")
+  estimates <- matrix(NA, nrow = ncol(X), ncol = ncol(new.data))
+  rownames(estimates) <- colnames(X)
+  colnames(estimates) <- colnames(new.data)
+  g.X.matrix <- diag(gamma.vec) %*% X
+  for(l.mix in colnames(new.data)){
+    g.new.data <- diag(gamma.vec) %*% new.data[, l.mix]
+    estimates.l.mix <- nnls(g.X.matrix, g.new.data)
+    estimates[, l.mix] <- estimates.l.mix$x
   }
-
-  # transform gamma.vec into a diagonal matrix (everything but diagonal is zero)
-  Gamma <- diag(gamma.vec)
-  # anallytical solution from formula in description:
-  sol <- solve(t(X) %*% Gamma %*% X) %*% t(X) %*% Gamma %*% Y
-  return(sol)
+  return(estimates)
 }
 

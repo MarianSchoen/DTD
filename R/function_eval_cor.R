@@ -15,6 +15,10 @@
 #'   the DTD.model provides the vector g.
 #' @param true.compositions numeric matrix with cells as rows, and mixtures as columns.
 #' Each row of C holds the distribution of the cell over all mixtures.
+#' @param estimate.c.type string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
+#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
+#' (see \code{\link{estimate_c}}),
+#' if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
 #'
 #' @return float, value of the Loss function
 #'
@@ -68,34 +72,97 @@
 evaluate_cor <- function(X.matrix = NA,
                          new.data,
                          true.compositions,
-                         DTD.model){
+                         DTD.model,
+                         estimate.c.type){
+
+
+  # safety check: estimate.c.type
+  ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
+                      output.info = c("evaluate_cor", "estimate.c.type"))
+  # end -> estimate.c.type
 
   # the reference matrix can either be included in the DTD.model, or has to be past
   # via the X.matrix argument:
-  if(any(is.na(X.matrix)) && is.list(DTD.model) && "reference.X" %in% names(DTD.model)){
-    X <- DTD.model$reference.X
-  }else{
+  if(is.matrix(X.matrix) && !any(is.na(X.matrix))){
     X <- X.matrix
-  }
-  # as a DTD.model either a list, or only the tweak vector can be used:
-  if(is.list(DTD.model)){
-    if("best.model" %in% names(DTD.model)){
-      fista.output <- DTD.model$best.model
-    }else{
-      if("Tweak" %in% names(DTD.model)){
-        stop("evaluate_cor: DTD.model does not fit")
-      }else{
-        fista.output <- DTD.model
+  }else{
+    if(is.list(DTD.model) && "reference.X" %in% names(DTD.model)){
+      if("reference.X" %in% names(DTD.model)){
+        X <- DTD.model$reference.X
+      }
+      if("best.model" %in% names(DTD.model)){
+        if("reference.X" %in% names(DTD.model$best.model)){
+          X <- DTD.model$best.model$reference.X
+        }
       }
     }
+  }
+  if(!exists("X")){
+    stop("In evaluate_cor: 'X.matrix' must be provided either as the 'X.matrix' argument, or within the DTD.model")
+  }
+
+  # as a DTD.model either a list, or only the tweak vector can be used:
+  if (is.list(DTD.model)) {
+    if ("best.model" %in% names(DTD.model)) {
+      if("Tweak" %in% names(DTD.model$best.model)){
+        gamma.vec <- DTD.model$best.model$Tweak
+      }
+    }else {
+      if ("Tweak" %in% names(DTD.model)) {
+        gamma.vec <- DTD.model$Tweak
+      }else {
+        stop("In evaluate_cor: DTD.model does not fit")
+      }
+    }
+  }else {
+    gamma.vec <- DTD.model
+  }
+
+  if(length(gamma.vec) != nrow(X)){
+    stop("In evaluate_cor: 'DTD.model' does not fit 'X.matrix'. Check if the provided model includes as many 'Tweak' entries as there are features (=> rows) in 'X.matrix'")
+  }
+
+  if(!is.null(names(gamma.vec))){
+    if(all(rownames(X) %in% names(gamma.vec))){
+      gamma.vec <- gamma.vec[rownames(X)]
+    }else{
+      stop("In evaluate_cor: There are features within 'X.matrix' where no tweak/g entry in the 'DTD.model' can be found")
+    }
+  }
+
+  if(!is.numeric(gamma.vec)){
+    stop("In evaluate_cor: Used 'Tweak' (from 'DTD.model') is not numeric")
+  }
+
+  if(nrow(true.compositions) != ncol(X)){
+    stop("In evaluate_cor: 'nrow(true.composition)' does not match 'ncol(X.matrix)'")
+  }
+  if(ncol(true.compositions) != ncol(new.data)){
+    stop("In evaluate_cor: 'ncol(true.composition)' does not match 'ncol(new.data)' ")
+  }
+
+  if(all(colnames(true.compositions) %in% colnames(new.data))){
+    true.compositions <- true.compositions[, colnames(new.data)]
   }else{
-    tweak <- DTD.model
+    stop("In evaluate_cor: 'colnames(true.compositions)' do not match 'colnames(new.data)'")
+  }
+
+  if(all(rownames(true.compositions) %in% colnames(X))){
+    true.compositions <- true.compositions[colnames(X), ]
+  }else{
+    stop("In evaluate_cor: 'rownames(true.compositions)' do not match 'colnames(X.matrix)'")
+  }
+
+  if(all(rownames(new.data) %in% rownames(X))){
+    new.data <- new.data[rownames(X), ]
+  }else{
+    stop("in evaluate_cor: not all'rownames(new.data)' are in 'rownames(X.matrix)'")
   }
 
   Y <- new.data
   C <- true.compositions
   # estimate C using reference matrix, bulks and the tweak vector:
-  esti.cs <- estimate_c(X, Y, tweak)
+  esti.cs <- ESTIMATE.C.FUN(X, Y, gamma.vec)
 
   if(any(dim(esti.cs) != dim(C))){
     stop("evaluate_cor: dimension of estimated C do not fit")
@@ -104,8 +171,10 @@ evaluate_cor <- function(X.matrix = NA,
   # initialise loss:
   loss <- 0
   for(l1 in 1:nrow(C)){
-    # calculate the correlation per Type and add them up
-    loss <- loss + stats::cor(C[l1, ], esti.cs[l1, ])
+    if(sd(esti.cs[l1, ]) != 0){
+      # calculate the correlation per Type and add them up
+      loss <- loss + stats::cor(C[l1, ], esti.cs[l1, ])
+    }
   }
 
   # Our loss function is set to be a minimization problem, therefore we invert the sign:

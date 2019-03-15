@@ -34,8 +34,8 @@
 #' If your gradient, evaluation or soft thresholding function require more arguments, please write a wrapper.
 #' Exemplary wrapper functions can be found in the examples.
 #'
-#' @param tweak.vec numeric vector, with which the minimization algorithm starts, defaults to NA
-#' @param lambda float, regularization factor for ST.FUN function, defaults to 0
+#' @param tweak.vec numeric vector, with which the minimization algorithm starts
+#' @param lambda non-negative float, regularization factor for ST.FUN function, defaults to 0
 #' @param maxit integer, maximum number of iterations for the iterative
 #'   minimization, defaults to 1000
 #' @param learning.rate float, step size while learning. Defaults to NA. If it is NA, the learning rate will
@@ -59,7 +59,7 @@
 #'  if the optimium has not been found. Defaults to 2.
 #' @param cycles integer, in each iteration one gradient is calculated. To find the
 #'  best step size, we do "cycles" steps, and evaluate each of them to find the best step size.
-#'  Defaults to 50
+#'  Defaults to 5
 #' @param save.all.tweaks boolean, should all tweak vectores during all iterations be stored. Defaults to FALSE
 #' @param use.restart boolean, restart the algorithm if the update was not a descent step. Defaults to TRUE
 #' @param verbose boolean, should information be printed to console. Defaults to TRUE
@@ -133,9 +133,9 @@
 #'               tweak = start.tweak,
 #'               X.matrix = X.matrix,
 #'               train.data.list = training.data)
-descent_generalized_fista <- function(tweak.vec = NA,
+descent_generalized_fista <- function(tweak.vec,
                                       lambda=0,
-                                      maxit=1e3,
+                                      maxit=1e2,
                                       learning.rate = NA,
                                       F.GRAD.FUN,
                                       ST.FUN = soft_thresholding,
@@ -143,21 +143,118 @@ descent_generalized_fista <- function(tweak.vec = NA,
                                       EVAL.FUN,
                                       NORM.FUN = identity,
                                       line.search.speed = 2,
-                                      cycles=50,
+                                      cycles=5,
                                       save.all.tweaks=FALSE,
                                       use.restart=TRUE,
                                       verbose=TRUE,
                                       NESTEROV.FUN = positive_subspace_pmax){
-  # safety checks:
-  if(any(is.na(tweak.vec))){
-    stop("descent_generalized_fista: Tweak vector includes NAs")
+
+  # safety check: F.GRAD.FUN
+  # I am going to check if the function returns an error, if called with only 1 parameter
+  # I am NOT going to check if the function returns the steepest direction (or at least a descent direction)
+  tmp <- try(F.GRAD.FUN(tweak.vec), silent = TRUE)
+  if(any(grepl(pattern = "Error ", x = tmp))){
+    stop("In descent_generalized_fista: 'F.GRAD.FUN' produces an error, if called with tweak.vec as first, and only argument")
   }
-  if(!(is.numeric(lambda) || is.numeric(maxit) || is.numeric(line.search.speed) || is.numeric(cycles))){
-    stop("descent_generalized_fista: Set lambda, maxit, line.search.speed and cycles to numeric values")
+  # end -> F.GRAD.FUN
+
+  # safety check: EVAL.FUN
+  # I am going to check if the function returns an error, if called with only 1 parameter
+  tmp <- try(EVAL.FUN(tweak.vec), silent = TRUE)
+  if(any(grepl(pattern = "Error ", x = tmp))){
+    stop("In descent_generalized_fista: 'EVAL.FUN' produces an error, if called with tweak.vec as first, and only argument")
   }
-  if(!(is.logical(save.all.tweaks) || is.logical(verbose) || is.logical(use.restart))){
-    stop("descent_generalized_fista: Set save.all.tweaks, use.restart and verbose to logicals")
+  # end -> EVAL.FUN
+
+  # safety check: ST.FUN
+  # I am going to check if the function returns an error, if called with only 1 parameter
+  tmp <- try(ST.FUN(x = tweak.vec,
+                    lambda = lambda), silent = TRUE)
+  if(any(grepl(pattern = "Error ", x = tmp))){
+    stop("In descent_generalized_fista: 'ST.FUN' produces an error, if called with 'tweak.vec' as first, and 'lambda' as second argument")
   }
+  # end -> ST.FUN
+
+  # safety check: FACTOR.FUN
+  # I am going to check if the function returns an error, if called with only 1 parameter
+  tmp <- try(FACTOR.FUN(maxit), silent = TRUE)
+  if(any(grepl(pattern = "Error ", x = tmp))){
+    stop("In descent_generalized_fista: 'FACTOR.FUN' produces an error, if called with 'maxit' as first, and only argument")
+  }
+  # end -> FACTOR.FUN
+
+  # safety check: NORM.FUN
+  # I am going to check if the function returns an error, if called with only 1 parameter
+  tmp <- try(NORM.FUN(tweak.vec), silent = TRUE)
+  if(any(grepl(pattern = "Error ", x = tmp))){
+    stop("In descent_generalized_fista: 'NORM.FUN' produces an error, if called with 'tweak.vec' as first, and only argument")
+  }
+  # end -> NORM.FUN
+
+  # safety check: NORM.FUN
+  # I am going to check if the function returns an error, if called with only 1 parameter
+  tmp <- try(NORM.FUN(tweak.vec), silent = TRUE)
+  if(any(grepl(pattern = "Error ", x = tmp))){
+    stop("In descent_generalized_fista: 'NORM.FUN' produces an error, if called with 'tweak.vec' as first, and only argument")
+  }
+  # end -> NORM.FUN
+
+  # safety check: NESTEROV.FUN
+  # I am going to check if the function returns an error, if called with only 1 parameter
+  tmp <- try(NESTEROV.FUN(tweak.vec), silent = TRUE)
+  if(any(grepl(pattern = "Error ", x = tmp))){
+    stop("In descent_generalized_fista: 'NESTEROV.FUN' produces an error, if called with 'tweak.vec' as first, and only argument")
+  }
+  # end -> NORM.FUN
+
+
+  # safety check: tweak.vec
+  test <- test_tweak_vec(tweak.vec = tweak.vec,
+                         output.info = c("descent_generalized_fista", "tweak.vec"))
+  # end -> tweak
+
+  # safety check: lambda
+  test <- test_numeric(test.value = lambda,
+                       output.info = c("descent_generalized_fista", "lambda"),
+                       min = 0,
+                       max = Inf)
+  # end -> lambda
+
+  # safety check: maxit
+  test <- test_integer(test.value = maxit,
+                       output.info = c("descent_generalized_fista", "maxit"),
+                       min = 2,
+                       max = Inf)
+  # end -> maxit
+
+  # safety check: line.search.speed
+  test <- test_numeric(test.value = line.search.speed,
+                       output.info = c("descent_generalized_fista", "line.search.speed"),
+                       min = .Machine$double.eps,
+                       max = Inf)
+  # end -> line.search.speed
+
+  # safety check: cycles
+  test <- test_integer(test.value = cycles,
+                       output.info = c("descent_generalized_fista", "cycles"),
+                       min = 1,
+                       max = Inf)
+  # end -> cycles
+
+  # safety check: save.all.tweaks
+  test <- test_logical(test.value = save.all.tweaks,
+                       output.info = c("descent_generalized_fista", "save.all.tweaks"))
+  # end -> save.all.tweaks
+
+  # safety check: use.restart
+  test <- test_logical(test.value = use.restart,
+                       output.info = c("descent_generalized_fista", "use.restart"))
+  # end -> use.restart
+
+  # safety check: verbose
+  test <- test_logical(test.value = verbose,
+                       output.info = c("descent_generalized_fista", "verbose"))
+  # end -> verbose
 
   # check if the norm function changes EVAL value:
   if(!isTRUE(all.equal(EVAL.FUN(tweak.vec), EVAL.FUN(NORM.FUN(tweak.vec))))){

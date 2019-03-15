@@ -9,12 +9,12 @@ generate_random_data(n.types = 5, n.samples.per.type = 10,
   seed = 1310)
 }
 \arguments{
-\item{n.types}{integer, how many different types should be included in the data set (default 5)}
+\item{n.types}{integer >= 2, how many different types should be included in the data set (default 5)}
 
-\item{n.samples.per.type}{integer, how many samples should be generated per type (default 10)
+\item{n.samples.per.type}{integer >= 1, how many samples should be generated per type (default 10)
 Notice, for each type, the number of samples will be randomized a bit}
 
-\item{n.features}{integer, how many features should be included (default 1000)}
+\item{n.features}{integer >= 1, how many features should be included (default 1000)}
 
 \item{sample.type}{string, name of samples, defaults to "Cell"}
 

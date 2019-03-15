@@ -11,7 +11,7 @@ ggplot_gpath(DTD.model, number.pics = 3,
 }
 \arguments{
 \item{DTD.model}{: list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
-or\code{\link{descent_generalized_fista}}}
+or \code{\link{descent_generalized_fista}}}
 
 \item{number.pics}{: integer, into how many pictures should the resutlt be split. (defaults to 3)}
 
@@ -32,7 +32,7 @@ Only these entries will be visualized. If set to NA, all entries will be used. (
 
 \item{main}{string, used as title of the plot (Default: "")}
 
-\item{plot.legend}{boolean, should the legend be plotted? Notice that the legend will
+\item{plot.legend}{logical, should the legend be plotted? Notice that the legend will
 be plotted in a additional figure, and can be visualized via grid::grid.draw (Default: FALSE)}
 }
 \value{

@@ -4,13 +4,20 @@
 \alias{ggplot_convergence}
 \title{Plot loss curve}
 \usage{
-ggplot_convergence(DTD.model, EVAL.FUN = NA, main = "")
+ggplot_convergence(DTD.model, X.matrix = NA, test.data, estimate.c.type,
+  main = "")
 }
 \arguments{
 \item{DTD.model}{list, as returned by the train_correlation_model function.}
 
-\item{EVAL.FUN}{function, that takes a single input (the tweak vector of the fista.output),
-and returns the loss function on the test set. Default is NA}
+\item{test.data}{numeric matrix with samples as columns, and features as rows.
+In the formula above denoated as Y.}
+
+\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
+\eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
+(see \code{\link{estimate_c}}),
+if estimate.c.type is set to "non_negative" the estimates "C"
+must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
 
 \item{main}{string, additionally title (default "")}
 }

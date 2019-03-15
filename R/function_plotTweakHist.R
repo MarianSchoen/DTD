@@ -25,22 +25,46 @@ ggplot_ghistogram <- function(DTD.model,
                               main = "",
                               x.lab = "g-vec") {
 
-  if(is.list(DTD.model)){
-    if("best.model" %in% names(DTD.model)){
-      fista.output <- DTD.model$best.model
-    }else{
-      if("Tweak" %in% names(DTD.model)){
-        stop("ggplot_ghistogram: DTD.model does not fit")
-      }else{
-        fista.output <- DTD.model
-      }
+  # test if DTD.model can be used for plotting:
+  if (is.list(DTD.model) && ("Tweak" %in% names(DTD.model))) {
+    tweak <- DTD.model$Tweak
+  }
+  if (is.list(DTD.model) && ("best.model" %in% names(DTD.model))) {
+    tweak <- DTD.model$best.model$Tweak
+  }
+  if (is.numeric(DTD.model)) {
+      tweak <- DTD.model
     }
+  if (!exists("tweak")) {
+    stop("In ggplot_ghistogram: 'DTD.model' does not fit")
   }else{
-    stop("ggplot_ghistogram: DTD.model is not a list")
+    test <- test_tweak_vec(tweak.vec = tweak,
+                           output.info = c("ggplot_ghistogram", "tweak"))
   }
 
+  # safety check: n.bins
+  test <- test_integer(test.value = n.bins,
+                       output.info = c("ggplot_ghistogram", "n.bins"),
+                       min = 1,
+                       max = length(tweak))
+  # end -> n.bins
+
+  # safety check: main
+  useable.main <- try(as.character(main), silent = TRUE)
+  if(any(grepl(x = useable.main, pattern = "Error"))){
+    stop("In ggplot_ghistogram: provided 'main' can not be used as.character.")
+  }
+  # end -> main
+  # safety check: x.lab
+  useable.x.lab <- try(as.character(x.lab), silent = TRUE)
+  if(any(grepl(x = useable.x.lab, pattern = "Error"))){
+    stop("In ggplot_ghistogram: provided 'x.lab' can not be used as.character.")
+  }
+  # end -> x.lab
+
+
   # Transformation:
-  g_vec <- suppressWarnings(TRANSFORM.FUN(fista.output$Tweak))
+  g_vec <- suppressWarnings(TRANSFORM.FUN(tweak))
 
   # Get number of na:
   nums.NA <- sum(is.na(g_vec)) + sum(is.infinite(g_vec))

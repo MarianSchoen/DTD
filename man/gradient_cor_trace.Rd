@@ -4,7 +4,7 @@
 \alias{gradient_cor_trace}
 \title{Gradient of \eqn{L(g) = \sum cor(true_C, estimated_C(g) )}}
 \usage{
-gradient_cor_trace(X, Y, C, tweak)
+gradient_cor_trace(X, Y, C, tweak, estimate.c.type)
 }
 \arguments{
 \item{X}{numeric matrix with features as rows, and reference samples as columns}
@@ -13,7 +13,9 @@ gradient_cor_trace(X, Y, C, tweak)
 
 \item{C}{numeric matrix with reference samples as rows, and samples as columns}
 
-\item{tweak}{numeric vector with length of nrow(X).
+\item{tweak}{numeric vector with length of nrow(X).}
+
+\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
 In the Loss function above tweak is named "g"}
 }
 \value{

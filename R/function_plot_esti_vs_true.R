@@ -4,16 +4,27 @@
 #' it plots known/true quantities versus estimated quantities per cell type. Its main inputs are two quantity matrices.
 #' For an example see section "Correlation per cell type" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param estimated.c matrix, with cell types as rows, and mixtures as columns
-#' @param true.c matrix, with cell types as rows, and mixtures as columns
-#' @param norm.mixturewise boolean, should every sample (=> column) be normalized to sum of 1? (Defaults to FALSE)
+#' @param norm.mixturewise logical, should every sample (=> column) be normalized to sum of 1? (Defaults to FALSE)
 #' @param norm.typewise boolean, should every type (=> row) be normalized to range from 0 to 1? (Defaults to FALSE)
 #' @param title string, title for plot (Defaults to "")
 #' @param shape.indi vector with length of ncol(true.c), used as parameter shape in ggplot.
 #' Idea is to mark samples from different origin. If no additional(Defaults to NA)
-#' @param show.legend boolean, should an additional legend be plotted? Notice, in this function a figure per type will be generated.
+#' @param show.legend logical, should an additional legend be plotted? Notice, in this function a figure per type will be generated.
 #' In the title of each subfigure the correlation of the included type and the type is shown.
 #' This parameter only sets the additional overall legend(Defaults to FALSE)
+#' @param DTD.model either a numeric vector with length of nrow(X),
+#' or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or\code{\link{descent_generalized_fista}}.
+#' @param X.matrix numeric matrix with cells as columns, and features as rows.
+#'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
+#'  includes the reference matrix X (default for \code{\link{train_correlatio_model}})
+#' @param test.data numeric matrix with samples as columns, and features as rows.
+#' In the deconvolution formula 'test.data' is denoated as Y.
+#' @param estimate.c.type string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
+#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
+#' (see \code{\link{estimate_c}}),
+#' if estimate.c.type is set to "non_negative" the estimates "C"
+#' must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
 #'
 #' @import ggplot2
 #' @import reshape2
@@ -21,22 +32,97 @@
 #' @return ggplot object
 #' @export
 #'
-ggplot_true_vs_esti <- function(estimated.c,
-                                true.c,
+ggplot_true_vs_esti <- function(DTD.model,
+                                X.matrix = NA,
+                                test.data,
                                 norm.mixturewise = FALSE,
                                 norm.typewise = FALSE,
+                                estimate.c.type,
                                 title = "",
                                 shape.indi = NA,
                                 show.legend = FALSE) {
-  # Safety checks:
-  if (!all(dim(estimated.c) == dim(true.c))) {
-    stop("Dimension of C are uniequal ...\n")
+
+  if (is.list(DTD.model)) {
+    if ("best.model" %in% names(DTD.model)) {
+      tweak <- DTD.model$best.model$Tweak
+    } else {
+      if ("Tweak" %in% names(DTD.model)) {
+        stop("In ggplot_true_vs_esti: There is no Tweak entry in the 'DTD.model'")
+      } else {
+        tweak <- DTD.model$Tweak
+      }
+    }
+  } else {
+    if(is.numeric(DTD.model)){
+      tweak <- DTD.model
+    }else{
+      stop("In ggplot_true_vs_esti: DTD.model is neither a list nor a numeric vector")
+    }
   }
+
+
+  if(is.list(test.data) && length(test.data) == 2){
+    if(!all(c("quantities", "mixtures") %in%  names(test.data))){
+      stop("In ggplot_true_vs_esti: entries of 'test.data' must be named 'quantities' and 'mixtures'.")
+    }else{
+      if(!is.matrix(test.data$mixtures)){
+        stop("In ggplot_true_vs_esti: 'test.data$mixtures' is not a matrix.")
+      }
+      if(!is.matrix(test.data$quantities)){
+        stop("In ggplot_true_vs_esti: 'test.data$quantities' is not a matrix. Therefore, 'test.data' can not be used.")
+      }
+    }
+  }else{
+    stop("In ggplot_true_vs_esti: 'test.data' must be provided as a list with two entries: 'quantities' and 'mixtures'.")
+  }
+  if(!is.matrix(X.matrix) || any(is.na(X.matrix)) || !is.numeric(X.matrix)){
+    if (is.list(DTD.model) && "reference.X" %in% names(DTD.model)) {
+      message("In ggplot_true_vs_esti: provided 'X.matrix' could not be used, therefore used: 'DTD.model$reference.X'")
+      X.matrix <- DTD.model$reference.X
+    }else{
+      stop("In ggplot_true_vs_esti: can't use 'X.matrix'. Neither via X.matrix argument nor included in the DTD.model.")
+    }
+  }
+
+  # safety check: title
+  useable.ylab <- try(as.character(title), silent = TRUE)
+  if(any(grepl(x = useable.ylab, pattern = "Error"))){
+    stop("In ggplot_true_vs_esti: provided 'title' can not be used as.character.")
+  }
+  # end -> title
+
+  # safety check: norm.typewise
+  test <- test_logical(test.value = norm.typewise,
+                       output.info = c("ggplot_true_vs_esti", "norm.typewise"))
+  # end -> norm.typewise
+
+  # safety check: norm.mixturewise
+  test <- test_logical(test.value = norm.mixturewise,
+                       output.info = c("ggplot_true_vs_esti", "norm.mixturewise"))
+  # end -> norm.mixturewise
+
+  # safety check: estimate.c.tye
+  ESTIMATE_C_FUN <- test_c_type(test.value = estimate.c.type,
+                                output.info = c("ggplot_true_vs_esti", "estimate.c.type"))
+  # end -> estimate.c.type
+
+
+
+  estimated.c <- ESTIMATE_C_FUN(X.matrix = X.matrix,
+                                new.data = test.data$mixtures,
+                                DTD.model = tweak)
+
+  true.c <- test.data$quantities
+
+  if(!all(dim(estimated.c) == dim(true.c))){
+    stop("In ggplot_true_vs_esti: dimension of estimated C, and C in 'test.data$quantities' differ" )
+  }
+
+
   # If shape.indi has not been set, initialize it
   if (any(is.na(shape.indi))) {
     shape.indi <- rep(1, ncol(estimated.c))
   }
-
 
   # Norm every mixture (column of the data) to sum of 1
   if (norm.mixturewise) {
@@ -63,19 +149,23 @@ ggplot_true_vs_esti <- function(estimated.c,
     if (all(rownames(estimated.c) %in% rownames(true.c))) {
       true.c <- true.c[rownames(estimated.c), ]
     } else {
-      stop("ggplot_true_vs_esti: There are different rownames in estimated.c and true.c")
+      stop("In ggplot_true_vs_esti: There are different rownames in estimated.c and true.c")
     }
   }
 
   # In the title of the subplots we add the correlation per type, therefore:
   cor.list <- c()
   for (l1 in 1:nrow(estimated.c)) {
-    cor.list <- c(cor.list, stats::cor(estimated.c[l1, ], true.c[l1, ]))
+    if(sd(true.c[l1, ]) != 0){ # => can't calculate corelation
+      cor.list <- c(cor.list, stats::cor(estimated.c[l1, ], true.c[l1, ]))
+    }else{
+      cor.list <- c(cor.list, 0)
+    }
   }
   names(cor.list) <- rownames(estimated.c)
 
   # Adjust title:
-  tit <- paste0("Overall Correlation: ", format(mean(cor.list), digits = 2))
+  tit <- paste0("Overall Correlation: ", format(mean(cor.list, na.rm = TRUE), digits = 2))
   if (title != "") {
     tit <- paste0(tit, ";", title)
   }

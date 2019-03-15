@@ -14,7 +14,7 @@
 #' For an example see section "g-Path" in the package vignette `browseVignettes("DTD")`
 #'
 #' @param DTD.model : list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
-#' or\code{\link{descent_generalized_fista}}
+#' or \code{\link{descent_generalized_fista}}
 #' @param number.pics : integer, into how many pictures should the resutlt be split. (defaults to 3)
 #' @param G.TRANSFORM.FUN : function, that expects a vector of numerics, and returns a vector of the same length.
 #' Will be applied on fista.output$Tweak. Set G.TRANSFORM.FUN to identity if no transformation is required.
@@ -24,7 +24,7 @@
 #' If you change ITER.TRANSFORM.FUN don't forget to adjust the x.lab parameter (Default: log10)
 #' @param y.lab string, used as y label on the plot (Default: "g)
 #' @param x.lab string, used as x label on the plot (default is "log10(iteration)")
-#' @param plot.legend boolean, should the legend be plotted? Notice that the legend will
+#' @param plot.legend logical, should the legend be plotted? Notice that the legend will
 #' be plotted in a additional figure, and can be visualized via grid::grid.draw (Default: FALSE)
 #' @param subset vector of strings, or NA that match the rownames of fista.output$History.
 #' Only these entries will be visualized. If set to NA, all entries will be used. (Default: NAA)
@@ -46,27 +46,79 @@ ggplot_gpath <- function(DTD.model,
                          main = "",
                          plot.legend = FALSE) {
 
+  # safety check: number.pics
+  test <- test_integer(number.pics,
+                       output.info = c("ggplot_gpath", "number.pics"),
+                       min = 1,
+                       max = Inf)
+  # end -> number.pics
+
+  # safety check: y.lab
+  useable.ylab <- try(as.character(y.lab), silent = TRUE)
+  if(any(grepl(x = useable.ylab, pattern = "Error"))){
+    stop("In ggplot_gpath: provided 'y.lab' can not be used as.character.")
+  }
+  # end -> y.lab
+
+  # safety check: x.lab
+  useable.ylab <- try(as.character(x.lab), silent = TRUE)
+  if(any(grepl(x = useable.ylab, pattern = "Error"))){
+    stop("In ggplot_gpath: provided 'x.lab' can not be used as.character.")
+  }
+  # end -> x.lab
+
+  # safety check: main
+  useable.ylab <- try(as.character(main), silent = TRUE)
+  if(any(grepl(x = useable.ylab, pattern = "Error"))){
+    stop("In ggplot_gpath: provided 'main' can not be used as.character.")
+  }
+  # end -> main
+
+
+
+  # safety check: plot.legend
+  test <- test_logical(test.value = plot.legend,
+                       output.info = c("ggplot_gpath", "plot.legend"))
+  # end -> plot.legend
+
+  # for gPath, the following elements are needed:
+  # - 'History' of learning
+
+  # Either it is provided as a list ...
   if(is.list(DTD.model)){
     if("best.model" %in% names(DTD.model)){
       fista.output <- DTD.model$best.model
     }else{
-      if(all(c("Tweak", "Convergence") %in% names(DTD.model))){
-        stop("ggplot_gpath: DTD.model does not fit")
+      if(all(c("Tweak", "History") %in% names(DTD.model))){
+        stop("In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)")
       }else{
         fista.output <- DTD.model
       }
     }
-  }else{
-    stop("ggplot_gpath: DTD.model is not a list")
-  }
-
-  # safety check (if there is no History for the g_i, then no path can be plotted)
-  if (is.null(fista.output$History)) {
-    stop("FISTA output must include History!")
-  } else {
     f.history <- fista.output$History
     tweak <- fista.output$Tweak
+  }else{
+    # ... or only the History matrix is provided:
+    if(!is.matrix(DTD.model)){
+      stop("In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)")
+    }else{
+      f.history <- DTD.model
+      tweak <- f.history[, ncol(f.history)]
+    }
   }
+  # safety check: G.TRANSFORM.FUN
+  useable.g.trans.fun <- try(G.TRANSFORM.FUN(tweak), silent = TRUE)
+  if(any(grepl(x = useable.g.trans.fun, pattern = "Error")) || any(!is.numeric(useable.g.trans.fun))){
+    stop("In ggplot_gpath: 'G.TRANSFORM.FUN' does not return numeric vector.")
+  }
+  # end -> main
+
+  # safety check: ITER.TRANSFORM.FUN
+  useable.iter.trans.fun <- try(ITER.TRANSFORM.FUN(tweak), silent = TRUE)
+  if(any(grepl(x = useable.iter.trans.fun, pattern = "Error")) || any(!is.numeric(useable.iter.trans.fun))){
+    stop("In ggplot_gpath: 'ITER.TRANSFORM.FUN' does not return numeric vector.")
+  }
+  # end -> main
 
   # if:
   # - subset is not na,
@@ -77,7 +129,7 @@ ggplot_gpath <- function(DTD.model,
     tweak <- tweak[subset]
   } else {
     if (!all(is.na(subset))) {
-      cat("subset could not be used, therefore complete tweak, and history will be used\n")
+      message("In ggplot_gpath: subset could not be used, therefore complete tweak, and history will be used\n")
     }
   }
 
