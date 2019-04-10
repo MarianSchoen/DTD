@@ -1,21 +1,24 @@
 #' Mix samples for loss-function learning DTD
 #'
-#' mix_samples takes a gene expresssion matrix, and pheno information.
+#' mix_samples takes a gene expresssion matrix ('exp.data'),
+#' and 'pheno' information.
 #' It then mixes the samples with known quantities such that it can be
 #' used for loss-function learning digital tissue deconvolution.
-#' For mixture it randomly selects "n.samples" samples from "exp.data", and averages over them.
+#' For a mixture it randomly selects "n.samples" samples from "exp.data", and averages over them.
 #' Using the information stored in pheno, it can get the quantities per cell in each mixture.
 #'
 #' @param exp.data numeric matrix, with features as rows and samples as columns
-#' @param pheno named vector, with pheno information for each sample in exp.data
+#' @param pheno named vector of strings, with pheno information ('pheno') for each sample ('name(pheno)') in exp.data
 #' @param n.samples integer above 0, numbers of samples to be drawn (defaults to 1000)
 #' @param n.per.mixture integer above 0, below ncol(exp.data),
 #'  how many samples should be included per mixutre. (Default: 100)
-#' @param included.in.X named vector of strings, indicating types that are in the reference matrix.
-#' Only those types, and sorted in that order, will be included in the quantity matrix
+#' @param included.in.X vector of strings, indicating types that are in the reference matrix.
+#' Only those types, and sorted in that order, will be included in the quantity matrix.
+#' Notice, every profile of 'exp.data' might be included in the mixture.
+#' But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.
 #' @param verbose logical, should information be printed? (Default: FALSE)
 #'
-#' @return list with random profiles, and their quantity matrix
+#' @return list with two entries: 'mixtures' and 'quantities'.
 #'
 #' @export
 #'
@@ -82,6 +85,16 @@ mix_samples <- function(exp.data,
                        verbose = FALSE){
 
   # Safety checks
+  if(!is.vector(included.in.X)){
+    stop("in mix_samples_with_jitter: 'included.in.X' is not provided as vector")
+  }
+  if(!is.vector(pheno)){
+    stop("in mix_samples_with_jitter: 'pheno' is not provided as vector")
+  }
+  if(!is.matrix(exp.data)){
+    stop("in mix_samples: 'exp.data' is not a numeric matrix")
+  }
+
   if(!any(included.in.X %in% pheno)){
     stop("in mix_samples: no cell type in 'included.in.X' fits 'pheno'")
   }
@@ -89,10 +102,6 @@ mix_samples <- function(exp.data,
   if(!(all(names(pheno) %in% colnames(exp.data)) && length(pheno) == ncol(exp.data))){
     stop("in mix_samples: 'names(pheno)' do not fit 'colnames(exp.data)'.
          For every entry of 'colnames(exp.data)' there has to be a entry in 'pheno'")
-  }
-
-  if(!is.matrix(exp.data)){
-    stop("in mix_samples: 'exp.data' is no matrix")
   }
 
   # safety checks: n.samples
