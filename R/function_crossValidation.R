@@ -1,15 +1,15 @@
 #' Cross-validation for digital tissue deconvolution
 #'
-#' Our descent generalized FISTA implementation includes a l1 regularization term.
+#' Our descent generalized FISTA implementation includes a l1 regularization term (see \code{\link{train_deconvolution_model}}.
 #' This function performs a k-fold cross validation to find the best fitting regularization parameter.
 #' For an example see `browseVignettes("DTD")`
 #'
 #' @param lambda.seq numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
 #' If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
 #' of the training set -  will be generated. Default: NULL
-#' @param tweak.start numeric vector, starting vector for the DTD algorithm. Default: NULL.
+#' @param tweak.start numeric vector, starting vector for the DTD algorithm.
 #' @param n.folds integer, number of buckets in the cross validation. Defaults to 10
-#' @param lambda.length integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 20
+#' @param lambda.length integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 10
 #' @param train.data.list list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
 #' Within this list the train/test cross validation will be done.
 #' Notice, that the train.data.list must have an entry named "mixtues". In this entry, the matrix containing the
@@ -20,14 +20,19 @@
 #' @param ... all parameters that are passed to the \code{\link{descent_generalized_fista}} function.
 #' E.g. maxiter, tweak_vec etc ...
 #' @param warm.start logical, should the solution of a previous model of the cross validation be used as a start
-#'  in the next model. Defaults to FALSE
+#'  in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.
 #'
-#' @return list of length 2. A cross validation matrix as entry "cv.obj", and the model with minimal loss function
+#' @return list of length 2.
+#' \itemize{
+#'    \item 'cv.obj', list of lists. DTD model for each lambda, and every folds.
+#'    \item 'best.model', list. DTD model optimized on the complete data set with the best lambda from the cross validation.
+#' }
+#' A cross validation matrix as entry "cv.obj", and the model with minimal loss function
 #' retrained on the complete dataset as "best.model
 #' @export
 #'
 DTD_cv_lambda <- function(lambda.seq = NULL,
-                          tweak.start = NULL,
+                          tweak.start,
                           n.folds = 5,
                           lambda.length = 10,
                           train.data.list,
@@ -36,6 +41,7 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
                           cv.verbose = TRUE,
                           warm.start = FALSE,
                           ...) {
+
   # safety check: tweak.start
   test <- test_tweak_vec(tweak.vec = tweak.start,
                          output.info = c("DTD_cv_lambda", "tweak.start"))
@@ -118,6 +124,16 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
     lambda.0 <- sqrt(log(p) / n)
     lambda.seq <- lambda.0 * 2^seq(2, -20, length.out = lambda.length)
   }
+  # cross validation can be called with warm.start.
+  # these warm starts should start with the most unregularized scenario:
+  if(min(lambda.seq) != lambda.seq[1]){
+    lambda.seq <- sort(lambda.seq, decreasing = TRUE)
+  }
+  # after cross validation, a model is trained on the complete training
+  # data using the best lambda of the cross validation.
+  # The starting tweak for the end model must not be the result of a warm start,
+  # therefore store it:
+  tweak.start.end.model <- tweak.start
 
   # internal training samples selection function:
   select.fun <- function(list.entry, samples) {
@@ -129,18 +145,13 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
     }
     return(list.entry)
   }
-  # Initialise the cv.object:
-  cv.object <- data.frame(matrix(
-    nrow = (n.folds + 2),
-    ncol = length(lambda.seq)
-  ))
-  colnames(cv.object) <- lambda.seq
-  rownames(cv.object) <- c(1:n.folds, "nonZero", "nFoundModels")
+
+  # in older versions, I only kept the resulting loss for every fold and each lambda.
+  # I think, for visualizing the cross validation, and comparing, it is better to return the complete models
+  cv.object <- list()
+
   # Start of cross validation:
   for (lambda in lambda.seq) {
-    cor.test.vec <- c()
-    non_zeros <- c()
-    foundMods <- 0
     if (cv.verbose) {
       pos <- which(lambda.seq == lambda) - 1
       cat("\ndoing lambda: ", lambda, ", completed ", pos, " of ", length(lambda.seq), ", ", 100 * pos / length(lambda.seq), "% \n")
@@ -148,6 +159,7 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
     if (cv.verbose) {
       cat("doing l.fold: ")
     }
+    lambda.fold <- list()
     for (l.fold in 1:n.folds) {
       if (cv.verbose) {
         cat(l.fold, "\t")
@@ -178,47 +190,58 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
       silent = TRUE
       )
 
+
       # If the regularization parameter lambda is to big,
       # the fista algorithm does not find a model, and throws an error
       if (any(grepl(pattern = "Error", catch))) {
-        cor.test.vec <- c(cor.test.vec, NA)
-        non_zeros <- c(non_zeros, NA)
+        lambda.fold[[as.character(l.fold)]] <- "could not build a model"
         next
-      } else {
-        # if the fista algorithm did not throw an error => increment the number of found Models ...
-        foundMods <- foundMods + 1
-        # ... and check how many coefficients are unequal zero
-        tmp_non_zero <- sum(catch$Tweak != 0)
-        non_zeros <- c(non_zeros, tmp_non_zero)
-        # warm start, after learning a model, keep last tweak vec as start for next model:
-        if (warm.start) {
-          tweak.start <- catch$Tweak
-        }
       }
+      # warm start, after learning a model, keep last tweak vec as start for next model:
+      if (warm.start) {
+        tweak.start <- catch$Tweak
+        }
       # Evaluate the reached minimum on the test set:
       tmp.test.list <- lapply(train.data.list, select.fun, samples = test.samples)
       tmp.eval.fun.test <- function(tmp.tweak, tmp.list = tmp.test.list) {
         return(EVAL.FUN(tmp.tweak, train.list = tmp.list))
       }
-      cor.test.vec <- c(cor.test.vec, tmp.eval.fun.test(catch$Tweak))
+      catch$cor.test <- tmp.eval.fun.test(catch$Tweak)
+      lambda.fold[[as.character(l.fold)]] <- catch
     }
-    # fill the cv.object data.frame:
-    cv.object[[as.character(lambda)]] <- c(cor.test.vec, mean(non_zeros), foundMods / n.folds)
+    cv.object[[as.character(lambda)]] <- lambda.fold
   }
   if (cv.verbose) {
     cat("\ncross validation completed, starting to build model on complete data, with  best lambda\n")
   }
 
-  # after the cross validation, find the lambda with best evaluation score,
+  # after the cross validation, find the lambda with best evaluation score
+  pick.mean.test.results.function <- function(lambda.list){
+    tmp <- lapply(lambda.list, function(each.fold){
+        if("cor.test" %in% names(each.fold)){
+          return(each.fold$cor.test)
+        }else{
+          return(Inf)
+        }
+      })
+    test.vec <- mean(unlist(tmp, use.names = FALSE), na.rm = TRUE)
+    return(test.vec)
+  }
+
+  # pick the average mean per lambda:
+  test.result.per.lambda <- lapply(cv.object,
+                                   pick.mean.test.results.function)
+
+  # unlist it => keep names
+  mean.test.results <- unlist(test.result.per.lambda)
+
   # and rebuild a model on the complete dataset:
-  lmin.pos <- which.min(apply(cv.object[1:n.folds, , drop = FALSE],
-                              2,
-                              mean, na.rm = TRUE)) # it may occur (due to hapless folds) that one fold leads to NA in all models
-  lmin <- as.numeric(colnames(cv.object)[lmin.pos])
+  lmin.pos <- which.min(mean.test.results)
+  lmin <- as.numeric(names(mean.test.results)[lmin.pos])
 
   bestModel <- descent_generalized_fista(
     lambda = lmin,
-    tweak.vec = tweak.start,
+    tweak.vec = tweak.start.end.model,
     F.GRAD.FUN = F.GRAD.FUN,
     EVAL.FUN = EVAL.FUN,
     save.all.tweaks = TRUE,
