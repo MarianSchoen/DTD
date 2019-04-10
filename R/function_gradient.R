@@ -8,8 +8,9 @@
 #' @param Y numeric matrix with features as rows, and samples as columns
 #' @param C numeric matrix with reference samples as rows, and samples as columns
 #' @param tweak numeric vector with length of nrow(X).
-#' @param estimate.c.type string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
 #' In the Loss function above tweak is named "g"
+#' @param estimate.c.type string, either "non_negative", or "direct".
+#' Indicates how the algorithm finds the solution of
 #'
 #' @export
 #'
