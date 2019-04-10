@@ -18,7 +18,7 @@
 #' @param estimate.c.type string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
 #' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
 #' (see \code{\link{estimate_c}}),
-#' if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
+#' if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see \code{\link{estimate_nn_c}})
 #'
 #' @return float, value of the Loss function
 #'
@@ -51,21 +51,22 @@
 #'                             percentage.of.all.cells = percentage.of.all.cells)
 #' X.matrix <- sample.X$X.matrix
 #' samples.to.remove <- sample.X$samples.to.remove
+#' remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
 #'
-#'
-#' indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
-#' training.data <- mix_samples(gene.mat = remaining.mat,
-#'                              pheno = indicator.train,
+#' indicator.remain <- indicator.list[names(indicator.list) %in% colnames(remaining.mat)]
+#' training.data <- mix_samples(exp.data = remaining.mat,
+#'                              pheno = indicator.remain,
 #'                              included.in.X = include.in.X,
 #'                              n.samples = 500,
 #'                              n.per.mixture = 100,
 #'                              verbose = FALSE)
 #'
 #'  start.tweak <- rep(1, nrow(X.matrix))
-#'  sum.cor <- evaluate_cor(X = X.matrix,
+#'  sum.cor <- evaluate_cor(X.matrix = X.matrix,
 #'                       new.data = training.data$mixtures,
 #'                       true.compositions = training.data$quantities,
-#'                       DTD.model = start.tweak)
+#'                       DTD.model = start.tweak,
+#'                       estimate.c.type = "direct")
 #'
 #'  rel.cor <- sum.cor/ncol(X.matrix)
 #' cat("Relative correlation: ", -rel.cor, "\n")
