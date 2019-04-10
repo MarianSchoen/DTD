@@ -16,6 +16,7 @@
 #'
 #' @return numeric matrix with ncol(X) rows, and ncol(Y) columns
 #'
+#' @import nnls
 #' @export
 #' @examples
 #' library(DTD)
