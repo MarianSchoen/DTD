@@ -1,8 +1,16 @@
 #' Train a DTD model based on correlation loss function
 #'
+#' Loss-function learning Digital Tissue Deconvolution (DTD) adjustes a deconvolution model to
+#' a biological context. 'train_deconvolution_model' is the main function of the DTD package.
+#' As input it takes the reference matrix X, a list of training data and a start vector 'tweak'.
+#' Then, it iteratively finds that vector 'g' that best deconvolutes based on the loss fucntion:
+#' \deqn{L(g) = - \sum cor(C_{j,.} \widehat(C_{j,.}(g))) + \lambda ||g||_1}
+#' The 'train_deconvolution_model' function calls the cross validation function \code{\link{DTD_cv_lambda}}
+#' to find the optimal lambda. Afterwards it optimizes a model on the complete dataset.
+#'
 #' This function works as a wrapper for the correlation loss function and its gradient.
 #' It provides a workaround for digital tissue deconvolution, such that the user only
-#' has to provide a starting vector (in literature g, in code tweak), a reference matrix X,
+#' has to provide a starting vector (in literature "g", in code 'tweak'), a reference matrix X,
 #' and a training list, including the training mixtures, and their cell type quantities.
 #'
 #' For an example see `browseVignettes("DTD")`
@@ -26,11 +34,15 @@
 #' (see \code{\link{estimate_c}}),
 #' if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
 #'
-#' @return list, including 4 entries: 'cv.obj' (see \code{\link{DTD_cv_lambda}}),
-#' 'best.model' (see \code{\link{DTD_cv_lambda}}),
-#' 'reference.X' and 'pics' (see `browseVignettes("DTD")`)
+#' @return list, including 4 entries:
+#' \itemize{
+#'     \item cv.obj' (see \code{\link{DTD_cv_lambda}})
+#'     \item 'best.model' (see \code{\link{DTD_cv_lambda}})
+#'     \item 'reference.X'
+#'     \item 'pics' (see `browseVignettes("DTD")`)
+#' }
 #' @export
-train_correlation_model <- function(tweak,
+train_deconvolution_model <- function(tweak,
                                     X.matrix,
                                     train.data.list,
                                     test.data.list = NULL,
@@ -38,7 +50,7 @@ train_correlation_model <- function(tweak,
                                     ...){
 
   if(length(tweak) != nrow(X.matrix)){
-    stop("In train_correlation_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'")
+    stop("In train_deconvolution_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'")
   }
 
   if(is.null(names(tweak))){
@@ -49,33 +61,33 @@ train_correlation_model <- function(tweak,
     if(all(rownames(X.matrix) %in% names(tweak))){
       tweak <- tweak[rownames(X.matrix)]
     }else{
-      stop("In train_correlation_model: There are features within 'X.matrix' where no entry in 'tweak' can be found")
+      stop("In train_deconvolution_model: There are features within 'X.matrix' where no entry in 'tweak' can be found")
     }
   }
   test <- test_tweak_vec(tweak.vec = tweak,
-                        output.info = c("train_correlation_model", "tweak"))
+                        output.info = c("train_deconvolution_model", "tweak"))
   # end -> tweak
 
   # safety check for X.matrix:
   if(!(is.matrix(X.matrix) && !any(is.na(X.matrix)))){
-    stop("In train_correlation_model: X.matrix must be a matrix without any NA.")
+    stop("In train_deconvolution_model: X.matrix must be a matrix without any NA.")
   }
   # end -> X.matrix
 
   # safety check for train.data.list:
   if(is.list(train.data.list) && length(train.data.list) == 2){
     if(!all(c("quantities", "mixtures") %in%  names(train.data.list))){
-      stop("In train_correlation_model: entries of train.data.list must be named 'quantities' and 'mixtures'")
+      stop("In train_deconvolution_model: entries of train.data.list must be named 'quantities' and 'mixtures'")
     }else{
       if(!is.matrix(train.data.list$mixtures)){
-        stop("In train_correlation_model: 'train.data.list$mixtures' is not a matrix")
+        stop("In train_deconvolution_model: 'train.data.list$mixtures' is not a matrix")
       }
       if(!is.matrix(train.data.list$quantities)){
-        stop("In train_correlation_model: 'train.data.list$quantities' is not a matrix")
+        stop("In train_deconvolution_model: 'train.data.list$quantities' is not a matrix")
       }
     }
   }else{
-    stop("In train_correlation_model: train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'")
+    stop("In train_deconvolution_model: train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'")
   }
   # end -> train.data.list
 
@@ -83,35 +95,35 @@ train_correlation_model <- function(tweak,
   if(!is.null(test.data.list)){
     if(is.list(test.data.list) && length(test.data.list) == 2){
       if(!all(c("quantities", "mixtures") %in%  names(test.data.list))){
-        stop("In train_correlation_model: entries of test.data.list must be named 'quantities' and 'mixtures'")
+        stop("In train_deconvolution_model: entries of test.data.list must be named 'quantities' and 'mixtures'")
       }else{
         if(!is.matrix(test.data.list$mixtures)){
-          stop("In train_correlation_model: 'test.data.list$mixtures' is not a matrix")
+          stop("In train_deconvolution_model: 'test.data.list$mixtures' is not a matrix")
         }
         if(!is.matrix(test.data.list$quantities)){
-          stop("In train_correlation_model: 'test.data.list$quantities' is not a matrix")
+          stop("In train_deconvolution_model: 'test.data.list$quantities' is not a matrix")
         }
       }
     }else{
-      stop("In train_correlation_model: test.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'")
+      stop("In train_deconvolution_model: test.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'")
     }
   }
   # end -> test.data.list
 
   # saftey check if X.matrix and test/train are compatible:
   if(nrow(train.data.list$mixtures) != nrow(X.matrix)){
-    stop("In train_correlation_model: 'nrow(train.data.list$mixtures)' does not match 'nrow(X.matrix)'")
+    stop("In train_deconvolution_model: 'nrow(train.data.list$mixtures)' does not match 'nrow(X.matrix)'")
   }
   if(nrow(train.data.list$quantities) != ncol(X.matrix)){
-    stop("In train_correlation_model: 'ncol(train.data.list$quantities)' does not match 'ncol(X.matrix)'")
+    stop("In train_deconvolution_model: 'ncol(train.data.list$quantities)' does not match 'ncol(X.matrix)'")
   }
 
   if(!is.null(test.data.list)){
     if(nrow(test.data.list$mixtures) != nrow(X.matrix)){
-      stop("In train_correlation_model: 'nrow(test.data.list$mixtures)' does not match 'nrow(X.matrix)'")
+      stop("In train_deconvolution_model: 'nrow(test.data.list$mixtures)' does not match 'nrow(X.matrix)'")
     }
     if(nrow(test.data.list$quantities) != ncol(X.matrix)){
-      stop("In train_correlation_model: 'ncol(test.data.list$quantities)' does not match 'ncol(X.matrix)'")
+      stop("In train_deconvolution_model: 'ncol(test.data.list$quantities)' does not match 'ncol(X.matrix)'")
     }
   }
   # safety checks if X.matrix, test and train are sorted in the same way:
@@ -119,31 +131,31 @@ train_correlation_model <- function(tweak,
   if(all(feature.names %in% rownames(train.data.list$mixtures))){
     train.data.list$mixtures <- train.data.list$mixtures[feature.names, ]
   }else{
-    stop("In train_correlation_model: there are features in 'X.matrix' that are not in 'train.data.list$mixtures'")
+    stop("In train_deconvolution_model: there are features in 'X.matrix' that are not in 'train.data.list$mixtures'")
   }
   type.names <- colnames(X.matrix)
   if(all(type.names %in% rownames(train.data.list$quantities))){
     train.data.list$quantities <- train.data.list$quantities[type.names, ]
   }else{
-    stop("In train_correlation_model: there are cell types (=> columns) in 'X.matrix' that are not in 'train.data.list$quantities")
+    stop("In train_deconvolution_model: there are cell types (=> columns) in 'X.matrix' that are not in 'train.data.list$quantities")
   }
 
   if(!is.null(test.data.list)){
     if(all(feature.names %in% rownames(test.data.list$mixtures))){
       test.data.list$mixtures <- test.data.list$mixtures[feature.names, ]
     }else{
-      stop("In train_correlation_model: there are features (=> rows) in 'X.matrix' that are not in 'test.data.list$mixtures'")
+      stop("In train_deconvolution_model: there are features (=> rows) in 'X.matrix' that are not in 'test.data.list$mixtures'")
     }
     if(all(type.names %in% rownames(test.data.list$quantities))){
       test.data.list$quantities <- test.data.list$quantities[type.names, ]
     }else{
-      stop("In train_correlation_model: there are cell types (=> columns) in 'X.matrix' that are not in 'test.data.list$quantities")
+      stop("In train_deconvolution_model: there are cell types (=> columns) in 'X.matrix' that are not in 'test.data.list$quantities")
     }
   }
   # end => compatible test
 
   ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
-                                output.info = c("train_correlation_model", "estimate.c.type"))
+                                output.info = c("train_deconvolution_model", "estimate.c.type"))
 
 
   # define wrapper functions for gradient and correlation evaluation
@@ -177,6 +189,7 @@ train_correlation_model <- function(tweak,
     ) / ncol(X)
     return(loss)
   }
+
   catch <- DTD_cv_lambda(
     tweak.start = tweak,
     train.data.list = train.data.list,
@@ -184,7 +197,6 @@ train_correlation_model <- function(tweak,
     EVAL.FUN = DTD.evCor.wrapper,
     ...
   )
-
   catch$reference.X <- X.matrix
 
   pics <- vector(mode = "list")
@@ -213,11 +225,11 @@ train_correlation_model <- function(tweak,
                                                   test.data = test.data.list,
                                                   estimate.c.type = estimate.c.type,
                                                   X.matrix = X.matrix)
-    pics$explained.correlation <- ggplot_explained_correlation(DTD.model = catch,
-                                                               X.matrix = X.matrix,
-                                                               test.data = test.data.list,
-                                                               estimate.c.type = estimate.c.type,
-                                                               print.labels = TRUE
+    pics$Xheatmap <- ggplot_heatmap(DTD.model = catch,
+                                                 X.matrix = X.matrix,
+                                                 test.data = test.data.list,
+                                                 estimate.c.type = estimate.c.type,
+                                                 feature.subset = round(0.2*nrow(X.matrix))
     )
   }
   catch$pics <- pics
