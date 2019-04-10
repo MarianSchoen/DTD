@@ -19,8 +19,6 @@
 #' @return numeric matrix with ncol(X) rows, and ncol(Y) columns
 #'
 #' @export
-#'
-#'
 #' @examples
 #' library(DTD)
 #'
