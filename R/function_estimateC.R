@@ -21,7 +21,7 @@
 #' @export
 #' @examples
 #' library(DTD)
-#'
+#' set.seed(1)
 #' # simulate random data:
 #' random.data <- generate_random_data(
 #'   n.types = 5,
@@ -31,7 +31,7 @@
 #'
 #' # simulate a true c
 #' # (this is not used by the estimate_c function, it is only used to show the result!)
-#' true.c <- rnorm(n = ncol(random.data), mean = 1, sd = 0.5)
+#' true.c <- rnorm(n = ncol(random.data), mean = 0.1, sd = 0.5)
 #'
 #' # calculate bulk y = Xc * some_error
 #' bulk <- random.data %*% true.c * rnorm(n = nrow(random.data), mean = 1, sd = 0.01)
