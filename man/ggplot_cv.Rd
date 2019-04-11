@@ -5,7 +5,8 @@
 \title{Visualizing cross validation output}
 \usage{
 ggplot_cv(DTD.model, main = "", LAMBDA.TRANS.FUN = log2,
-  x.lab = expression("log2(" * lambda * ")"), y.lab = "Loss function")
+  upper.x.axis.info = "non-zero", x.lab = expression("log2(" * lambda *
+  ")"), y.lab = "Loss function")
 }
 \arguments{
 \item{DTD.model}{: list as returned by \code{\link{train_correlatio_model}} or \code{\link{DTD_cv_lambda}}}
@@ -14,6 +15,8 @@ ggplot_cv(DTD.model, main = "", LAMBDA.TRANS.FUN = log2,
 
 \item{LAMBDA.TRANS.FUN}{function, will be applied to the lambda sequence,
 to get equdistance x ticks (defaults to log2)}
+
+\item{upper.x.axis.info}{string, either "non-zero" or "geometric-mean". This information will be printed on the upper x axis.}
 
 \item{x.lab}{string, or expression, will be used as the label on the x axis, defaults to "log2(lambda)"}
 

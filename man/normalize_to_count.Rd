@@ -4,22 +4,26 @@
 \alias{normalize_to_count}
 \title{normalize_to_count}
 \usage{
-normalize_to_count(exp.data, count = 1e+06)
+normalize_to_count(exp.data, count = NA)
 }
 \arguments{
-\item{exp.data}{positive numeric matrix, with samples as columns and features as columns}
+\item{exp.data}{positive numeric matrix, with samples as columns and features as rows.
+Notice, 'normalize_to_count' normalizes the columns of this matrix.}
 
-\item{count}{float , to which every sample of exp.data will be scaled}
+\item{count}{float, 0 < 'count', to which every sample of exp.data will be scaled.
+If 'is.na(count)' (default), count is set to nrow(exp.data)}
 }
 \value{
 "ret", matrix with same dimension as "exp.data"
 }
 \description{
-'normalize_to_count' takes a numeric matrix 'exp.data' with only non-negative entries and normalizes each column (=> sample) to a fix number of counts.\cr
+'normalize_to_count' takes a numeric matrix 'exp.data' with only non-negative
+entries and normalizes each column (=> sample) to a total number of counts.\cr
 For every sample i, each feature j gets scaled to
  \deqn{exp.data[j, i] = (count * exp.data[j, i]) / sum(exp.data[, i])}
 }
 \examples{
+library(DTD)
 some.matrix <- matrix(abs(rnorm(1000 * 5)), ncol = 5, nrow = 1000)
 # each sample (=column) has different number of total counts:
 apply(some.matrix, 2, sum)

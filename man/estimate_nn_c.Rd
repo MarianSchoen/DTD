@@ -2,7 +2,7 @@
 % Please edit documentation in R/function_estimateCNN.R
 \name{estimate_nn_c}
 \alias{estimate_nn_c}
-\title{non negative c}
+\title{Estimating non negative C}
 \usage{
 estimate_nn_c(X.matrix = NA, new.data, DTD.model)
 }
@@ -23,11 +23,14 @@ or\code{\link{descent_generalized_fista}}. In the equation above
 numeric matrix with ncol(X) rows, and ncol(Y) columns
 }
 \description{
-non negative c
+Given a reference matrix X, a matrix of bulks Y and a g-vector, "estimate_nn_c" finds
+the solution of \deqn{arg min || diag(g) (Y - XC) ||_2} with non negative constraint over C,
+using the package 'nnls' (non-negative least squares)
 }
 \examples{
 library(DTD)
 
+set.seed(1)
 # simulate random data:
 random.data <- generate_random_data(
   n.types = 5,
@@ -37,7 +40,7 @@ random.data <- generate_random_data(
 
 # simulate a true c
 # (this is not used by the estimate_c function, it is only used to show the result!)
-true.c <- abs(rnorm(n = ncol(random.data), mean = 1, sd = 0.5))
+true.c <- rnorm(n = ncol(random.data), mean = 0.1, sd = 0.5)
 
 # calculate bulk y = Xc * some_error
 bulk <- as.matrix(random.data \%*\% true.c * rnorm(n = nrow(random.data), mean = 1, sd = 0.01), ncol = 1)

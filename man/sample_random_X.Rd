@@ -5,18 +5,20 @@
 \title{Sample random X}
 \usage{
 sample_random_X(included.in.X, pheno, exp.data,
-  percentage.of.all.cells = 0.1)
+  percentage.of.all.cells = 0.1, normalize_profiles = TRUE)
 }
 \arguments{
 \item{included.in.X}{vector of strings, which cell types should be included in X?}
 
-\item{pheno}{named vector of strings, names have to match exp.data.
+\item{pheno}{named vector of strings, names have to match 'colnames(exp.data)'.
 Information about the cell type (values of vector) for each sample (names of vector)}
 
 \item{exp.data}{numeric matrix with features as rows, and samples as columns}
 
 \item{percentage.of.all.cells}{0 < float < 1, which percentage of all possible cells should
 be use to generate a cell type profile? Defaults to 0.1}
+
+\item{normalize_profiles}{logical, normalize the reference profiles? Defaults to TRUE}
 }
 \value{
 list with two entries: (1) X.matrix: numeric matrix with as many rows as exp.data,
@@ -25,11 +27,16 @@ and as many columns as length(included.in.X)
 }
 \description{
 The loss-function learning digital tissue deconvolution approach published by Goertler et al 2018
-estimates cell compositions for a given reference matrix X. Basically, there are two methods to
-specify the reference profiles in X. Either they are selected using external knowledge
-(e.g. additional measurements) or they are randomly selected out of the complete data set.
+estimates cell compositions for a given reference matrix X (supervised deconvolution).
+Basically, there are two methods to specify the reference profiles in X.
+Either they are selected using external knowledge (e.g. additional measurements) or they are
+randomly selected out of the complete data set.
 The sample_random_X function is an implementation for the second method.
 }
 \details{
+For each entry of 'included.in.X', 'percentage.of.all.cells' are randomly selected.
+Then, the reference profile is built by adding up all selected profiles of a type.
+Afterwards, the reference profiles are normalized to a total number of counts.
+
 For examples see the DTD vignette: browseVignettes("DTD")
 }

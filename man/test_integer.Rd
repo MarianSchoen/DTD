@@ -12,9 +12,9 @@ test_integer(test.value, output.info, min, max)
 
 \item{output.info}{[1] function that calls, [2] name of value to test}
 
-\item{min.value}{min is tested '<'}
+\item{min}{min is tested '<'}
 
-\item{max.value}{max is tested '>'}
+\item{max}{max is tested '>'}
 }
 \value{
 TRUE, if no error is detected, stops with error otherwise

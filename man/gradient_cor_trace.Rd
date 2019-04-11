@@ -13,10 +13,11 @@ gradient_cor_trace(X, Y, C, tweak, estimate.c.type)
 
 \item{C}{numeric matrix with reference samples as rows, and samples as columns}
 
-\item{tweak}{numeric vector with length of nrow(X).}
-
-\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
+\item{tweak}{numeric vector with length of nrow(X).
 In the Loss function above tweak is named "g"}
+
+\item{estimate.c.type}{string, either "non_negative", or "direct".
+Indicates how the algorithm finds the solution of}
 }
 \value{
 numeric list, same length as "tweak"

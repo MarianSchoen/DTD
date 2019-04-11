@@ -16,5 +16,5 @@ x
 Identity
 }
 \examples{
-identity(1:10)
+DTD::identity(1:10)
 }

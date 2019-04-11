@@ -4,7 +4,7 @@
 \alias{DTD_cv_lambda}
 \title{Cross-validation for digital tissue deconvolution}
 \usage{
-DTD_cv_lambda(lambda.seq = NULL, tweak.start = NULL, n.folds = 5,
+DTD_cv_lambda(lambda.seq = NULL, tweak.start, n.folds = 5,
   lambda.length = 10, train.data.list, F.GRAD.FUN, EVAL.FUN,
   cv.verbose = TRUE, warm.start = FALSE, ...)
 }
@@ -13,11 +13,11 @@ DTD_cv_lambda(lambda.seq = NULL, tweak.start = NULL, n.folds = 5,
 If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
 of the training set -  will be generated. Default: NULL}
 
-\item{tweak.start}{numeric vector, starting vector for the DTD algorithm. Default: NULL.}
+\item{tweak.start}{numeric vector, starting vector for the DTD algorithm.}
 
 \item{n.folds}{integer, number of buckets in the cross validation. Defaults to 10}
 
-\item{lambda.length}{integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 20}
+\item{lambda.length}{integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 10}
 
 \item{train.data.list}{list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
 Within this list the train/test cross validation will be done.
@@ -31,17 +31,22 @@ training samples (as columns) and all features (as rows) must be present. (see V
 \item{cv.verbose}{logical, should information about the cv process be printed to the screen? (Defaults to TRUE)}
 
 \item{warm.start}{logical, should the solution of a previous model of the cross validation be used as a start
-in the next model. Defaults to FALSE}
+in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.}
 
 \item{...}{all parameters that are passed to the \code{\link{descent_generalized_fista}} function.
 E.g. maxiter, tweak_vec etc ...}
 }
 \value{
-list of length 2. A cross validation matrix as entry "cv.obj", and the model with minimal loss function
+list of length 2.
+\itemize{
+   \item 'cv.obj', list of lists. DTD model for each lambda, and every folds.
+   \item 'best.model', list. DTD model optimized on the complete data set with the best lambda from the cross validation.
+}
+A cross validation matrix as entry "cv.obj", and the model with minimal loss function
 retrained on the complete dataset as "best.model
 }
 \description{
-Our descent generalized FISTA implementation includes a l1 regularization term.
+Our descent generalized FISTA implementation includes a l1 regularization term (see \code{\link{train_deconvolution_model}}.
 This function performs a k-fold cross validation to find the best fitting regularization parameter.
 For an example see `browseVignettes("DTD")`
 }

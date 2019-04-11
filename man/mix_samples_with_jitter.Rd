@@ -4,56 +4,60 @@
 \alias{mix_samples_with_jitter}
 \title{Mix samples with Jitter}
 \usage{
-mix_samples_with_jitter(sample.names, special.samples, n.samples,
-  datamatrix, pheno, verbose = FALSE, single.special = FALSE,
+mix_samples_with_jitter(minor.fraction.type, major.fraction.type,
+  n.samples, exp.data, pheno, verbose = FALSE, single.special = FALSE,
   add.jitter = FALSE, chosen.mean = 1, chosen.sd = 0.05,
-  min.amount.samples = 1, per.type = 1, included.in.X = NA)
+  n.per.mixture = 1, included.in.X, min.major = 0.5, max.major = 0.7)
 }
 \arguments{
-\item{sample.names}{vector of strings, have to match colnames(datamatrix).}
+\item{minor.fraction.type}{vector of strings, have to match colnames(exp.data).}
 
-\item{special.samples}{vector of strings, have to match colnames(datamatrix), these samples will
-occur with higher quantites within the mix data.}
+\item{major.fraction.type}{vector of strings, have to match colnames(exp.data), these samples will
+occur with higher quantites in the in-silicio mixtures.}
 
-\item{n.samples}{integer, how many mixtures should be drawn}
+\item{n.samples}{integer above 0, numbers of samples to be drawn (defaults to 1000)}
 
-\item{datamatrix}{numeric matrix, with samples as columns, and features as rows}
+\item{exp.data}{non-negative numeric matrix, with features as rows and samples as columns}
 
-\item{pheno}{named list of characters, indicates which of the samples in datamatrix belongs to which type in sample.names/special.names}
+\item{pheno}{named vector of strings, with pheno information ('pheno') for each sample ('name(pheno)') in exp.data}
 
-\item{verbose}{boolean, should function tell about progression? (Defaults to FALSE)}
+\item{verbose}{logical, should the function print about progress to the terminal? (Defaults to FALSE)}
 
-\item{single.special}{boolean, should all special names be used? or only a single one (Defaults to FALSE)}
+\item{single.special}{logical, in a mixture, should all special names be used? (=> TRUE) Or, should a mixture only include one special sample? (=> FALSE)(Defaults to FALSE)}
 
-\item{add.jitter}{boolean, should the mixtures be mulitplied with a vector of normally distributed numbers? (JITTER)}
+\item{add.jitter}{logical, should the mixtures be mulitplied with a vector of normally distributed numbers? (JITTER)}
 
-\item{chosen.mean}{numeric, mean of jitter (Default: 1)}
+\item{chosen.mean}{float, mean of jitter (Default: 1)}
 
-\item{chosen.sd}{numeric, standard deviation of jitter (Default: 0.05)}
+\item{chosen.sd}{float, standard deviation of jitter (Default: 0.05)}
 
-\item{min.amount.samples}{integer, how many samples have to be present such that it averages over them,
-instead of taking only 1 (Default: 1)}
+\item{n.per.mixture}{integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)}
 
-\item{per.type}{integer, how many samples "per type" should be used for each mixture (Default: 1)}
+\item{included.in.X}{vector of strings, indicating types that are in the reference matrix.
+Only those types, and sorted in that order, will be included in the quantity matrix.
+Notice, every profile of 'exp.data' might be included in the mixture.
+But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.}
 
-\item{included.in.X}{list of strings, which cell types are included in the reference matrix.
-The mix function will mix all samples in the data set, but will only return the quantity matrix
-for the types included in X (and in the right ordering).
-Defaults to NA, then no reordering/selecting will be done}
+\item{min.major}{float, 0 <= 'min.major' <= 'max.major', minimal fraction of 'major.fraction.type' in each mixture}
+
+\item{max.major}{float, 'min.major' <= 'max.major' <= 1, maximal fraciton of 'major.fraction.type' in each mixture}
 }
 \value{
-list with two entries. "quantities" matrix (nrow = ncol(datamatrix), ncol = nMixtures) and "mixture"
-matrix (nrow = nrow(datamatrix), ncol = nMixtures)
+list with two entries. "quantities" matrix (nrow = ncol(exp.data), ncol = nMixtures) and "mixture"
+matrix (nrow = nrow(exp.data), ncol = nMixtures)
 }
 \description{
-"mix_samples_with_jitter" takes pheno information (sample.names, special.names) and a expression matrix.
-Its output is a expression matrix with in-silicio mixtures and a quantity matrix.
-Each sample of the output is a mixture of input samples, multiplied with Jitter vector.
+"mix_samples_with_jitter" takes pheno information ('minor.fraction.type', 'special.names')
+and a expression matrix ('exp.data').
+Its output is a list of two matrices. A matrix holding in-silicio 'mixtures' and a quantity matrix,
+holding the corresponding compositions.
+Each profile of the 'mixture' matrix is the result of a linear combination of input profiles ('exp.data'),
+multiplied with a random jitter vector.
 "mix_samples_with_jitter" mixes samples in a way that they look similar to biological data.
 For example, in a tumor tissue there are several cells included, but we expect that
 most of them are tumor cells. Therefore, the mix_samples_with_jitter function expects a
-list of samples which represent immune cells (and occur in minor fractions) and a
-list of special samples (which occur in major fractions)
+vector of samples which represent cells, that occur in minor fractions (e.g. immune cells) and a
+vector of special samples, which occur in major fractions.
 }
 \examples{
 library(DTD)
@@ -75,19 +79,23 @@ names(indicator.list) <- colnames(random.data)
 include.in.X <- c("Type2", "Type3", "Type4", "Type5")
 
 # here, I declare "Type1" as Tumor cells, and all other as immune cells
-special.samples <- c("Type1")
+major.fraction.type <- c("Type1")
 all.samples <- unique(indicator.list)
-sample.names <- all.samples[- which(all.samples \%in\% special.samples)]
+minor.fraction.type <- all.samples[- which(all.samples \%in\% major.fraction.type)]
 
-training.data <- mix_samples_with_jitter(sample.names = sample.names,
-                                         special.samples = special.samples,
-                                     n.samples = 1e3,
-                                     datamatrix = random.data,
-                                     pheno = indicator.list,
-                                     single.special = FALSE,
-                                     add.jitter = TRUE,
-                                     chosen.mean = 1,
-                                     chosen.sd = 0.05,
-                                     min.amount.samples = 1)
+training.data <- mix_samples_with_jitter(
+    minor.fraction.type = minor.fraction.type,
+    major.fraction.type = major.fraction.type,
+    included.in.X = include.in.X,
+    n.samples = 1e3,
+    exp.data = random.data,
+    pheno = indicator.list,
+    single.special = FALSE,
+    add.jitter = TRUE,
+    chosen.mean = 1,
+    chosen.sd = 0.05,
+    min.major = 0.5,
+    max.major = 0.5
+)
 
 }

@@ -10,10 +10,12 @@ mix_samples(exp.data, pheno, included.in.X, n.samples = 1000,
 \arguments{
 \item{exp.data}{numeric matrix, with features as rows and samples as columns}
 
-\item{pheno}{named vector, with pheno information for each sample in exp.data}
+\item{pheno}{named vector of strings, with pheno information ('pheno') for each sample ('name(pheno)') in exp.data}
 
-\item{included.in.X}{named vector of strings, indicating types that are in the reference matrix.
-Only those types, and sorted in that order, will be included in the quantity matrix}
+\item{included.in.X}{vector of strings, indicating types that are in the reference matrix.
+Only those types, and sorted in that order, will be included in the quantity matrix.
+Notice, every profile of 'exp.data' might be included in the mixture.
+But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.}
 
 \item{n.samples}{integer above 0, numbers of samples to be drawn (defaults to 1000)}
 
@@ -23,13 +25,14 @@ how many samples should be included per mixutre. (Default: 100)}
 \item{verbose}{logical, should information be printed? (Default: FALSE)}
 }
 \value{
-list with random profiles, and their quantity matrix
+list with two entries: 'mixtures' and 'quantities'.
 }
 \description{
-mix_samples takes a gene expresssion matrix, and pheno information.
+mix_samples takes a gene expresssion matrix ('exp.data'),
+and 'pheno' information.
 It then mixes the samples with known quantities such that it can be
 used for loss-function learning digital tissue deconvolution.
-For mixture it randomly selects "n.samples" samples from "exp.data", and averages over them.
+For a mixture it randomly selects "n.samples" samples from "exp.data", and averages over them.
 Using the information stored in pheno, it can get the quantities per cell in each mixture.
 }
 \examples{

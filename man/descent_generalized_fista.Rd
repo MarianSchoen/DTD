@@ -57,10 +57,16 @@ Defaults to 5}
 \item{verbose}{boolean, should information be printed to console. Defaults to TRUE}
 
 \item{NESTEROV.FUN}{function, applied to the nesterov extrapolation.
-In DTD it is all g must be positive. Therefore we set default to a positive_subspace_pmax wrapper function}
+In DTD all g must be positive. Therefore we set default to a positive_subspace_pmax wrapper function}
 }
 \value{
-list, including [["Converge"]], [["Tweak"]] and [["Lambda"]]  (depending on "save_all_tweks": [["History"]])
+list, including
+\itemize{
+   \item "Converge", numeric vector, EVAL.FUN in every step
+   \item "Tweak" numeric vector, the best distinguishing vector
+   \item "Lambda", numeric value, used \eqn{\lambda}
+   \item depending on "save.all.tweaks": "History", numeric matrix, "Tweak" vector of every step
+}
 }
 \description{
 descent_generalized_fista takes as input a vector, a gradient function and an
@@ -100,8 +106,8 @@ Exemplary wrapper functions can be found in the examples.
 \examples{
 library(DTD)
 random.data <- generate_random_data(n.types = 10,
-                                    n.samples.per.type = 150,
-                                    n.features = 250,
+                                    n.samples.per.type = 100,
+                                    n.features = 200,
                                     sample.type = "Cell",
                                     feature.type = "gene")
 
@@ -116,7 +122,7 @@ names(indicator.list) <- colnames(random.data)
 # extract reference matrix X
 # First, decide which cells should be deconvoluted.
 # Notice, in the mixtures there can be more cells than in the reference matrix.
-include.in.X <- paste0("Type", 2:7)
+include.in.X <- paste0("Type", 2:5)
 
 percentage.of.all.cells <- 0.2
 sample.X <- sample_random_X(included.in.X = include.in.X,
@@ -138,26 +144,64 @@ train.mat <- remaining.mat[, train.samples]
 test.mat <- remaining.mat[, test.samples]
 
 indicator.train <- indicator.list[names(indicator.list) \%in\% colnames(train.mat)]
-training.data <- mix_samples(gene.mat = train.mat,
+training.data <- mix_samples(exp.data = train.mat,
                              pheno = indicator.train,
                              included.in.X = include.in.X,
                              n.samples = 500,
-                             n.per.mixture = 100,
+                             n.per.mixture = 50,
                              verbose = FALSE)
 
 indicator.test <- indicator.list[names(indicator.list) \%in\% colnames(test.mat)]
-test.data <-  mix_samples(gene.mat = test.mat,
+test.data <-  mix_samples(exp.data = test.mat,
                           pheno = indicator.test,
                           included.in.X = include.in.X,
                           n.samples = 500,
-                          n.per.mixture = 100,
+                          n.per.mixture = 50,
                           verbose = FALSE)
+
+GRADIENT.WRAPPER <- function(tweak,
+                            X=X.matrix,
+                            train.list = training.data){
+ grad <- gradient_cor_trace(X = X,
+                    Y = train.list$mixtures,
+                    C = train.list$quantities,
+                    tweak = tweak,
+                    estimate.c.type = "direct")
+ return(grad)
+}
+EVAL.WRAPPER <- function(tweak,
+                            X=X.matrix,
+                            train.list = training.data){
+
+ loss <- evaluate_cor(X.matrix = X,
+                      new.data = train.list$mixtures,
+                      true.compositions = train.list$quantities,
+                      DTD.model = tweak,
+                      estimate.c.type = "direct")
+ return(loss/ncol(X))
+}
+
+
 
 start.tweak <- rep(1, nrow(X.matrix))
 names(start.tweak) <- rownames(X.matrix)
-# Train a deconvolution model:
-catch <- train_correlation_model(
-              tweak = start.tweak,
-              X.matrix = X.matrix,
-              train.data.list = training.data)
+# Standard model:
+cor.train.standard.model <- EVAL.WRAPPER(start.tweak)
+cat("Correlation on train data, with standard model: ", cor.train.standard.model, "\\n")
+
+# Train a single deconvolution model:
+catch <- descent_generalized_fista(
+              tweak.vec = start.tweak,
+              F.GRAD.FUN = GRADIENT.WRAPPER,
+              EVAL.FUN = EVAL.WRAPPER)
+
+# evaluate model on test data:
+cor.test <- evaluate_cor(
+    X.matrix = X.matrix,
+    new.data = test.data$mixtures,
+    true.compositions = test.data$quantities,
+    DTD.model = catch,
+    estimate.c.type = "direct"
+    )/ncol(X.matrix)
+cat("Correlation on test data: ", cor.test, "\\n")
 }
