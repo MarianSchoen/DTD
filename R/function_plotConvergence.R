@@ -1,24 +1,27 @@
 #' Plot loss curve
 #'
-#' The "ggplot_convergence" function uses ggplot2 and reshape to visualize the decrease of the loss-function after
+#' The "ggplot_convergence" function uses ggplot2 and reshape2 to visualize the decrease of the loss-function after
 #' a model has been trained.
 #'
 #' As input parameter it needs the output of \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
-#' or\code{\link{descent_generalized_fista}}.
-#' If fista has been evoked with save_all_tweaks = T, and a evaluation function is available,
-#' the loss-function can be evaluated for all intermediate tweak vectors,
-#' and both training and test loss curves will be plotted (=> detect overfitting).\cr
+#' or \code{\link{descent_generalized_fista}}.
+#' If the `DTD.model` includes a 'History' entry, and a `test.data` is available
+#' the loss function can be evaluated for each intermediate steps of the optimization.
+#' Then, the resulting picture includes two convergence paths, one for the training data,
+#' and one for the test.data.\cr
 #' For an example see section "Visualization of learn curve" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param DTD.model list, as returned by the train_correlation_model function.
-#' @param test.data numeric matrix with samples as columns, and features as rows.
-#' In the formula above denoated as Y.
-#' @param main string, additionally title (default "")
+#' @param DTD.model output of \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or \code{\link{descent_generalized_fista}}.
+#' @param test.data list of two matrices, named "mixtures" and "quantities".
+#' For examples see \code{\link{mix_samples}}, \code{\link{mix_samples_with_jitter}}
+#' or the package vignette `browseVignettes("DTD")`.
 #' @param estimate.c.type string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
-#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
-#' (see \code{\link{estimate_c}}),
+#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. \cr If estimate.c.type is set to "direct" there is no regularization
+#' (see \code{\link{estimate_c}}),\cr
 #' if estimate.c.type is set to "non_negative" the estimates "C"
 #' must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
+#' @param main string, additionally title (default "")
 #'
 #' @return ggplot object
 #' @export
@@ -28,7 +31,7 @@
 #'
 ggplot_convergence <- function(DTD.model,
                                X.matrix = NA,
-                               test.data,
+                               test.data = NULL,
                                estimate.c.type,
                                main = "") {
   # convergence can be plotted for training AND test set, if:
@@ -42,7 +45,7 @@ ggplot_convergence <- function(DTD.model,
     if ("best.model" %in% names(DTD.model)) {
       fista.output <- DTD.model$best.model
     } else {
-      if (all(c("Tweak", "Convergence") %in% names(DTD.model))) {
+      if (!all(c("Tweak", "Convergence") %in% names(DTD.model))) {
         stop("In ggplot_convergence: DTD.model does not fit")
       } else {
         fista.output <- DTD.model
@@ -50,6 +53,14 @@ ggplot_convergence <- function(DTD.model,
     }
   } else {
     stop("In ggplot_convergence: DTD.model is not a list")
+  }
+
+  # check if there is an History entry
+  if(!"History" %in% names(fista.output)){
+    if(!is.null(test.data)){
+      message("In ggplot_convergence: There is no 'History' entry in the DTD model, therefore convergence can not be shown on 'test.data'.")
+    }
+    test.data <- NULL
   }
 
   # check if test.data can be used:
@@ -86,6 +97,11 @@ ggplot_convergence <- function(DTD.model,
       }
   }
 
+  # safety check: main
+  main <- test_string(main,
+                      output.info = c("ggplot_convergence", "main"))
+  # end -> main
+
 
   # safety check for estimate.c.type:
   ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
@@ -109,9 +125,14 @@ ggplot_convergence <- function(DTD.model,
   }
 
 
-  if(nrow(X.matrix) != nrow(fista.output$History)){
-    message("In ggplot_convergence:  nrow('X.matrix') does not fit the number of rows of the provided 'History'. Therefore, only plotting training convergence.")
-    test.data <- NULL
+  # check if dimensions fit (I)
+  if(!is.null(test.data)){
+    if(all(rownames(fista.output$History) %in% rownames(X.matrix))){
+      X.matrix <- X.matrix[rownames(fista.output$History), ]
+    }else{
+      message("In ggplot_convergence: rownames('X.matrix') does not fit 'DTD.model' (rownames of History entry). Therefore convergence can not be shown on 'test.data'.")
+      test.data <- NULL
+    }
   }
   # If there is a History, then test can be evaluated:
   if (!is.null(fista.output$History) &&
