@@ -5,9 +5,9 @@ if("DTD" %in% (.packages())){
 library(DTD)
 library(testthat)
 
-context("Test generate_random_samples ")
+context("Test generate_random_data ")
 
-test_that("generate_random_samples ", {
+test_that("generate_random_data ", {
   expect_error(
     generate_random_data(n.types = "25"),
     "In generate_random_data: 'n.types' is not a single integer"
@@ -193,6 +193,168 @@ test.mat <- remaining.mat[, test.samples]
 
 indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
 }
+context("Test mix_with_jitter")
+{
+   major.fraction.type <- c("Type1")
+   all.samples <- unique(indicator.list)
+   minor.fraction.type <- all.samples[- which(all.samples %in% major.fraction.type)]
+}
+test_that("mix_with_jitter", {
+  expect_error(
+    mix_samples_with_jitter(
+          minor.fraction.type = "minor.fraction.type",
+          major.fraction.type = major.fraction.type,
+          included.in.X = include.in.X,
+          n.samples = 1e3,
+          exp.data = random.data,
+          pheno = indicator.list,
+          single.special = FALSE,
+          add.jitter = TRUE,
+          chosen.mean = 1,
+          chosen.sd = 0.05,
+          min.major = 0.5,
+          max.major = 0.5
+      ),
+    "in mix_samples_with_jitter: There is type in 'minor.fraciton.type' that can not be matched to 'pheno'"
+  )
+  expect_error(
+    mix_samples_with_jitter(
+      minor.fraction.type = c(minor.fraction.type, "somethingnotfitting"),
+      major.fraction.type = major.fraction.type,
+      included.in.X = include.in.X,
+      n.samples = 1e3,
+      exp.data = random.data,
+      pheno = indicator.list,
+      single.special = FALSE,
+      add.jitter = TRUE,
+      chosen.mean = 1,
+      chosen.sd = 0.05,
+      min.major = 0.5,
+      max.major = 0.5
+    ),
+    "in mix_samples_with_jitter: There is type in 'minor.fraciton.type' that can not be matched to 'pheno'"
+  )
+  expect_error(
+    mix_samples_with_jitter(
+      minor.fraction.type = minor.fraction.type,
+      major.fraction.type = major.fraction.type,
+      included.in.X = "include.in.X",
+      n.samples = 1e3,
+      exp.data = random.data,
+      pheno = indicator.list,
+      single.special = FALSE,
+      add.jitter = TRUE,
+      chosen.mean = 1,
+      chosen.sd = 0.05,
+      min.major = 0.5,
+      max.major = 0.5
+    ),
+    "in mix_samples_with_jitter: no cell type in 'included.in.X' fits 'pheno'"
+  )
+  expect_error(
+    mix_samples_with_jitter(
+      minor.fraction.type = minor.fraction.type,
+      major.fraction.type = major.fraction.type,
+      included.in.X = include.in.X,
+      n.samples = -7,
+      exp.data = random.data,
+      pheno = indicator.list,
+      single.special = FALSE,
+      add.jitter = TRUE,
+      chosen.mean = 1,
+      chosen.sd = 0.05,
+      min.major = 0.5,
+      max.major = 0.5
+    ),
+    "In mix_samples_with_jitter: 'n.samples' is below minimal value"
+  )
+  expect_error(
+    mix_samples_with_jitter(
+      minor.fraction.type = minor.fraction.type,
+      major.fraction.type = major.fraction.type,
+      included.in.X = include.in.X,
+      n.samples = 10,
+      exp.data = "random.data",
+      pheno = indicator.list,
+      single.special = FALSE,
+      add.jitter = TRUE,
+      chosen.mean = 1,
+      chosen.sd = 0.05,
+      min.major = 0.5,
+      max.major = 0.5
+    ),
+    "in mix_samples_with_jitter: 'exp.data' is not a numeric matrix"
+  )
+  expect_error(
+    mix_samples_with_jitter(
+      minor.fraction.type = minor.fraction.type,
+      major.fraction.type = major.fraction.type,
+      included.in.X = include.in.X,
+      n.samples = 10,
+      exp.data = "random.data",
+      pheno = indicator.list,
+      single.special = FALSE,
+      add.jitter = TRUE,
+      chosen.mean = 1,
+      chosen.sd = 0.05,
+      min.major = 0.5,
+      max.major = 0.5
+    ),
+    "in mix_samples_with_jitter: 'exp.data' is not a numeric matrix"
+  )
+  expect_error(
+    mix_samples_with_jitter(
+      minor.fraction.type = minor.fraction.type,
+      major.fraction.type = major.fraction.type,
+      included.in.X = include.in.X,
+      n.samples = 10,
+      exp.data = cbind(random.data, as.character(random.data[, 1])),
+      pheno = indicator.list,
+      single.special = FALSE,
+      add.jitter = TRUE,
+      chosen.mean = 1,
+      chosen.sd = 0.05,
+      min.major = 0.5,
+      max.major = 0.5
+    ),
+    "in mix_samples_with_jitter: 'exp.data' is not a numeric matrix"
+  )
+  expect_error(
+    mix_samples_with_jitter(
+      minor.fraction.type = minor.fraction.type,
+      major.fraction.type = major.fraction.type,
+      included.in.X = include.in.X,
+      n.samples = 10,
+      exp.data = random.data,
+      pheno = "indicator.list",
+      single.special = FALSE,
+      add.jitter = TRUE,
+      chosen.mean = 1,
+      chosen.sd = 0.05,
+      min.major = 0.5,
+      max.major = 0.5
+    ),
+    "in mix_samples_with_jitter: no cell type in 'included.in.X' fits 'pheno'"
+  )
+  expect_error(
+    mix_samples_with_jitter(
+      minor.fraction.type = minor.fraction.type,
+      major.fraction.type = major.fraction.type,
+      included.in.X = include.in.X,
+      n.samples = 10,
+      exp.data = random.data,
+      pheno = indicator.list,
+      single.special = "FALSE",
+      add.jitter = TRUE,
+      chosen.mean = 1,
+      chosen.sd = 0.05,
+      min.major = 0.5,
+      max.major = 0.5
+    )#,
+    #"In mix_samples_with_jitter: 'single.special' must be a single value, either 'TRUE' or 'FALSE' (not 1 or 0)"
+  )
+  # all other parameter are checked via funciton => works
+})
 context("Test mix_samples ")
 test_that("mix_samples ", {
   expect_error(
@@ -365,50 +527,50 @@ test_that("evaluate_cor ", {
 context("Test train_deconvolution_model ")
 test_that("train_deconvolution_model ", {
   expect_error(
-    train_correlation_model(tweak = "hallo",
+    train_deconvolution_model(tweak = "hallo",
                             X.matrix = X.matrix,
                             train.data.list = training.data,
                             test.data.list = test.data,
                             estimate.c.type = "direct"),
-    "In train_correlation_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'",
+    "In train_deconvolution_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'",
     fixed = TRUE
   )
   expect_error(
-    train_correlation_model(tweak = 1:10,
+    train_deconvolution_model(tweak = 1:10,
                             X.matrix = X.matrix,
                             train.data.list = training.data,
                             test.data.list = test.data,
                             estimate.c.type = "direct"),
-    "In train_correlation_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'",
+    "In train_deconvolution_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'",
     fixed = TRUE
   )
   tmp <- start.tweak
   names(tmp) <- paste0(1:length(tmp))
   expect_error(
-    train_correlation_model(tweak = tmp,
+    train_deconvolution_model(tweak = tmp,
                             X.matrix = X.matrix,
                             train.data.list = training.data,
                             test.data.list = test.data,
                             estimate.c.type = "direct"),
-    "In train_correlation_model: There are features within 'X.matrix' where no entry in 'tweak' can be found"
+    "In train_deconvolution_model: There are features within 'X.matrix' where no entry in 'tweak' can be found"
   )
   tmp <- start.tweak
   tmp[1] <- NA
   expect_error(
-    train_correlation_model(tweak = tmp,
+    train_deconvolution_model(tweak = tmp,
                             X.matrix = X.matrix,
                             train.data.list = training.data,
                             test.data.list = test.data,
                             estimate.c.type = "direct"),
-    "In train_correlation_model: 'tweak' includes NA"
+    "In train_deconvolution_model: 'tweak' includes NA"
   )
   # expect_equal(
-  #   train_correlation_model(tweak = start.tweak,
+  #   train_deconvolution_model(tweak = start.tweak,
   #                           X.matrix = X.matrix,
   #                           train.data.list = training.data,
   #                           test.data.list = test.data,
   #                           estimate.c.type = "direct"),
-  #   train_correlation_model(tweak = sample(start.tweak),
+  #   train_deconvolution_model(tweak = sample(start.tweak),
   #                           X.matrix = X.matrix,
   #                           train.data.list = training.data,
   #                           test.data.list = test.data,
@@ -416,56 +578,56 @@ test_that("train_deconvolution_model ", {
   # )
 
   expect_error(
-    train_correlation_model(tweak = start.tweak,
+    train_deconvolution_model(tweak = start.tweak,
                             X.matrix = X.matrix,
                             train.data.list = NA,
                             test.data.list = test.data,
                             estimate.c.type = "direct"),
-    "In train_correlation_model: train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'"
+    "In train_deconvolution_model: train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'"
   )
   tmp <- training.data
   tmp$quantities <- NULL
   expect_error(
-    train_correlation_model(tweak = start.tweak,
+    train_deconvolution_model(tweak = start.tweak,
                             X.matrix = X.matrix,
                             train.data.list = tmp,
                             test.data.list = test.data,
                             estimate.c.type = "direct"),
-    "In train_correlation_model: train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'"
+    "In train_deconvolution_model: train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'"
   )
   tmp <- training.data
   tmp$quantities <- rep(1:10)
   expect_error(
-    train_correlation_model(tweak = start.tweak,
+    train_deconvolution_model(tweak = start.tweak,
                             X.matrix = X.matrix,
                             train.data.list = tmp,
                             test.data.list = test.data,
                             estimate.c.type = "direct"),
-    "In train_correlation_model: 'train.data.list$quantities' is not a matrix",
+    "In train_deconvolution_model: 'train.data.list$quantities' is not a matrix",
     fixed = TRUE
   )
   tmp <- training.data
   tmp$quantities <- NULL
   tmp$wasanders <- 1
   expect_error(
-    train_correlation_model(tweak = start.tweak,
+    train_deconvolution_model(tweak = start.tweak,
                             X.matrix = X.matrix,
                             train.data.list = tmp,
                             test.data.list = test.data,
                             estimate.c.type = "direct"),
-    "In train_correlation_model: entries of train.data.list must be named 'quantities' and 'mixtures'"
+    "In train_deconvolution_model: entries of train.data.list must be named 'quantities' and 'mixtures'"
   )
   expect_error(
-    train_correlation_model(tweak = start.tweak,
+    train_deconvolution_model(tweak = start.tweak,
                             X.matrix = X.matrix,
                             train.data.list = training.data,
                             test.data.list = test.data,
                             estimate.c.type = "schmuh"),
-    "In train_correlation_model: 'estimate.c.type' does not match 'non_negative' or 'direct."
+    "In train_deconvolution_model: 'estimate.c.type' does not match 'non_negative' or 'direct."
   )
 })
 
-catch <- train_correlation_model(tweak = start.tweak,
+catch <- train_deconvolution_model(tweak = start.tweak,
                                  X.matrix = X.matrix,
                                  train.data.list = training.data,
                                  test.data.list = test.data,
@@ -605,6 +767,7 @@ test_that("DTD_cv_lambda ", {
   )
 })
 
+
 context("Test desecent_generalized_fista ")
 # most of the cases are tested via "standard test functions", therefore they will not be retested ...
 # empty, i am going to fill this with test as soon as errors occur
@@ -696,8 +859,8 @@ test_that("ggplot_convergence ", {
                        X.matrix = matrix(1:9, nrow =3 ),
                        test.data = test.data,
                        estimate.c.type = "direct",
-                       main = ""),
-    "In ggplot_convergence:  nrow('X.matrix') does not fit the number of rows of the provided 'History'. Therefore, only plotting training convergence.",
+                       title = ""),
+    "In ggplot_convergence: rownames('X.matrix') does not fit 'DTD.model' (rownames of History entry). Therefore convergence can not be shown on 'test.data'.",
     fixed = TRUE)
   expect_error(
     ggplot_convergence(DTD.model = NULL),
@@ -708,6 +871,13 @@ test_that("ggplot_convergence ", {
                        test.data = NA),
     "In ggplot_convergence: 'test.data' must be provided as a list with two entries: 'quantities' and 'mixtures'. Therefore, 'test.data' can not be used. Plotting only training convergence",
     fixed = TRUE)
+  expect_message(
+    ggplot_convergence(DTD.model = catch,
+                       estimate.c.type = "direct",
+                       test.data = test.data,
+                       title = log2),
+    "In ggplot_convergence: 'title' can not be used 'as.character'"
+    )
 })
 
 context("Test ggplot_true_vs_esti")
@@ -748,16 +918,42 @@ test_that("ggplot_true_vs_esti",{
                                 estimate.c.type = "direct"),
             "In ggplot_true_vs_esti: 'test.data' must be provided as a list with two entries: 'quantities' and 'mixtures'."
           )
-
+}
+)
+context("Test ggplotg_historgram ")
+test_that("ggplotg_historgram ", {
+  expect_error(
+    ggplot_ghistogram(
+      DTD.model = "NA",
+      n.bins = 10,
+      TRANSFORM.FUN = log2,
+      title = "",
+      x.lab = ""
+      ),
+    "In ggplot_ghistogram: 'DTD.model' does not fit"
+  )
+  expect_error(
+    ggplot_ghistogram(
+      DTD.model = catch,
+      n.bins = -7,
+      TRANSFORM.FUN = log2,
+      title = "",
+      x.lab = ""
+    ),
+    "In ggplot_ghistogram: 'n.bins' is below minimal value"
+  )
+  expect_error(
+    ggplot_ghistogram(
+      DTD.model = catch,
+      n.bins = 2,
+      TRANSFORM.FUN = "log2",
+      title = "",
+      x.lab = ""
+    ),
+    "In ggplot_ghistogram: 'TRANSFORM.FUN' is not a function"
+  )
+  # rest is checked via default functions
 }
 )
 
 
-
-# all plot functions:
-# cv done
-# path done
-# convergence done
-# explained correlation
-# true vs esti
-# ggplot_ghistogramm
