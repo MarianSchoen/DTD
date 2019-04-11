@@ -6,12 +6,13 @@
 #' the function will state the number of NAs in the title of the plot.
 #' For an example see section "Histogram of g-vector" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param DTD.model : list, as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
-#' or \code{\link{descent_generalized_fista}}
-#' @param n.bins : integer, number of bins in the histogram. Defaults to 50
+#' @param DTD.model either a numeric vector ,
+#' or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or\code{\link{descent_generalized_fista}}.
+#' @param n.bins : positive integer, number of bins in the histogram. Defaults to 50
 #' @param TRANSFORM.FUN : function that expects a list of floats, and returns a list of floats
-#' Defaults to identity.
-#' @param main string, used as title of the plot. Defaults to ""
+#' Defaults to identity. (defaults to identity)
+#' @param title string, additionally title (default "")
 #' @param x.lab string, used as x label of the plot. Defaults to ""
 #'
 #' @import ggplot2
@@ -22,7 +23,7 @@
 ggplot_ghistogram <- function(DTD.model,
                               n.bins = 50,
                               TRANSFORM.FUN = DTD::identity,
-                              main = "",
+                              title = "",
                               x.lab = "g-vec") {
 
   # test if DTD.model can be used for plotting:
@@ -49,36 +50,44 @@ ggplot_ghistogram <- function(DTD.model,
                        max = length(tweak))
   # end -> n.bins
 
-  # safety check: main
-  useable.main <- try(as.character(main), silent = TRUE)
-  if(any(grepl(x = useable.main, pattern = "Error"))){
-    stop("In ggplot_ghistogram: provided 'main' can not be used as.character.")
-  }
-  # end -> main
+  # safety check: title
+  title <- test_string(
+    test.value = title,
+    output.info = c("ggplot_ghistogram", "titel")
+  )
+  # end -> title
+
   # safety check: x.lab
-  useable.x.lab <- try(as.character(x.lab), silent = TRUE)
-  if(any(grepl(x = useable.x.lab, pattern = "Error"))){
-    stop("In ggplot_ghistogram: provided 'x.lab' can not be used as.character.")
-  }
+  x.lab <- test_string(
+    test.value = x.lab,
+    output.info = c("ggplot_ghistogram", "titel")
+  )
   # end -> x.lab
 
+  # safety check: TRANSFORM.FUN
+  if(!is.function(TRANSFORM.FUN)){
+    stop("In ggplot_ghistogram: 'TRANSFORM.FUN' is not a function")
+  }
+  # end -> TRANSFORM.FUN
 
   # Transformation:
   g_vec <- suppressWarnings(TRANSFORM.FUN(tweak))
 
   # Get number of na:
   nums.NA <- sum(is.na(g_vec)) + sum(is.infinite(g_vec))
-  # If there are na, adjust "main"
+  # If there are na, adjust "title"
   if (nums.NA > 0) {
-    main <- paste0("Due to TRANSFORM.FUN, there are ", nums.NA, " missing values \n", main)
+    title <- paste0("Due to TRANSFORM.FUN, there are ", nums.NA, " missing values \n", title)
+  }
+  if(nums.NA == length(tweak)){
+    stop("In ggplot_ghistogram: after 'TRANSFORM.FUN(tweak), all values are NA or infinite.")
   }
 
   # draw the picture:
   pic <- ggplot2::ggplot(data = NULL, aes(x = g_vec)) +
     ggplot2::geom_histogram(bins = n.bins) +
-    ggplot2::ggtitle(main) +
+    ggplot2::ggtitle(title) +
     ggplot2::xlab(x.lab)
-
 
   return(pic)
 }
