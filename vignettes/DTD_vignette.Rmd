@@ -30,7 +30,7 @@ The gene expression profile of a tissue averages the expression profiles of all 
 \end{equation}
 Every entry $g_i$ of $g$ holds the information how important gene i is for the deconvolution process. The information stored in $g$ can be gained from a loss-function learning approach. 
 This idea and the mathematical background of loss-function learning DTD approach has been published by @Goertler2018. With this "DTD" package we provide all necessary R functions and routines to train and use a loss-function learning digital tissue deconvolution model. 
-The article uses the following notation. The _reference matrix_ is denoted as $X$. Every column $X_{.,k}$ is a cellular reference profile. The expression matrix of _bulk profiles_ is named $Y$. Every column $Y_{.,k}$ is a mixture of cells, for which the quantities $C_{.,k}$ of the given cell profiles in $X$ should be estimated. 
+The article uses the following notation. The *reference matrix* is denoted as $X$. Every column $X_{.,k}$ is a cellular reference profile. The expression matrix of *bulk profiles* is named $Y$. Every column $Y_{.,k}$ is a mixture of cells, for which the quantities $C_{.,k}$ of the given cell profiles in $X$ should be estimated. 
 
 The underlying idea of loss-function learning DTD is to gain the vector $g$ by minimizing a loss function $L$ on a training set. 
 \begin{equation}
@@ -57,13 +57,13 @@ random.data <- generate_random_data(
   n.features = n.features
 )
 normalized.data <- normalize_to_count(random.data)
-indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
-names(indicator.list) <- colnames(normalized.data)
+indicator.vector <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
+names(indicator.vector) <- colnames(normalized.data)
 perc.of.all.cells <- 0.1
 include.in.X <- paste0("Type", 1:5)
 sample.X <- sample_random_X(
   included.in.X = include.in.X,
-  pheno = indicator.list,
+  pheno = indicator.vector,
   exp.data = normalized.data,
   percentage.of.all.cells = perc.of.all.cells
 )
@@ -79,7 +79,7 @@ test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% trai
 
 train.mat <- remaining.mat[, train.samples]
 test.mat <- remaining.mat[, test.samples]
-indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
+indicator.train <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
 training.data <- mix_samples(
   exp.data = train.mat,
   pheno = indicator.train,
@@ -88,7 +88,7 @@ training.data <- mix_samples(
   n.per.mixture = n.per.mixtures,
   verbose = FALSE
 )
-indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
+indicator.test <- indicator.vector[names(indicator.vector) %in% colnames(test.mat)]
 test.data <- mix_samples(
   exp.data = test.mat,
   pheno = indicator.test,
@@ -99,7 +99,7 @@ test.data <- mix_samples(
 )
 start.tweak <- rep(1, nrow(X.matrix))
 names(start.tweak) <- rownames(X.matrix)
-model <- train_correlation_model(
+model <- train_deconvolution_model(
   tweak = start.tweak,
   X.matrix = X.matrix,
   train.data.list = training.data,
@@ -112,9 +112,9 @@ model <- train_correlation_model(
   verbose = FALSE
 )
 ```
-The crucial function in the DTD package is the `train_correlation_model` function, which minimizes the vector $g$ over a training set. After some preliminary work it can be called via: 
+The crucial function in the DTD package is the `train_deconvolution_model` function, which minimizes the vector $g$ over a training set. After some preliminary work it can be called via: 
 ```{r, fig.width = 7, fig.align="center"}
-model <- train_correlation_model(
+model <- train_deconvolution_model(
   tweak = start.tweak,
   X.matrix = X.matrix,
   train.data.list = training.data,
@@ -131,7 +131,7 @@ Here, we trained the $g$-vector for `r maxit` iterations, which decreased the lo
 
 # How to use? 
 
-In the following examples, we demonstrate how data has to look like in order to be used for loss-function learning digital tissue deconvolution. After that, we give examples on how to process the data, how to generate a test and training set, how to train the $g$ vector, and finally, how to visualize the results. 
+In the following examples, we demonstrate how data has to look like in order to be used for loss-function learning digital tissue deconvolution. After that, we give examples on how to process the data, how to generate a test and training set, how to train the $g$ vector, and finally, how to visualize the results. \cr
 First of all, load the library: 
 ```{r}
 library(DTD)
@@ -182,7 +182,7 @@ The randomly generated expression matrix `random.data` looks similar to single-c
 ## Data processing 
 
 Notice that the loss-function learning DTD approach works on an additive, not a multiplicative scale. Therefore, any type log transformation needs to be undone. 
-Next, we scale every sample of the data set to a fixed number of counts. Using the provided `normalize_to_count` function, every sample gets scaled such that the sum over all counts equals $10^6$:
+Next, we scale every sample of the data set to a fixed number of counts. Using the provided `normalize_to_count` function, every sample gets scaled such that the sum over all counts equals `r print(sum(normalized.data[,1]))`:
 ```{r}
 # In random.data the number of counts differs over all samples:
 apply(random.data, 2, sum)[example.index]
@@ -191,13 +191,13 @@ normalized.data <- normalize_to_count(random.data)
 apply(normalized.data, 2, sum)[example.index]
 ```
 
-In addition to the normalized data matrix the DTD algorithm needs an `indicator.list`:
+In addition to the normalized data matrix the DTD algorithm needs an `indicator.vector`:
 ```{r}
-indicator.list <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
-names(indicator.list) <- colnames(normalized.data)
-print(indicator.list[example.index])
+indicator.vector <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
+names(indicator.vector) <- colnames(normalized.data)
+print(indicator.vector[example.index])
 ```
-`indicator.list` needs to be a named list. Each entry assigns the cell type (as value of the list) to every sample (names of the list) in the `normalized.data`. It is used in the training process of the algorithm. 
+`indicator.vector` needs to be a named list. Each entry assigns the cell type (as value of the list) to every sample (names of the list) in the `normalized.data`. It is used in the training process of the algorithm. 
 
 ## Reference matrix X
 
@@ -212,7 +212,7 @@ cat("```\n")
 ```{r}
 sample.X <- sample_random_X(
   included.in.X = include.in.X,
-  pheno = indicator.list,
+  pheno = indicator.vector,
   exp.data = normalized.data,
   percentage.of.all.cells = perc.of.all.cells
 )
@@ -250,14 +250,15 @@ In this package we provide two methods to generate the training set. One method 
 
 ### Many samples --> directly
 
+`mix_samples` randomly selects `n.per.mixture` profiles from `exp.data` and sums them up feature-wise. Additionally for each mixture it reports which randomly selected profiles have been used. Resulting in a mixture matrix, and a corresponding quantity matrix. 
 The `mix_samples` function needs the following arguments:
 
-- gene.mat: numeric matrix, with features as rows, and samples as columns. Here `train.mat`
-- pheno: named list of strings, here `indicator.list`
-- included.in.X: list of strings, here `include.in.X`
-- n.samples: integer, how many in-silicio mixtures should be generated. 
-- n.per.mixture: integer, how many cells should be included in each mixture
-- verbose: boolean, should output be printed. 
+* exp.data: numeric matrix, with features as rows, and samples as columns. Here `train.mat`
+* pheno: named vector of strings, here `indicator.vector`
+* included.in.X: vector of strings, here `include.in.X`
+* n.samples: integer, how many in-silicio mixtures should be generated. 
+* n.per.mixture: integer, how many cells should be included in each mixture
+* verbose: boolean, should output be printed. 
 ```{r echo=FALSE, results = "asis"}
 cat("```\n")
 cat(
@@ -267,7 +268,7 @@ cat(
 cat("```\n")
 ```  
 ```{r}
-indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
+indicator.train <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
 training.data <- mix_samples(
   exp.data = train.mat,
   pheno = indicator.train,
@@ -278,11 +279,11 @@ training.data <- mix_samples(
 )
 str(training.data)
 ```
-Remark that all types are included in the mixtures, but only the distributions of the cell within $X$  are reported in the composition matrix $C$. 
-With the same function we generate a test set. Notice that a sample is  either in the reference matrix $X$, in the test set or in the training set. 
+Remark that all types are included in the mixtures, but only the distributions of the cell within $X$  are reported in the composition matrix $C$. Therefore, for a mixture, the corresponding quantity information does not sum up to 1. 
+Using the same function we generate a test set. Notice that a sample is  either in the reference matrix $X$, in the test set or in the training set. 
 
 ```{r}
-indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
+indicator.test <- indicator.vector[names(indicator.vector) %in% colnames(test.mat)]
 test.data <- mix_samples(
   exp.data = test.mat,
   pheno = indicator.test,
@@ -297,40 +298,39 @@ test.data <- mix_samples(
 The `mix_samples_with_jitter` function needs a bit more preliminary work. 
 It takes the following arguments: 
 
-- special.names: list of strings. Cell types included in the special.names list will occur with higher quantities in the mixtures 
-- sample.names: list of strings. Cell types included in the sample.names list will occur with lower quantities in the mixtures
+* major.fraction.type: vector of strings. Cell types included in the 'major.fraction.type' vector will occur with higher quantities in the mixtures 
+* minor.fraction.type: vector of strings. Cell types included in the sample.names vector will occur with lower quantities in the mixtures
 
-The idea behind splitting all samples in the data set into `special.names` and `sample.names` is: 
+The idea behind splitting all samples in the data set into `major.fraction.type` and `minor.fraction.type` is: 
 In a tumor tissue malignant cells make up ~75% of all cells. In contrast to that, certain immune cells (e.g. a macrophage subtype) make up only ~5 % of all cells. 
 In the training set imbalanced quantities should be reflected. 
 
-- n.samples: integer, how many in-silicio mixtures should be generated. 
-- datamatrix: numeric matrix, here `train.mat`
-- pheno: named list of strings, here `indicator.list`
-- verbose: boolean,  should output be printed. 
-- single.special: boolean, if `FALSE`  all `special.samples` will be included in all mixtures, or if `TRUE`  only one `special.sample` will be included per mixture. This option should be used if `special.samples` represent different tumor types. 
-- add.jitter: boolean, should the mixtures be multiplied with jitter. 
-- chosen.mean: numeric, mean of jitter
-- chosen.sd: numeric, standard deviation of jitter
-- min.amount.samples: integer, how many samples have to be present such that it averages over them, instad of taking only 1. 
-- included.in.X: list of strings, here include.in.X
+* n.samples: integer, how many in-silicio mixtures should be generated. 
+* exp.data: numeric matrix, here `train.mat`
+* pheno: named vector of strings, here `indicator.vector`
+* verbose: logical,  should output be printed?
+* single.special: logical, if `FALSE`  all `major.fraction.type` will be included in all mixtures. If `TRUE`  only one `major.fraction.type` will be included per mixture. This option should be used if e.g. `major.fraction.type` represent different tumor types. 
+* add.jitter: logical, should the mixtures be multiplied with jitter. 
+* chosen.mean: numeric, mean of jitter
+* chosen.sd: numeric, standard deviation of jitter
+* included.in.X: list of strings, here include.in.X
 
 ```{r}
 # Here, we set "Type1" to be special:
-special.samples <- c("Type1")
+major.fraction.type <- c("Type1")
 # and all other to be normal:
-all.samples <- unique(indicator.list)
-sample.names <- all.samples[-which(all.samples %in% special.samples)]
+all.samples <- unique(indicator.vector)
+minor.fraction.type <- all.samples[-which(all.samples %in% major.fraction.type)]
 
 # reduce indicator list to those samples included in training:
-indicator.list <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
+indicator.vector <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
 
 training.data.jitter <- mix_samples_with_jitter(
-  sample.names = sample.names,
-  special.samples = special.samples,
+  minor.fraction.type = minor.fraction.type,
+  major.fraction.type = major.fraction.type,
   n.samples = n.samples,
-  datamatrix = train.mat,
-  pheno = indicator.list,
+  exp.data = train.mat,
+  pheno = indicator.vector,
   verbose = FALSE,
   add.jitter = TRUE,
   included.in.X = include.in.X
@@ -343,17 +343,18 @@ In the optimizing procedure we search for a vector $g$, which minimizes our loss
 \begin{equation}
   L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
 \end{equation}
-This optimization is done iteratively by gradient descent, using an implementation of 'FISTA' (Fast iterative shrinkage thresholding algorithm, @Beck2009). A crucial hyperparameter for the model is the \lambda. In order to find the optimal \lambda a cross validation is performed. The training procedure can be called via `train_correlation_model`, and takes the following arguments: 
+This optimization is done iteratively by gradient descent, using an implementation of 'FISTA' (Fast iterative shrinkage thresholding algorithm, Beck and Teboulle (2009)). A crucial hyperparameter for the model is $\lambda$. In order to find the optimal $\lambda$ a cross validation is performed. The training procedure can be called via `train_deconvolution_model`, and takes the following arguments: 
 
-- tweak: numeric vector, with which the minimization starts. Notice, that the names of tweak will be kept during optimization, and might be helpful for further visualizations.  
-- X.matrix: numeric matrix, with as many rows as length(tweak). Each column of X.matrix holds a cell type specific reference profile. 
-- train.data.list: list of training mixtures, and quantities. 
-- test.data.list: list of test mixtures, and quantities
+* `tweak`: numeric vector, with which the minimization starts. Notice, that the names of tweak will be kept during optimization, and might be helpful for further visualizations.  
+* X.matrix: numeric matrix, with as many rows as length(tweak). Each column of X.matrix holds a cell type specific reference profile. 
+* train.data.list: list of training mixtures, and quantities. 
+* test.data.list: list of test mixtures, and quantities
+* ... any argument that will be passed to `DTD_cv_lambda` and `descent_generalized_fista`. E.g. `maxiter`, `verbose` or `lambda.length`
 
 ```{r}
 start.tweak <- rep(1, nrow(X.matrix))
 names(start.tweak) <- rownames(X.matrix)
-model <- train_correlation_model(
+model <- train_deconvolution_model(
   tweak = start.tweak,
   X.matrix = X.matrix,
   train.data.list = training.data,
@@ -364,80 +365,80 @@ model <- train_correlation_model(
   verbose = FALSE
 )
 ```
-The output of the `train_correlation_model` algorithm is a list. The entry 'cv.obj' holds a data.frame with information about the cross validation. The entry 'best.model' contains a model trained on the full trainings data set with the best lambda of the cross validation. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function best), and a convergence vector. Within the convergence vector there are the evaluations of the `EVAL.FUN` in every step. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found. Additionally, in the 'model' object there is a entry named 'reference.X' and 'pics'. 'reference.X' holds the used reference matrix X, in 'pics' there are several ggplot figures to assess the quality of the model. 
+The output of the `train_deconvolution_model` algorithm is a list. The entry 'cv.obj' holds a list of lists with information about the cross validation (see section "Cross validation"). The entry 'best.model' contains a model trained on the full trainings data set with the best lambda of the cross validation. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function best), and a convergence vector. Within the convergence vector the loss function evaluated in every iteration is stored. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found. Additionally, in the `model` object there is a entry named `reference.X` and `pics`. `reference.X` holds the used reference matrix X, in `pics` there are several ggplot figures to assess the quality of the model. 
 
 ## Visualize results
 
-Each of the following visualizations is called automatically after training a model with the `train_correlation_model` function. They are stored as a list of ggplot object, and can be found in the `pics` entry of the model.   
+Each of the following visualizations is called automatically after training a model with the `train_deconvolution_model` function. They are stored as a list of ggplot object, and can be found in the `pics` entry of the model.   
 
 ### Visualization of learn curve  
 
-During the training step, the algorithm finds a $g$-vector which minimzes the Loss-function. In order to visualize the training curve, the function `ggplot_correlation` can be used. With the objective to validate the model in sense of overfitting you can provide a test-data: 
+During the training step, the algorithm finds a $g$-vector which minimzes the loss function. In order to visualize the training curve, the function `ggplot_correlation` can be used. With the objective to validate the model in sense of overfitting you can provide a test-data: 
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
 print(model$pics$convergence)
 
 # or via function call:
-print(
-  ggplot_convergence(
-    DTD.model = model,
-    X.matrix = X.matrix,
-    test.data = test.data,
-    estimate.c.type = "direct",
-    main = "DTD Vignette"
-  )
-)
+# print(
+#   ggplot_convergence(
+#     DTD.model = model,
+#     X.matrix = X.matrix,
+#     test.data = test.data,
+#     estimate.c.type = "direct",
+#     main = "DTD Vignette"
+#   )
+# )
 ```
 
 ### Correlation per cell type
 The loss-function plot above shows the average negative correlation over all cell types for each intermediate step of the optimization With the aim of assessing the models performance per cell type, the `ggplot_true_vs_esti` function can be used. 
-As input it takes the DTD model and a test set. 
+As input it takes the DTD model and test data. 
 
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
 print(model$pics$true_vs_esti)
 
 # or via function call:
-print(
-  ggplot_true_vs_esti(
-    DTD.model = model,
-    X.matrix = X.matrix,
-    test.data = test.data,
-    estimate.c.type = "direct"
-  )
-)
+# print(
+#   ggplot_true_vs_esti(
+#     DTD.model = model,
+#     X.matrix = X.matrix,
+#     test.data = test.data,
+#     estimate.c.type = "direct"
+#   )
+# )
 ```
 
 ### Histogram of g-vector
-The loss-function learning DTD algorithm results in a model that predicts cell compositions well. Another benefit of it is the information stored in the $g$-vector. If gene i contributes strongly to the deconvolution process the algorithm tends to assign a higher entry to $g_i$. As a consequence taking a closer look on the distribution of the $g$-vector is important. In the DTD package, the function `ggplot_ghistogram` can be used. As input parameters it takes the output of a `train_correlation_model` call. 
+The loss-function learning DTD algorithm results in a model that predicts cell compositions well. Most of the deconvolution information is stored in the $g$-vector. If gene i contributes strongly to the deconvolution process the algorithm tends to assign a higher entry to $g_i$. As a consequence taking a closer look on the distribution of the $g$-vector is important. In the DTD package, the function `ggplot_ghistogram` can be used. As input parameters it takes the output of a `train_deconvolution_model` call. 
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
 print(model$pics$histogram)
 # or via function call:
-print(
-  ggplot_ghistogram(
-    DTD.model = model
-  )
-)
+# print(
+#   ggplot_ghistogram(
+#     DTD.model = model
+#   )
+# )
 ```
 
 ### g-Path
-Another useful information that can be gained from the `History` of the `tweak.vec` can be visualized using the `ggplot_gpath` function: 
+Another useful information that can be gained from the `History` of the `tweak.vec` can be visualized using the `ggplot_gpath` function.
+In the plot below each line tracks the change of one $g_i$ during all iterations. In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. Accordingly, there are `r nrow(X.matrix)` lines in the plot. Notice, that most of the change in $g$ takes place in the early steps of the algorihtm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10) to transform the iteration axis.  \cr
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
 print(model$pics$path)
 # or via function call:
 
-singlePic <- ggplot_gpath(
-  DTD.model = model,
-  number.pics = 1,
-  main = "All genes",
-  G.TRANSFORM.FUN = log2,
-  y.lab = "log2(g)"
-)
-print(singlePic$gPath)
+# singlePic <- ggplot_gpath(
+#   DTD.model = model,
+#   number.pics = 1,
+#   main = "All genes",
+#   G.TRANSFORM.FUN = log2,
+#   y.lab = "log2(g)"
+# )
+# print(singlePic$gPath)
 ```  
-In this plots each line tracks the change of one $g_i$ during all iterations. In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. Accordingly, there are `r nrow(X.matrix)` lines in the plot. Notice, that most of the change in $g$ takes place in the early steps of the algorihtm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10) to transform the iteration axis.  \cr
 In the `ggplot_gPath` function, each $g$ is visualized with one line. To visualize only a subset of $g$, selected features can be indicated by the option `subset`: 
 ```{r, fig.width = 7, fig.align="center"}
 singlePic.subset <- ggplot_gpath(
@@ -461,51 +462,56 @@ multPic <- ggplot_gpath(
 )
 print(multPic$gPath)
 ```
+By default, the `ggplot_gpath` function does not plot a legend. There is the boolean argument `plot.legend`. If it is set `TRUE`, a TableGrob object will be stored in the `legend` entry, holding the legend-plot. 
 
 ### Explained correlation  
 
-In order to assess the effect of each feature in the deconvolution process we introduce the concept of 'explained correlation': 
-Given a trained model, we can iteratively manipulate the model by excluding a feature. This means, its entry in the g-vector is set to zero. Then we deconvolute the test set with the manipulated model, and observe a decrease in correlation. The higher the decrease is, the more important the gene is in the deconvolution process. In the following figure, the y-axis holds the percentage of explained correlation per feature.
+During training, the algorithm optimizes a vector `g`, such that it deconvolutes a training set with maximized correlation. The effect of the g-vector can be visualized when plotting the reference matrix `X`, multiplied with `g`, as a heatmap. Mathematically, the heatmap holds $diag(g) \cdot X$.  
+The function `ggplot_heatmap` takes as input a `DTD.model` (either the output of `train_deconvolution_model`, `DTD_cv_lambda`, `descent_generalized_fista` or a numeric vector, which will be interpreted as a `g` vector). Without any additional input, the heatmap will include all features. Notice, that rows and columns of the heatmap will be clustered hierarchically.  
+The heatmap becomes more informative, if only a subset of features is included. 
+Here, we implemented two subsetting methods:  
 
+* subsetting by rownames: apply a vector of feature names. The clustering and plotting will only be done on the selected subet
+* subsetting by *explained correlation*: Explained correlation is a measure to assess the effect of each feature in the deconvolution process. Let the complete model deconvolute a test set with 75% correlation. If feature i is removed from the model (by setting its entry in `g[i] = 0`), the deconvolution correlation will change, e.g. to 72%. Then gene `i` explains 3% of the correlation. The measure of *explained correlation* can iteratively be applied to each feature. Using the *explained correlation* ranking, only a top_n subset of features can be used for clustering and visualizing the heatmap.
+
+Notice, subsetting by rownames does not require a test set. Subsetting by *explained correlation* requires a test set. 
+When calling `train_deconvolution_model` a heatmap including all features is plotted, and included in the `pics` list. 
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
-print(model$pics$explained.correlation)
+print(model$pics$Xheatmap)
 # or via function call:
-print(
-  ggplot_explained_correlation(
-    DTD.model = model,
-    X.matrix = X.matrix,
-    test.data = test.data,
-    estimate.c.type = "direct",
-    print.labels = TRUE
-  )
-)
+# print(
+#   ggplot_heatmap(
+#     DTD.model = model,
+#     test.data = test.data,
+#     estimate.c.type = "direct", 
+#     feature.subset = 0.1
+#   )
+# )
 ```
 
 
 ## Cross validation
-The loss function  includes a l1 regularization term, controlled by the regularization parameter \lambda. 
-In order to find the optimal size of the regularization parameter we implemented a k-fold 
-cross validation. The crucial arguments of the cross validation are the following. These can be passed as '...' to the `train_correlation_model` function:
+The loss function  includes a l1 regularization term, controlled by the regularization parameter $\lambda$. 
+In order to find the optimal size of the regularization parameter we implemented a k-fold cross validation. Notice that the `train_deconvolution_model` function automatically performs a cross validation. The crucial arguments of the cross validation are the following. These can be passed as '...' to the `train_deconvolution_model` function:
 
-- n.folds: integer, how many buckets in the cross validation 
-- lambda.seq: numeric vector or NULL. For these lambda values, models are trained. For each lambda value `nfolds` models are trained, and tested in a sense of k-fold cross validation.  If `lambda.seq` is set to NULL, a lambda sequence will be generated based on the dimension of the training set. 
-- lambda.length: integer, how many lamdbas will be generated (only used if lambda.seq is NULL)
-- train.list: list with two entries (`mixtures` and `quantities`, as described previously). The entry `mixtures` must be a numeric matrix, with training samples as columns. The cross validation folds are assigned using these column names. During the cross validation a copy of the train.list will be used, in which only samples of the current fold are present. Sample selection is done via column names for matrices, and via names for vectors.  
+- lambda.seq: numeric vector or NULL. Sequence of $\lambda$, for which models are trained. For each $\lambda$ `n.folds` models are trained, and tested in a sense of k-fold cross validation.  If `lambda.seq` is set to NULL (Default-value), a sequence of $\lambda$ will be generated based on the dimension of the training set. 
+- n.folds: integer, number of folds for k-fold cross validation
+- lambda.length: integer, if `lambda.seq == NULL`, a sequence of $\lambda$ will be generated based on the dimension of the training set. `lambda.length` determines the length of the generated sequence.
+- train.list: list with two entries (`mixtures` and `quantities`, as described previously). The entry `mixtures` must be a numeric matrix, with training samples as columns. The cross validation folds are assigned using these column names. During the cross validation a copy of the train.list will be used, in which only samples of the current fold are present. Sample selection is done via column names for matrices, and via names for vectors. 
 - ... any argument that can be passed to the `descent_generalized_fista` function (e.g. maxiter, verbose etc.)
-For each fold and every lambda a model is trained.
-The return object from the cross validation is a list with 2 entries. The `cv.obj` entry holds a data.frame with information about the cross validation over the lambda.sequence. Pass this data frame to the `ggplot_cv` function for visualization. The second entry `best.model` of the `cv.obj` is a trained model which uses the lambda with minimal loss function during the cross validation. Notice that this model is trained on the complete trainings data set. 
+The return object from the cross validation is a list with 2 entries. The `cv.obj` entry holds a list of list. For every lambda, and each fold the DTD model is reported. The second entry `best.model` of the `cv.obj` is a trained model which uses the lambda with minimal loss function during the cross validation. Notice that this model is trained on the complete trainings data set. 
 Visualize the cross-validation result via:
 ```{r, fig.width = 7, fig.align='center'}
 # print via model$pics list:
 print(model$pics$cv)
 # or via function call:
-print(
-  ggplot_cv(
-    DTD.model = model,
-    main = "DTD Vignette"
-  )
-)
+# print(
+#   ggplot_cv(
+#     DTD.model = model,
+#     main = "DTD Vignette"
+#   )
+# )
 ```
 
 ## Session Info  
@@ -514,4 +520,4 @@ print(
 sessionInfo()
 ```
 
-# References  
+# Literature  
