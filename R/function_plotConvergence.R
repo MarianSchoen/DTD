@@ -11,7 +11,7 @@
 #' and one for the test.data.\cr
 #' For an example see section "Visualization of learn curve" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param DTD.model output of \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' @param DTD.model list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
 #' or \code{\link{descent_generalized_fista}}.
 #' @param test.data list of two matrices, named "mixtures" and "quantities".
 #' For examples see \code{\link{mix_samples}}, \code{\link{mix_samples_with_jitter}}
@@ -21,7 +21,7 @@
 #' (see \code{\link{estimate_c}}),\cr
 #' if estimate.c.type is set to "non_negative" the estimates "C"
 #' must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
-#' @param main string, additionally title (default "")
+#' @param title string, additionally title (default "")
 #'
 #' @return ggplot object
 #' @export
@@ -33,7 +33,7 @@ ggplot_convergence <- function(DTD.model,
                                X.matrix = NA,
                                test.data = NULL,
                                estimate.c.type,
-                               main = "") {
+                               title = "") {
   # convergence can be plotted for training AND test set, if:
   #   - the complete model of 'DTD.model' has the "History" entry
   #   - if test.data and reference matrix are provided
@@ -97,10 +97,10 @@ ggplot_convergence <- function(DTD.model,
       }
   }
 
-  # safety check: main
-  main <- test_string(main,
-                      output.info = c("ggplot_convergence", "main"))
-  # end -> main
+  # safety check: title
+  title <- test_string(title,
+                      output.info = c("ggplot_convergence", "title"))
+  # end -> title
 
 
   # safety check for estimate.c.type:
@@ -163,7 +163,7 @@ ggplot_convergence <- function(DTD.model,
   # melt convergence:
   convergence.melt <- reshape2::melt(convergence, id.var = "iter")
   # set title:
-  tit <- paste0("Loss-function curve during FISTA optimization \n", main)
+  tit <- paste0("Loss-function curve during FISTA optimization \n", title)
 
   # build the ggplot object
   pic <- ggplot2::ggplot(convergence.melt, aes_string(x = "iter", y = "value", col = "variable")) +
