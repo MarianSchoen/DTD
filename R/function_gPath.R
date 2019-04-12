@@ -6,34 +6,35 @@
 #' Then, the visualization will be split into more pictures.
 #' In each picture all \eqn{g_i} get collected that end up in the same quantile range.
 #' E.g if you split into 3 pictures, the first picture includes all genes that result into the
-#' quantile range from 0% Qu to 33% Qu of all g.
+#' quantile range from 0\% Qu to 33\% Qu of all g.\cr
 #' There are parameters (G.TRANSFORM.FUN and ITER.TRANSFORM.FUN) to transform the g vector, and iteration number.
 #' These might help to make the plot more understandable, e.g. if the distribution of the g vector is dominated by
 #' same outliers, applying a log transformation might help.
-#' In most of the scenarios the major changes in the g vector occur in the early iterations. Focus on this part via a log transformation.
+#' In most of the scenarios the major changes in the g vector occur in the early iterations.
+#' Focus on this part via a log transformation.
 #' For an example see section "g-Path" in the package vignette `browseVignettes("DTD")`
 #'
 #' @param DTD.model : list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
-#' or \code{\link{descent_generalized_fista}}
+#' or \code{\link{descent_generalized_fista}}. Must include a 'History' entry.
 #' @param number.pics : integer, into how many pictures should the resutlt be split. (defaults to 3)
 #' @param G.TRANSFORM.FUN : function, that expects a vector of numerics, and returns a vector of the same length.
-#' Will be applied on fista.output$Tweak. Set G.TRANSFORM.FUN to identity if no transformation is required.
-#' If you change G.TRANSFORM.FUN don't forget to adjust the y.lab parameter. (default is identity)
+#' Will be applied on each intermediate 'g' vector. Set 'G.TRANSFORM.FUN' to identity if no transformation is required.
+#' If you change 'G.TRANSFORM.FUN' don't forget to adjust the y.lab parameter. (default is identity)
 #' @param ITER.TRANSFORM.FUN : function, that expects a vector of numerics, and returns a vector of the same length.
-#' Will be applied on the iteration/x.axis of the plot. Set ITER.TRANSFORM.FUN to identity if no transformation is required.
-#' If you change ITER.TRANSFORM.FUN don't forget to adjust the x.lab parameter (Default: log10)
+#' Will be applied on the iteration/x.axis of the plot. Set 'ITER.TRANSFORM.FUN' to identity if no transformation is required.
+#' If you change 'ITER.TRANSFORM.FUN' don't forget to adjust the x.lab parameter (Default: log10)
 #' @param y.lab string, used as y label on the plot (Default: "g)
 #' @param x.lab string, used as x label on the plot (default is "log10(iteration)")
-#' @param plot.legend logical, should the legend be plotted? Notice that the legend will
-#' be plotted in a additional figure, and can be visualized via grid::grid.draw (Default: FALSE)
+#' @param show.legend logical, should the legend be plotted? Notice that the legend will
+#' be plotted in a additional figure, and can be visualized via 'grid::grid.draw', or 'plot' (Default: FALSE)
 #' @param subset vector of strings, or NA that match the rownames of fista.output$History.
-#' Only these entries will be visualized. If set to NA, all entries will be used. (Default: NAA)
-#' @param main string, used as title of the plot (Default: "")
+#' Only these entries will be visualized. If set to NA, all entries will be used. (Default: NA)
+#' @param title string, additionally title (default "")
 #'
 #' @import ggplot2
 #' @import reshape2
 #' @return list, with "gPath" entry. "gPath" will be a ggplot object.
-#' Depending on "plot.legend" the list has a second entry named "legend". "legend" will be a grid object.
+#' Depending on "show.legend" the list has a second entry named "legend". "legend" will be a grid object, which can be plotted via 'plot', or 'grid::grid.draw'.
 #' @export
 #'
 ggplot_gpath <- function(DTD.model,
@@ -43,8 +44,8 @@ ggplot_gpath <- function(DTD.model,
                          y.lab = "g",
                          x.lab = "log10(iteration)",
                          subset = NA,
-                         main = "",
-                         plot.legend = FALSE) {
+                         title = "",
+                         show.legend = FALSE) {
 
   # safety check: number.pics
   test <- test_integer(number.pics,
@@ -52,51 +53,35 @@ ggplot_gpath <- function(DTD.model,
                        min = 1,
                        max = Inf)
   # end -> number.pics
-
   # safety check: y.lab
-  useable.ylab <- try(as.character(y.lab), silent = TRUE)
-  if(any(grepl(x = useable.ylab, pattern = "Error"))){
-    stop("In ggplot_gpath: provided 'y.lab' can not be used as.character.")
-  }
+  y.lab <- test_string(test.value = y.lab, output.info = c("ggplot_gpath", "y.lab"))
   # end -> y.lab
-
   # safety check: x.lab
-  useable.ylab <- try(as.character(x.lab), silent = TRUE)
-  if(any(grepl(x = useable.ylab, pattern = "Error"))){
-    stop("In ggplot_gpath: provided 'x.lab' can not be used as.character.")
-  }
-  # end -> x.lab
-
-  # safety check: main
-  useable.ylab <- try(as.character(main), silent = TRUE)
-  if(any(grepl(x = useable.ylab, pattern = "Error"))){
-    stop("In ggplot_gpath: provided 'main' can not be used as.character.")
-  }
-  # end -> main
-
-
-
-  # safety check: plot.legend
-  test <- test_logical(test.value = plot.legend,
-                       output.info = c("ggplot_gpath", "plot.legend"))
-  # end -> plot.legend
+  x.lab <- test_string(test.value = x.lab, output.info = c("ggplot_gpath", "x.lab"))
+  # end -> y.lab
+  # safety check: title
+  title <- test_string(test.value = title, output.info = c("ggplot_gpath", "title"))
+  # end -> title
+  # safety check: show.legend
+  test <- test_logical(test.value = show.legend,
+                       output.info = c("ggplot_gpath", "show.legend"))
+  # end -> show.legend
 
   # for gPath, the following elements are needed:
   # - 'History' of learning
-
   # Either it is provided as a list ...
   if(is.list(DTD.model)){
     if("best.model" %in% names(DTD.model)){
       fista.output <- DTD.model$best.model
     }else{
-      if(all(c("Tweak", "History") %in% names(DTD.model))){
+      if(!"History" %in% names(DTD.model)){
         stop("In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)")
       }else{
         fista.output <- DTD.model
       }
     }
     f.history <- fista.output$History
-    tweak <- fista.output$Tweak
+    tweak <- f.history[, ncol(f.history)]
   }else{
     # ... or only the History matrix is provided:
     if(!is.matrix(DTD.model)){
@@ -106,19 +91,20 @@ ggplot_gpath <- function(DTD.model,
       tweak <- f.history[, ncol(f.history)]
     }
   }
+
   # safety check: G.TRANSFORM.FUN
   useable.g.trans.fun <- try(G.TRANSFORM.FUN(tweak), silent = TRUE)
   if(any(grepl(x = useable.g.trans.fun, pattern = "Error")) || any(!is.numeric(useable.g.trans.fun))){
     stop("In ggplot_gpath: 'G.TRANSFORM.FUN' does not return numeric vector.")
   }
-  # end -> main
+  # end -> G.TRANSFORM.FUN
 
   # safety check: ITER.TRANSFORM.FUN
   useable.iter.trans.fun <- try(ITER.TRANSFORM.FUN(tweak), silent = TRUE)
   if(any(grepl(x = useable.iter.trans.fun, pattern = "Error")) || any(!is.numeric(useable.iter.trans.fun))){
     stop("In ggplot_gpath: 'ITER.TRANSFORM.FUN' does not return numeric vector.")
   }
-  # end -> main
+  # end -> ITER.TRANSFORM.FUN
 
   # if:
   # - subset is not na,
@@ -177,7 +163,7 @@ ggplot_gpath <- function(DTD.model,
     ggplot2::geom_line() +
     ggplot2::ylab(y.lab) +
     ggplot2::xlab(x.lab) +
-    ggplot2::ggtitle(main) +
+    ggplot2::ggtitle(title) +
     ggplot2::facet_grid(. ~ qpg)
 
   ret <- list()
@@ -185,7 +171,7 @@ ggplot_gpath <- function(DTD.model,
   ret[["gPath"]] <- pics + theme(legend.position = "none")
 
   # Only if required, extract the legend from "pics" and provide as a entry in ret
-  if (plot.legend) {
+  if (show.legend) {
     tmp <- ggplot2::ggplot_gtable(ggplot_build(pics))
     tmp.leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
     legend <- tmp$grobs[[tmp.leg]]

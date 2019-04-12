@@ -72,7 +72,7 @@
 #' \itemize{
 #'    \item "Converge", numeric vector, EVAL.FUN in every step
 #'    \item "Tweak" numeric vector, the best distinguishing vector
-#'    \item "Lambda", numeric value, used \Lambda
+#'    \item "Lambda", numeric value, used \eqn{\lambda}
 #'    \item depending on "save.all.tweaks": "History", numeric matrix, "Tweak" vector of every step
 #' }
 #'

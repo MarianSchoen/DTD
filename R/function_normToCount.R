@@ -7,7 +7,8 @@
 #'
 #' @param exp.data positive numeric matrix, with samples as columns and features as rows.
 #' Notice, 'normalize_to_count' normalizes the columns of this matrix.
-#' @param count float, 0 < 'count', to which every sample of exp.data will be scaled
+#' @param count float, 0 < 'count', to which every sample of exp.data will be scaled.
+#' If 'is.na(count)' (default), count is set to nrow(exp.data)
 #'
 #' @return "ret", matrix with same dimension as "exp.data"
 #' @export
@@ -22,8 +23,11 @@
 #'
 #' # check:
 #' apply(normalized.matrix, 2, sum)
-normalize_to_count <- function(exp.data, count = 1e6) {
-
+normalize_to_count <- function(exp.data,
+                               count = NA) {
+  if(any(is.na(count))){
+    count <- nrow(exp.data)
+  }
   # safety check: count
   test <- test_numeric(test.value = count,
                        output.info = c("normalize_to_count", "count"),
