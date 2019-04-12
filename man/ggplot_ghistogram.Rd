@@ -5,18 +5,19 @@
 \title{Histogram of the g/tweak vector}
 \usage{
 ggplot_ghistogram(DTD.model, n.bins = 50,
-  TRANSFORM.FUN = DTD::identity, main = "", x.lab = "g-vec")
+  TRANSFORM.FUN = DTD::identity, title = "", x.lab = "g-vec")
 }
 \arguments{
-\item{DTD.model}{: list, as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
-or \code{\link{descent_generalized_fista}}}
+\item{DTD.model}{either a numeric vector ,
+or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or\code{\link{descent_generalized_fista}}.}
 
-\item{n.bins}{: integer, number of bins in the histogram. Defaults to 50}
+\item{n.bins}{: positive integer, number of bins in the histogram. Defaults to 50}
 
 \item{TRANSFORM.FUN}{: function that expects a list of floats, and returns a list of floats
-Defaults to identity.}
+Defaults to identity. (defaults to identity)}
 
-\item{main}{string, used as title of the plot. Defaults to ""}
+\item{title}{string, additionally title (default "")}
 
 \item{x.lab}{string, used as x label of the plot. Defaults to ""}
 }

@@ -5,10 +5,10 @@
 \title{Plot loss curve}
 \usage{
 ggplot_convergence(DTD.model, X.matrix = NA, test.data = NULL,
-  estimate.c.type, main = "")
+  estimate.c.type, title = "")
 }
 \arguments{
-\item{DTD.model}{output of \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+\item{DTD.model}{list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
 or \code{\link{descent_generalized_fista}}.}
 
 \item{test.data}{list of two matrices, named "mixtures" and "quantities".
@@ -21,7 +21,7 @@ or the package vignette `browseVignettes("DTD")`.}
 if estimate.c.type is set to "non_negative" the estimates "C"
 must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
 
-\item{main}{string, additionally title (default "")}
+\item{title}{string, additionally title (default "")}
 }
 \value{
 ggplot object
