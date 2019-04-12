@@ -218,6 +218,10 @@ train_deconvolution_model <- function(tweak,
   pics$path <- DTD::ggplot_gpath(catch)$gPath
 
   pics$histogram <- DTD::ggplot_ghistogram(DTD.model = catch)
+
+  pics$Xheatmap <- ggplot_heatmap(DTD.model = catch,
+                                  X.matrix = X.matrix)
+
   if(!is.null(test.data.list)){
     estimates <- ESTIMATE.C.FUN(new.data = test.data.list$mixtures,
                                 DTD.model = catch)
@@ -225,12 +229,6 @@ train_deconvolution_model <- function(tweak,
                                                   test.data = test.data.list,
                                                   estimate.c.type = estimate.c.type,
                                                   X.matrix = X.matrix)
-    pics$Xheatmap <- ggplot_heatmap(DTD.model = catch,
-                                                 X.matrix = X.matrix,
-                                                 test.data = test.data.list,
-                                                 estimate.c.type = estimate.c.type,
-                                                 feature.subset = round(0.2*nrow(X.matrix))
-    )
   }
   catch$pics <- pics
   return(catch)
