@@ -1,8 +1,9 @@
-#' Heatmap of diag(g) * X
+#' clustered heatmap of diag(g) * X
 #'
-#' Plot a heatmap of the reference matrix X times , using a selected subset of features
-#' NOT FINISHED, STOP
-#' Top features are selected via "explained correlation":
+#' For a DTD.model the 'ggplot_heatmap' function visualizes
+#' \deqn{diag(g) * X} on a subset of features as a clusterd heatmap.\cr
+#' Feature subsetting can either be done by a vector of strings, that match the feature names of X.\cr
+#' or via 'explained correlation':
 #' In order to assess the importance of a feature in the deconvolution process, we can exclude it from a trained model,
 #' and observe the change of correlaion on a test set. If the correlation e.g. decreases by 1 %,
 #' the gene explains 1 % correlation within the deconvolution model.
@@ -13,20 +14,22 @@
 #' For an example see section "Explained correlation" in the package vignette `browseVignettes("DTD")`
 #'
 #' @param DTD.model list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
-#' or \code{\link{descent_generalized_fista}}
+#' or \code{\link{descent_generalized_fista}}, or a numeric vector, which will be used as 'g'.
 #' @param X.matrix numeric matrix, with features/genes as rows, and cell types as column.
-#' Each column of X.matrix is a reference expression profile
+#' Each column of X.matrix is a reference expression profile.
+#' Notice, if the model includes a 'reference.X' matrix, this parameter can be set to NA.
 #' @param test.data numeric matrix with samples as columns, and features as rows.
 #' In the deconvolution formula 'test.data' is denoated as Y.
+#' If subsetting is done via feature names, 'test.data' will not be used.
 #' @param estimate.c.type string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
-#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
-#' (see \code{\link{estimate_c}}),
+#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. \cr
+#' If estimate.c.type is set to "direct" there is no regularization (see \code{\link{estimate_c}}),\cr
 #' if estimate.c.type is set to "non_negative" the estimates "C"
 #' must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
 #' @param feature.subset numeric or a vector of strings. If it is a numeric, "subset" features will be picked from the
 #' 'explained correlation' ranking (if 'feature.subset' < 1, this is the fraction of feature, if 'feature.subset' > 1
-#' it is the total amount. If it is a vector of strings, these genes will be used.
-#' @param main string, used as title in the plot
+#' it is the total amount). If it is a vector of strings, these features will be used.
+#' @param title string, additionally title (default "")
 #'
 #' @return ggplot object
 #' @export
@@ -37,7 +40,7 @@ ggplot_heatmap <- function(DTD.model,
                            X.matrix = NA,
                            test.data=NULL,
                            estimate.c.type,
-                           main = "",
+                           title = "",
                            feature.subset = 100){
   # safety check: DTD.model
   if (is.list(DTD.model)) {
@@ -94,12 +97,12 @@ ggplot_heatmap <- function(DTD.model,
     feature.subset <- min(feature.subset, nrow(X.matrix))
   }
   # end -> subset
-  # safety check: main
-  useable.main <- try(as.character(main), silent = TRUE)
-  if(any(grepl(x = useable.main, pattern = "Error"))){
-    stop("In ggplot_cv: provided 'main' can not be used as.character.")
+  # safety check: title
+  useable.title <- try(as.character(title), silent = TRUE)
+  if(any(grepl(x = useable.title, pattern = "Error"))){
+    stop("In ggplot_cv: provided 'title' can not be used as.character.")
   }
-  # end -> main
+  # end -> title
 
   if(is.null(test.data) && !exists("features")){
     features <- rownames(X.matrix)
@@ -201,7 +204,7 @@ ggplot_heatmap <- function(DTD.model,
       ) +
     xlab("features") +
     ylab("Cell types") +
-    ggtitle(main) +
+    ggtitle(title) +
     theme(axis.text.x = element_text(angle = 90,
                                      hjust = 1))
   return(pic0)
