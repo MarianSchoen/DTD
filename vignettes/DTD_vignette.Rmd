@@ -182,7 +182,7 @@ The randomly generated expression matrix `random.data` looks similar to single-c
 ## Data processing 
 
 Notice that the loss-function learning DTD approach works on an additive, not a multiplicative scale. Therefore, any type log transformation needs to be undone. 
-Next, we scale every sample of the data set to a fixed number of counts. Using the provided `normalize_to_count` function, every sample gets scaled such that the sum over all counts equals `r print(sum(normalized.data[,1]))`:
+Next, we scale every sample of the data set to a fixed number of counts. Using the provided `normalize_to_count` function, every sample gets scaled such that the sum over all counts equals `r sum(normalized.data[,1])`:
 ```{r}
 # In random.data the number of counts differs over all samples:
 apply(random.data, 2, sum)[example.index]
@@ -385,7 +385,7 @@ print(model$pics$convergence)
 #     X.matrix = X.matrix,
 #     test.data = test.data,
 #     estimate.c.type = "direct",
-#     main = "DTD Vignette"
+#     title =  "DTD Vignette"
 #   )
 # )
 ```
@@ -433,7 +433,7 @@ print(model$pics$path)
 # singlePic <- ggplot_gpath(
 #   DTD.model = model,
 #   number.pics = 1,
-#   main = "All genes",
+#   title =  "All genes",
 #   G.TRANSFORM.FUN = log2,
 #   y.lab = "log2(g)"
 # )
@@ -444,7 +444,7 @@ In the `ggplot_gPath` function, each $g$ is visualized with one line. To visuali
 singlePic.subset <- ggplot_gpath(
   DTD.model = model,
   number.pics = 1,
-  main = "Gene Subset",
+  title =  "Gene Subset",
   G.TRANSFORM.FUN = log2,
   y.lab = "log2(g)",
   subset = c("gene22", "gene37")
@@ -456,7 +456,7 @@ Alternatively, you can specify into how many pictures the plot should be split. 
 multPic <- ggplot_gpath(
   DTD.model = model,
   number.pics = 2,
-  main = "All Genes, split into 2",
+  title =  "All Genes, split into 2",
   G.TRANSFORM.FUN = log2,
   y.lab = "log2(g)"
 )
@@ -509,7 +509,7 @@ print(model$pics$cv)
 # print(
 #   ggplot_cv(
 #     DTD.model = model,
-#     main = "DTD Vignette"
+#     title =  "DTD Vignette"
 #   )
 # )
 ```
