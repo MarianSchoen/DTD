@@ -94,7 +94,7 @@ ggplot_heatmap <- function(DTD.model,
     if(feature.subset <= 1){ # fraction is provided
       feature.subset <- round(nrow(X.matrix) * feature.subset)
     }
-    feature.subset <- min(feature.subset, nrow(X.matrix))
+    feature.subset <- ceiling(min(feature.subset, nrow(X.matrix)))
   }
   # end -> subset
   # safety check: title
