@@ -920,8 +920,8 @@ test_that("ggplot_true_vs_esti",{
           )
 }
 )
-context("Test ggplotg_historgram ")
-test_that("ggplotg_historgram ", {
+context("Test ggplot_ghistorgram ")
+test_that("ggplot_ghistorgram ", {
   expect_error(
     ggplot_ghistogram(
       DTD.model = "NA",
@@ -956,4 +956,167 @@ test_that("ggplotg_historgram ", {
 }
 )
 
+context("Test ggplot_gpath ")
+test_that("ggplot_gpath ", {
+  expect_error(
+    ggplot_gpath(DTD.model = list(),
+               number.pics = 3,
+               G.TRANSFORM.FUN = identity,
+               ITER.TRANSFORM.FUN = identity,
+               y.lab = "",
+               x.lab = "",
+               subset = NA,
+               title = "",
+               show.legend = FALSE),
+    "In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)"
+  )
+  expect_error(
+    ggplot_gpath(DTD.model = catch,
+                 number.pics = -3,
+                 G.TRANSFORM.FUN = identity,
+                 ITER.TRANSFORM.FUN = identity,
+                 y.lab = "",
+                 x.lab = "",
+                 subset = NA,
+                 title = "",
+                 show.legend = FALSE),
+    "In ggplot_gpath: 'number.pics' is below minimal value"
+  )
+  expect_error(
+    ggplot_gpath(DTD.model = catch,
+                 number.pics = -3,
+                 G.TRANSFORM.FUN = identity,
+                 ITER.TRANSFORM.FUN = identity,
+                 y.lab = "",
+                 x.lab = "",
+                 subset = NA,
+                 title = "",
+                 show.legend = FALSE),
+    "In ggplot_gpath: 'number.pics' is below minimal value"
+  )
+  expect_error(
+    ggplot_gpath(DTD.model = catch,
+                 number.pics = c(1,2,3,-3),
+                 G.TRANSFORM.FUN = identity,
+                 ITER.TRANSFORM.FUN = identity,
+                 y.lab = "",
+                 x.lab = "",
+                 subset = NA,
+                 title = "",
+                 show.legend = FALSE),
+    "In ggplot_gpath: 'number.pics' is not a single integer"
+  )
+  expect_error(
+    ggplot_gpath(DTD.model = catch,
+                 number.pics = 4,
+                 G.TRANSFORM.FUN = "identity",
+                 ITER.TRANSFORM.FUN = "identity",
+                 y.lab = "",
+                 x.lab = "",
+                 subset = NA,
+                 title = "",
+                 show.legend = FALSE),
+    "In ggplot_gpath: 'G.TRANSFORM.FUN' does not return numeric vector"
+  )
+  expect_error(
+    ggplot_gpath(DTD.model = catch,
+                 number.pics = 4,
+                 G.TRANSFORM.FUN = identity,
+                 ITER.TRANSFORM.FUN = "identity",
+                 y.lab = "",
+                 x.lab = "",
+                 subset = NA,
+                 title = "",
+                 show.legend = FALSE),
+    "In ggplot_gpath: 'ITER.TRANSFORM.FUN' does not return numeric vector"
+  )
+  expect_message(
+    ggplot_gpath(DTD.model = catch,
+                 number.pics = 4,
+                 G.TRANSFORM.FUN = identity,
+                 ITER.TRANSFORM.FUN = identity,
+                 y.lab = identity,
+                 x.lab = "",
+                 subset = NA,
+                 title = "",
+                 show.legend = FALSE),
+    "In ggplot_gpath: 'y.lab' can not be used 'as.character'"
+  )
+  expect_message(
+    ggplot_gpath(DTD.model = catch,
+                 number.pics = 4,
+                 G.TRANSFORM.FUN = identity,
+                 ITER.TRANSFORM.FUN = identity,
+                 y.lab = "",
+                 x.lab = "",
+                 subset = c(1,2,3),
+                 title = "",
+                 show.legend = FALSE),
+    "In ggplot_gpath: subset could not be used, therefore complete tweak, and history will be used"
+  )
 
+  expect_error(
+    ggplot_gpath(DTD.model = catch,
+                 number.pics = 4,
+                 G.TRANSFORM.FUN = identity,
+                 ITER.TRANSFORM.FUN = identity,
+                 y.lab = "",
+                 x.lab = "",
+                 subset = c(1,2,3),
+                 title = "",
+                 show.legend = "FALSE")
+  )
+})
+
+context("Test ggplot_cv ")
+test_that("ggplot_cv ", {
+  expect_error(
+    ggplot_cv(DTD.model = list(),
+              title = "",
+              LAMBDA.TRANS.FUN = log2,
+              upper.x.axis.info = "geometric-mean",
+              x.lab = "",
+              y.lab = ""),
+    "In ggplot_cv: 'DTD.model' does not fit"
+  )
+  expect_error(
+    ggplot_cv(DTD.model = catch,
+              title = "",
+              LAMBDA.TRANS.FUN = log2(),
+              upper.x.axis.info = "geometric-mean",
+              x.lab = "",
+              y.lab = ""),
+    "In ggplot_cv: provided 'LAMBDA.TRANS.FUN' does not return a numeric, if called with '2'."
+  )
+  expect_error(
+    ggplot_cv(DTD.model = catch,
+              title = "",
+              LAMBDA.TRANS.FUN = log2(),
+              upper.x.axis.info = "some_not_set_thing",
+              x.lab = "",
+              y.lab = ""),
+    "In ggplot_cv: 'upper.x.axis.info' must either be 'non-zero' or 'geometric-mean'"
+  )
+})
+
+context("Test ggplot_heatmap ")
+test_that("ggplot_heatmap ", {
+  expect_error(
+    ggplot_heatmap(DTD.model = "catch",
+                 X.matrix = X.matrix,
+                 test.data = test.data,
+                 estimate.c.type = "direct",
+                 title = "",
+                 feature.subset = 1.0),
+    "In ggplot_heatmap: DTD.model is neither a list nor a numeric vector"
+    )
+  expect_error(
+    ggplot_heatmap(DTD.model = list(),
+                   X.matrix = X.matrix,
+                   test.data = test.data,
+                   estimate.c.type = "direct",
+                   title = "",
+                   feature.subset = 1.0),
+    "In ggplot_heatmap: There is no Tweak entry in the 'DTD.model'"
+  )
+})
