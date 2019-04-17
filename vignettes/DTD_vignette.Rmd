@@ -218,7 +218,7 @@ Next, we build the reference matrix $X$. $X$ holds data from some but not all in
 The parameter `included.in.X` specifies which cell types are included into $X$, while the parameter `perc.of.all.cells` specifies what fraction of cells
 from each type will be used for building $X$.
 
-Here we build $X$ using only the first `r length(include.in.X)` cell types and `r round((100*perc.of.all.cells), digits = 2)` of the corresponding single cell profiles.
+Here we build $X$ using only the first `r length(include.in.X)` cell types and `r round(perc.of.all.cells, digits = 2)` of the corresponding single cell profiles.
 ```{r echo=FALSE, results = "asis"}
 cat("```\n")
 cat(" include.in.X <- ", paste0("c(\"", paste(include.in.X, collapse = "\", \""), "\")"), "\n")
