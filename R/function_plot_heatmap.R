@@ -30,6 +30,7 @@
 #' 'explained correlation' ranking (if 'feature.subset' < 1, this is the fraction of feature, if 'feature.subset' > 1
 #' it is the total amount). If it is a vector of strings, these features will be used.
 #' @param title string, additionally title (default "")
+#' @param log2.expression logical, in the heatmap, should the values be log transformed?
 #'
 #' @return ggplot object
 #' @export
@@ -41,7 +42,8 @@ ggplot_heatmap <- function(DTD.model,
                            test.data=NULL,
                            estimate.c.type,
                            title = "",
-                           feature.subset = 100){
+                           feature.subset = 100,
+                           log2.expression = TRUE){
   # safety check: DTD.model
   if (is.list(DTD.model)) {
     if ("best.model" %in% names(DTD.model)) {
@@ -71,20 +73,22 @@ ggplot_heatmap <- function(DTD.model,
     }
   }
   # end -> X.matrix
+  # safety check: log2.expression
+  test <- test_logical(test.value = log2.expression,
+                       output.info = c("ggplot_heatmap", "log2.expression"))
+  # end -> log2.expression
 
   # safety check: test.data is moved into "expl.cor" part,
   # because if subset is a list of genes, I don't need it
   # estimate.c.type is moved as well
 
   # safety check: subset
-  if(length(feature.subset) != 1){
-    if(is.character(feature.subset)){
-      useable.subset <- intersect(feature.subset, rownames(X.matrix))
-      if(length(useable.subset) == 0){
-        stop("In ggplot_heatmap: 'feature.subset' is provided as vector of character. However, none of them can be found in rownames(X.matrix).")
-      }else{
-        features <- useable.subset
-      }
+  if(length(feature.subset) != 1 && all(is.character(feature.subset))){
+    useable.subset <- intersect(feature.subset, rownames(X.matrix))
+    if(length(useable.subset) == 0){
+      stop("In ggplot_heatmap: 'feature.subset' is provided as vector of character. However, none of them can be found in rownames(X.matrix).")
+    }else{
+      features <- useable.subset
     }
   }else{
     test <- test_numeric(feature.subset,
@@ -165,15 +169,17 @@ ggplot_heatmap <- function(DTD.model,
     features <- names(sorted.manipulated.cor)[1:feature.subset]
  #   upper.axis <- sorted.manipulated.cor[1:feature.subset]
   }
-
   tmp.rownames <- rownames(X.matrix)
   tmp.colnames <- colnames(X.matrix)
 
   X.times.g <- diag(tweak) %*% X.matrix
   colnames(X.times.g) <- tmp.colnames
   rownames(X.times.g) <- tmp.rownames
-
-  tmp.X.matrix <- X.times.g[features, ]
+  if(log2.expression){
+    tmp.X.matrix <- as.matrix(log2(X.times.g[features, ] + 1))
+  }else{
+    tmp.X.matrix <- X.times.g[features, ]
+  }
 
   cell.type.cluster <- hclust(dist(x = t(tmp.X.matrix),
                                    method = "euclidean"),
@@ -186,18 +192,18 @@ ggplot_heatmap <- function(DTD.model,
                              value.name = "expression")
   melted.X$Var1 <- factor(
     x = melted.X$Var1,
-    levels = rownames(tmp.X.matrix)[feature.cluster$order]
+    levels = rownames(tmp.X.matrix)[feature.cluster$order],
+    ordered = TRUE
   )
 
   melted.X$Var2 <- factor(
     x = melted.X$Var2,
-    levels = colnames(tmp.X.matrix)[cell.type.cluster$order]
+    levels = colnames(tmp.X.matrix)[cell.type.cluster$order],
+    ordered = TRUE
   )
 
-
-
   pic0 <- ggplot(melted.X, aes(x = Var1, y = Var2)) +
-    geom_tile(aes(fill = log(expression))) +
+    geom_tile(aes(fill = expression)) +
     scale_fill_gradient(
       low = "darkblue",
       high = "yellow"
