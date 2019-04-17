@@ -1,0 +1,5 @@
+- .git/
+- from_spanglab_to_marian.sh
+- .*
+- Rproj.user
+- exclude_from_rsync
