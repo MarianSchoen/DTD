@@ -1,8 +1,8 @@
 Package: DTD
 Title: Digital Tissue Deconvolution
 Version: 0.9
-Authors@R: person("Marian", "Sch<U+00F6>n", email = "marian.schoen@klinik.uni-regensburg.de", role = c("aut", "cre"))
-Description: Digital Tissue Deconvolution (DTD) estimates the cellular composition c of reference profiles X in a tissue sample y. Here we provide functions and routines to a loss-function learning DTD approach published by Goertler et al 2018. 
+Authors@R: person("Marian", "Schoen", email = "marian.schoen@klinik.uni-regensburg.de", role = c("aut", "cre"))
+Description: Digital Tissue Deconvolution (DTD) reconstructs the cellular composition of a tissue tissue from its bulk expression profile. Therefore, it adapts the deconvolution model to the tissue scenario using loss-function learning digital tissue deconvolution. 
 License: MIT
 Encoding: UTF-8
 LazyData: true
