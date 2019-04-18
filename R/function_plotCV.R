@@ -4,7 +4,7 @@
 #' The lambda with the minimal mean loss in cross validation is marked with a red dot
 #' For an example see " Cross validation" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param DTD.model : list as returned by \code{\link{train_correlatio_model}} or \code{\link{DTD_cv_lambda}}
+#' @param DTD.model : list as returned by \code{\link{train_deconvolution_model}} or \code{\link{DTD_cv_lambda}}
 #' @param title string, additionally title (default "")
 #' @param LAMBDA.TRANS.FUN function, will be applied to the lambda sequence,
 #' e.g. to get equidistance x ticks (defaults to log2)
@@ -135,10 +135,10 @@ ggplot_cv <- function(DTD.model,
   # if DTD.model is build by train_correlation_model => pick lambda from the best.model
   if(is.list(DTD.model) && "best.model" %in% names(DTD.model)){
     used.lambda <- LAMBDA.TRANS.FUN(DTD.model$best.model$Lambda)
-    used.lambda.median <- median(as.numeric(test.results.frame[as.character(DTD.model$best.model$Lambda), ]))
+    used.lambda.median <- stats::median(as.numeric(test.results.frame[as.character(DTD.model$best.model$Lambda), ]))
   }else{
     # find mean per lambda:
-    median.per.lambda <- apply(test.results.frame, 1, median, na.rm = TRUE)
+    median.per.lambda <- apply(test.results.frame, 1, stats::median, na.rm = TRUE)
     used.lambda.tmp <- as.numeric(names(which.min(median.per.lambda)))
     used.lambda <- LAMBDA.TRANS.FUN(used.lambda.tmp)
     used.lambda.median <- min(median.per.lambda, na.rm = TRUE)

@@ -10,12 +10,12 @@ ggplot_true_vs_esti(DTD.model, X.matrix = NA, test.data,
 }
 \arguments{
 \item{DTD.model}{either a numeric vector with length of nrow(X),
-or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 or\code{\link{descent_generalized_fista}}.}
 
 \item{X.matrix}{numeric matrix with cells as columns, and features as rows.
 Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-includes the reference matrix X (default for \code{\link{train_correlatio_model}})}
+includes the reference matrix X (default for \code{\link{train_deconvolution_model}})}
 
 \item{test.data}{list of two matrices, named "mixtures" and "quantities".
 For examples see \code{\link{mix_samples}}, \code{\link{mix_samples_with_jitter}}

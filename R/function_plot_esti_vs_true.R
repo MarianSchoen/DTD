@@ -16,11 +16,11 @@
 #' In the title of each subfigure the correlation of the included type and the type is shown.
 #' This parameter only controls the additional legend. (Defaults to FALSE)
 #' @param DTD.model either a numeric vector with length of nrow(X),
-#' or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 #' or\code{\link{descent_generalized_fista}}.
 #' @param X.matrix numeric matrix with cells as columns, and features as rows.
 #'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-#'  includes the reference matrix X (default for \code{\link{train_correlatio_model}})
+#'  includes the reference matrix X (default for \code{\link{train_deconvolution_model}})
 #' @param test.data list of two matrices, named "mixtures" and "quantities".
 #' For examples see \code{\link{mix_samples}}, \code{\link{mix_samples_with_jitter}}
 #' or the package vignette `browseVignettes("DTD")`.
@@ -166,7 +166,7 @@ ggplot_true_vs_esti <- function(DTD.model,
   # In the title of the subplots we add the correlation per type, therefore:
   cor.list <- c()
   for (l1 in 1:nrow(estimated.c)) {
-    if(sd(true.c[l1, ]) != 0){ # => can't calculate corelation
+    if(stats::sd(true.c[l1, ]) != 0){ # => can't calculate corelation
       cor.list <- c(cor.list, stats::cor(estimated.c[l1, ], true.c[l1, ]))
     }else{
       cor.list <- c(cor.list, 0)

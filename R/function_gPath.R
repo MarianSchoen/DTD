@@ -14,7 +14,7 @@
 #' Focus on this part via a log transformation.
 #' For an example see section "g-Path" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param DTD.model : list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' @param DTD.model : list as returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 #' or \code{\link{descent_generalized_fista}}. Must include a 'History' entry.
 #' @param number.pics : integer, into how many pictures should the resutlt be split. (defaults to 3)
 #' @param G.TRANSFORM.FUN : function, that expects a vector of numerics, and returns a vector of the same length.

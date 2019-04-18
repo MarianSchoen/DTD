@@ -2,7 +2,7 @@
 #'
 #' This function returns the value of the gradient of our Loss-function L.\cr
 #' For the mathematical theory see Goertler et al, 2018.
-#' For examples see code of \code{\link{train_correlation_model}}
+#' For examples see code of \code{\link{train_deconvolution_model}}
 #'
 #' @param X numeric matrix with features as rows, and reference samples as columns
 #' @param Y numeric matrix with features as rows, and samples as columns

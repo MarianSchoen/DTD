@@ -9,7 +9,7 @@ ggplot_cv(DTD.model, title = "", LAMBDA.TRANS.FUN = log2,
   ")"), y.lab = "Loss function")
 }
 \arguments{
-\item{DTD.model}{: list as returned by \code{\link{train_correlatio_model}} or \code{\link{DTD_cv_lambda}}}
+\item{DTD.model}{: list as returned by \code{\link{train_deconvolution_model}} or \code{\link{DTD_cv_lambda}}}
 
 \item{title}{string, additionally title (default "")}
 
