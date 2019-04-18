@@ -1,0 +1,23 @@
+Package: DTD
+Title: Digital Tissue Deconvolution
+Version: 0.9
+Authors@R: person("Marian", "Schoen", email = "marian.schoen@klinik.uni-regensburg.de", role = c("aut", "cre"))
+Description: Digital Tissue Deconvolution (DTD) reconstructs the cellular composition of a tissue from its bulk expression profile. In order to increase deconvolution accuracy, DTD adapts the deconvolution model to the tissue scenario via loss-function learning. Training is performed on 'in-silicio' training mixtures, for which the cellular composition are known. As input, DTD requires a labelled expression matrix. It includes functions to generate training and test mixtures, train the model, and assess its deconvolution capability via visualizations. 
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Depends:
+	R (>= 3.1.0),
+	stats, 
+	graphics,
+	matrixStats,
+	Matrix, 
+	ggplot2, 
+	reshape2,
+	nnls
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr

@@ -1,0 +1,551 @@
+---
+  title: "Loss-function learning for digital tissue deconvolution"
+  author: "Marian Schoen"
+  date: "`r Sys.Date()`"
+  output: 
+    rmarkdown::html_vignette:
+      toc: TRUE
+  bibliography: bibliography.bib
+  vignette: >
+    %\VignetteIndexEntry{Loss-function learning for digital tissue deconvolution}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.align = "center"
+)
+```
+# What is DTD? 
+
+The gene expression profile of a tissue averages the expression profiles of all cells in this tissue. Digital tissue deconvolution (DTD) addresses the following inverse problem: Given the expression profile $y$ of a tissue, what is the cellular composition $c$ in that tissue? If $X$ is a reference matrix whose $q$ columns hold reference profiles of $q$ different cell types,
+the cellular composition $c$ can be estimated by 
+\begin{equation}
+  arg~ min_c ~|| y - Xc||_2^2
+\end{equation}
+@Goertler2018 generalized this formula by introducing a gene weight vector $g$ 
+\begin{equation}
+  arg~ min_c ~|| diag(g) (y - Xc)||_2^2 ~~~~~~~~~~ (2)
+\end{equation}
+Every entry $g_i$ of $g$ calibrates how much gene i should contribute to the deconvolution process. 
+The parameter vector $g$ can be estimated from a loss-function learning approach. 
+This idea and the mathematical background of loss-function learning DTD approach are described in @Goertler2018. 
+We use the following notation. The *reference matrix* is denoted as $X$. Every column $X_{.,k}$ is a cellular reference profile. 
+The expression matrix of *bulk profiles* is named $Y$. Every column $Y_{.,k}$ is the expression profile of a mixture of cells (a tissue). 
+We estimate the matrix $C$ where $C_{i,k}$ is the contribution of cell type i in tissue k .
+
+Let 
+\begin{equation}
+  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
+\end{equation}
+
+The package DTD learns $g$ by minimizing $L$ on a training set of arteficicial bulk profiles $Y$ simmulated by mixing
+known reference profiles with known fractions $C$. 
+Here $C_{j,.}$ are the true compostions wheras $\widehat{C_{j,.}}(g)$ are the estimated compositions according to equation (2).
+
+The package DTD provides functions to set up the learning process. To run DTD you need reference profiles of different cell types that either result from single cell data or from sorted cell fractions. After some data preparation a full learning process can be evoked by the following code.
+
+
+```{r include=FALSE}
+# I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
+library(DTD)
+# fast testing:
+lambda.len <- 4
+n.folds <- 2
+###
+number.types <- 25
+n.features <- 100
+n.per.type <- 100
+n.per.mixtures <- 100
+maxit <- 25
+n.samples <- n.features
+random.data <- generate_random_data(
+  n.types = number.types,
+  n.samples.per.type = n.per.type,
+  n.features = n.features
+)
+normalized.data <- normalize_to_count(random.data)
+indicator.vector <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
+names(indicator.vector) <- colnames(normalized.data)
+perc.of.all.cells <- 0.1
+include.in.X <- paste0("Type", 1:5)
+sample.X <- sample_random_X(
+  included.in.X = include.in.X,
+  pheno = indicator.vector,
+  exp.data = normalized.data,
+  percentage.of.all.cells = perc.of.all.cells
+)
+X.matrix <- sample.X$X.matrix
+samples.to.remove <- sample.X$samples.to.remove
+remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
+train.samples <- sample(
+  x = colnames(remaining.mat),
+  size = ceiling(ncol(remaining.mat) / 2),
+  replace = FALSE
+)
+test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
+
+train.mat <- remaining.mat[, train.samples]
+test.mat <- remaining.mat[, test.samples]
+indicator.train <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
+training.data <- mix_samples(
+  exp.data = train.mat,
+  pheno = indicator.train,
+  included.in.X = include.in.X,
+  n.samples = n.samples,
+  n.per.mixture = n.per.mixtures,
+  verbose = FALSE
+)
+indicator.test <- indicator.vector[names(indicator.vector) %in% colnames(test.mat)]
+test.data <- mix_samples(
+  exp.data = test.mat,
+  pheno = indicator.test,
+  included.in.X = include.in.X,
+  n.samples = n.samples,
+  n.per.mixture = n.per.mixtures,
+  verbose = FALSE
+)
+start.tweak <- rep(1, nrow(X.matrix))
+names(start.tweak) <- rownames(X.matrix)
+model <- train_deconvolution_model(
+  tweak = start.tweak,
+  X.matrix = X.matrix,
+  train.data.list = training.data,
+  test.data.list = test.data,
+  estimate.c.type = "direct",
+  maxit = maxit,
+  n.folds = n.folds,
+  lambda.len = lambda.len,
+  cv.verbose = FALSE,
+  verbose = FALSE
+)
+```
+The crucial function in the DTD package is the `train_deconvolution_model` function, which minimizes the vector $g$ over a training set. After some preliminary work it can be called via: 
+```{r, fig.width = 7, fig.align="center"}
+model <- train_deconvolution_model(
+  tweak = start.tweak,
+  X.matrix = X.matrix,
+  train.data.list = training.data,
+  test.data.list = test.data,
+  estimate.c.type = "direct",
+  maxit = maxit,
+  cv.verbose = FALSE,
+  verbose = FALSE
+)
+print(model$pics$convergence)
+```
+
+Here, we trained the $g$-vector for `r maxit` iterations. Both training and test errors were reduced by optimizing the gene weights $g$.
+
+# How to use DTD? 
+
+In the following examples, we demonstrate how data has to look like in order to be used for running DTD. After that, we give examples on how to process the data, how to generate a test and training set, how to train the $g$ vector, and finally, how to visualize the results. \cr
+First of all, load the library: 
+```{r}
+library(DTD)
+```
+
+In practice, the DTD package needs expression measurements of either single cells of known cell type or of sorted cell fractions to train a $g$-vector. 
+In this vingnette we will demonstrate its use on simmulated data. To this end we have generated a matrix of random data reflecting single cell measurements.
+In fact the DTD package contains the `generate_random_data` function to simmulate such data.
+It has 3 arguments:
+
+- n.types: integer, number of simmulated cell-types. 
+- n.samples.per.type: integer, number of simmulated single cell profiles per cell-type.
+- n.features: integer, number of features per profile.
+
+Here we generate data for  `r number.types` cell types, with `r n.features` features. For each cell type we generate `r n.per.type` single cell profiles. 
+```{r echo=FALSE, results = "asis"}
+cat("```\n")
+cat(
+  " number.types <- ", number.types, "\n",
+  "n.features <- ", n.features, "\n",
+  "n.per.type <- ", n.per.type, "\n"
+)
+cat("```\n")
+```
+
+```{r}
+random.data <- generate_random_data(
+  n.types = number.types,
+  n.samples.per.type = n.per.type,
+  n.features = n.features
+)
+```
+The object `random.data` is a numeric matrix with `r nrow(random.data)` rows (features), and `r ncol(random.data)` columns (cells).
+```{r}
+print(random.data[1:5, 1:5])
+```
+```{r include=FALSE}
+# for further exemplary visualization
+example.index <- c(1, n.per.type + 1, 2 * n.per.type + 1, 3 * n.per.type + 1)
+```
+
+The colnames of `random.data` indicate the type of the cell:
+```{r}
+print(colnames(random.data)[example.index])
+```
+
+
+## Data processing 
+
+Notice that the loss-function learning DTD approach works on the original scale. Therefore, any type log transformation on real data needs to be undone.
+For the simmulated data there was no such transformation.
+Next, we scale every sample of the data set to a fixed number of `r sum(normalized.data[,1])` using the `normalize_to_count` function:
+```{r}
+# In random.data the number of counts differs over all samples:
+apply(random.data, 2, sum)[example.index]
+normalized.data <- normalize_to_count(random.data)
+# In normalized.data all samples share the same number of counts:
+apply(normalized.data, 2, sum)[example.index]
+```
+
+
+After that, we construct an index vector that maps single cell profiles (columns of normalized.data) to cell types
+```{r}
+indicator.vector <- gsub("^Cell[0-9]*\\.", "", colnames(normalized.data))
+names(indicator.vector) <- colnames(normalized.data)
+print(indicator.vector[example.index])
+```
+`indicator.vector` needs to be a named list. Each entry assigns the cell type (as value of the list) to the corresponding sample (names of the list) in `normalized.data`. 
+It is used in the training process of the algorithm. 
+
+## Reference matrix X  
+
+Next, we build the reference matrix $X$. $X$ holds data from some but not all input profiles. The profiles used to buld $X$ can either be selected manually, or chosen randomly. Within the DTD package we provide the `sample_random_X` function, which generates a reference matrix by randomly selecting samples of the same type, and then averaging them to a reference profile for this type. 
+The parameter `included.in.X` specifies which cell types are included into $X$, while the parameter `perc.of.all.cells` specifies what fraction of cells
+from each type will be used for building $X$.
+
+Here we build $X$ using only the first `r length(include.in.X)` cell types and `r round(perc.of.all.cells, digits = 2)` of the corresponding single cell profiles.
+```{r echo=FALSE, results = "asis"}
+cat("```\n")
+cat(" include.in.X <- ", paste0("c(\"", paste(include.in.X, collapse = "\", \""), "\")"), "\n")
+cat(" perc.of.all.cells <- ", perc.of.all.cells, "\n")
+cat("```\n")
+```  
+
+```{r}
+sample.X <- sample_random_X(
+  included.in.X = include.in.X,
+  pheno = indicator.vector,
+  exp.data = normalized.data,
+  percentage.of.all.cells = perc.of.all.cells
+)
+X.matrix <- sample.X$X.matrix
+samples.to.remove <- sample.X$samples.to.remove
+```
+Single cell profiles that were used to build $X$ must not be used in the following training and testing procedures. 
+The `sample_random_X` function keeps track on all used samples, and collects them in the variable `samples.to.remove`. 
+Using this index vector, we remove these profiles from the data and split the remaining profiles into a training and a test set both holding 50% of the remaining profiles.
+```{r}
+# removing samples that have been used in X.matrix
+remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
+
+# sampling training samples: (notice, that train test seperation is 50:50)
+train.samples <- sample(
+  x = colnames(remaining.mat),
+  size = ceiling(ncol(remaining.mat) / 2),
+  replace = FALSE
+)
+# selecting test samples:
+test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
+
+# extract data matrices for training and testing:
+train.mat <- remaining.mat[, train.samples]
+test.mat <- remaining.mat[, test.samples]
+```
+
+
+## Generating artificial tissue profiles
+
+In addition to the reference matrix $X$, DTD requires training data consisting of two matrices: 
+
+
+- Y, a matrix of (typically artificial) tissue profiles. Y has as many rows (=features) as `X.matrix` or `normalized.data`. 
+- C, a composition matrix. C has as many rows as there are cell types in `X.matrix`. 
+
+A column of Y is a simmulated bulk tissue profile, where the coresponding row in $C$ annotes the cellular composition of this tissue. 
+From the single cell profiles in the training set (that were not used to build $X$) we randommly sample profiles and average them to generate  
+artificial tissue profiles. The DTD package provides two methods to generate training and test sets. One method randomly samples cells 
+and averages them as described above. This is the recommended method for large single cell data sets. However, if there are only a few 
+reference samples per cell type (in average below 10 samples per type) we recommend to multiply a jitter on profiles prior to adding them. 
+For both methods we provide functions within the DTD package.
+
+`mix_samples` randomly selects `n.per.mixture` profiles from `exp.data` and generates bulk profiles. 
+Additionally, it reports which profiles have been used and which cell types they were drawn from, resulting in a tissue matrix Y, and a corresponding composition matrix C. 
+The `mix_samples` function needs the following arguments:
+
+* exp.data: numeric matrix, with features as rows, and samples as columns. Here `train.mat`
+* pheno: named vector of strings, here `indicator.vector`
+* included.in.X: vector of strings, here `include.in.X`
+* n.samples: integer, how many in-silicio mixtures should be generated. 
+* n.per.mixture: integer, how many cells should be included in each mixture
+* verbose: boolean, should output be printed. 
+```{r echo=FALSE, results = "asis"}
+cat("```\n")
+cat(
+  " n.samples <- ", n.samples, "\n",
+  "n.per.mixtures <- ", n.per.mixtures, "\n"
+)
+cat("```\n")
+```  
+```{r}
+indicator.train <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
+training.data <- mix_samples(
+  exp.data = train.mat,
+  pheno = indicator.train,
+  included.in.X = include.in.X,
+  n.samples = n.samples,
+  n.per.mixture = n.per.mixtures,
+  verbose = FALSE
+)
+str(training.data)
+```
+Note that all cell types are included in the artificial tissue profiles, but only the fractions of the cell within $X$  are reported in the composition matrix $C$. 
+Therefore, the columns in C do not necessarily sum up to 1. 
+
+Using the same function we generate a test set, but this time we select single cell profiles from the test set. Notice that the single cell profiles used for training and testing are disjoint and so are the profiles used for building $X$.
+
+```{r}
+indicator.test <- indicator.vector[names(indicator.vector) %in% colnames(test.mat)]
+test.data <- mix_samples(
+  exp.data = test.mat,
+  pheno = indicator.test,
+  included.in.X = include.in.X,
+  n.samples = n.samples,
+  n.per.mixture = n.per.mixtures,
+  verbose = FALSE
+)
+```
+
+
+The `mix_samples_with_jitter` function needs more preparatory work. 
+It takes the following arguments: 
+
+* major.fraction.type: vector of strings. Cell types included in the 'major.fraction.type' vector will occur with higher quantities in the mixtures 
+* minor.fraction.type: vector of strings. Cell types included in the sample.names vector will occur with lower quantities in the mixtures
+
+The idea behind splitting all samples in the data set into `major.fraction.type` and `minor.fraction.type` is: 
+In a tumor tissue malignant cells make up ~75% of all cells. In contrast to that, certain immune cells (e.g. a macrophage subtypes) make up less than 5 % of all cells. 
+In the training set imbalanced quantities should be reflected. 
+
+* n.samples: integer, how many in-silicio mixtures should be generated. 
+* exp.data: numeric matrix, here `train.mat`
+* pheno: named vector of strings, here `indicator.vector`
+* verbose: logical,  should output be printed?
+* single.special: logical, if `FALSE`  all `major.fraction.type` will be included in all mixtures. If `TRUE`  only one `major.fraction.type` will be included per mixture. This option should be used if e.g. `major.fraction.type` represent different tumor types. 
+* add.jitter: logical, should the mixtures be multiplied with jitter. 
+* chosen.mean: numeric, mean of jitter
+* chosen.sd: numeric, standard deviation of jitter
+* included.in.X: list of strings, here include.in.X
+
+```{r}
+# Here, we set "Type1" to be special:
+major.fraction.type <- c("Type1")
+# and all other to be normal:
+all.samples <- unique(indicator.vector)
+minor.fraction.type <- all.samples[-which(all.samples %in% major.fraction.type)]
+
+# reduce indicator list to those samples included in training:
+indicator.vector <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
+
+training.data.jitter <- mix_samples_with_jitter(
+  minor.fraction.type = minor.fraction.type,
+  major.fraction.type = major.fraction.type,
+  n.samples = n.samples,
+  exp.data = train.mat,
+  pheno = indicator.vector,
+  verbose = FALSE,
+  add.jitter = TRUE,
+  included.in.X = include.in.X
+)
+```
+
+## Learning the gene weight vector g 
+
+In the optimizing procedure we search for a vector $g$, which minimizes L, where 
+\begin{equation}
+  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
+\end{equation}
+This optimization is done iteratively by gradient descent, using an implementation of 'FISTA' (Fast iterative shrinkage thresholding algorithm, Beck and Teboulle (2009)). 
+A crucial hyperparameter for the model is $\lambda$. In order to find the optimal $\lambda$ a cross validation is performed. 
+The training procedure can be called via `train_deconvolution_model`, and takes the following arguments: 
+
+* `tweak`: numeric initialization vector for g. Notice, that the names of tweak will be kept during optimization, and might be helpful for further visualizations.  
+* X.matrix: numeric matrix, with as many rows as length(tweak). Each column of X.matrix holds a cell type specific reference profile. 
+* train.data.list: list of training profiles, and compsositions. 
+* test.data.list: list of test profiles, and compositions.
+* ... any argument that will be passed to `DTD_cv_lambda` and `descent_generalized_fista`. E.g. `maxiter`, `verbose` or `lambda.length`
+
+```{r}
+start.tweak <- rep(1, nrow(X.matrix))
+names(start.tweak) <- rownames(X.matrix)
+model <- train_deconvolution_model(
+  tweak = start.tweak,
+  X.matrix = X.matrix,
+  train.data.list = training.data,
+  test.data.list = test.data,
+  estimate.c.type = "direct",
+  maxit = maxit,
+  cv.verbose = TRUE,
+  verbose = FALSE
+)
+```
+The output of  `train_deconvolution_model` algorithm is a list. The entry 'cv.obj' holds a list of lists with information about the cross validation (see section "Cross validation"). The entry 'best.model' contains a model trained on the full trainings data set with the best lambda of the cross validation. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function), and a loss vector. The loss vector stores the loss function evaluated in every iteration. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found. Additionally, in the `model` object there is a entry named `reference.X` and `pics`. `reference.X` holds the used reference matrix X, in `pics` there are several ggplot figures to assess the quality of the model. 
+
+
+### Calibrating the sparceness of g via cross validation
+The loss function includes a $L_1$ regularization term, controlled by the regularization parameter $\lambda$. 
+In order to find the optimal  $\lambda$  we implemented a k-fold cross validation. The `train_deconvolution_model` function automatically performs a cross validation. The crucial arguments of the cross validation are the following. These can be passed as '...' to the `train_deconvolution_model` function:
+
+- lambda.seq: numeric vector or NULL. Sequence of $\lambda$, for which models are trained. For each $\lambda$ `n.folds` models are trained, and tested in a sense of k-fold cross validation.  If `lambda.seq` is set to NULL (Default-value), a sequence of $\lambda$ will be generated based on the dimension of the training set. 
+- n.folds: integer, number of folds for k-fold cross validation
+- lambda.length: integer, if `lambda.seq == NULL`, a sequence of $\lambda$ will be generated based on the dimension of the training set. `lambda.length` determines the length of the generated sequence.
+- train.list: list with two entries (`mixtures` and `quantities`, as described previously). The entry `mixtures` must be a numeric matrix, with training samples as columns. The cross validation folds are assigned using these column names. During the cross validation a copy of the train.list will be used, in which only samples of the current fold are present. Sample selection is done via column names for matrices, and via names for vectors. 
+- ... any argument that can be passed to the `descent_generalized_fista` function (e.g. maxiter, verbose etc.)
+The return object from the cross validation is a list with 2 entries. The `cv.obj` entry holds a list of list. For every lambda, and each fold the DTD model is reported. The second entry `best.model` of the `cv.obj` is a trained model which uses the lambda with minimal loss function during the cross validation. Notice that this model is trained on the complete trainings data set.
+
+## Visualizations
+
+Each of the following visualizations is called automatically after training a model with the `train_deconvolution_model` function. They are stored as a list of ggplot object, and can be found in the `pics` entry of the model.   
+
+### Visualization of the learning curve  
+
+The function `ggplot_correlation` plots the loss L against the iteration of gradient descent algorithm for both training and test data. It can be used to monitor learning rates and potential overfitting.
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$convergence)
+
+# or via function call:
+# print(
+#   ggplot_convergence(
+#     DTD.model = model,
+#     X.matrix = X.matrix,
+#     test.data = test.data,
+#     estimate.c.type = "direct",
+#     title =  "DTD Vignette"
+#   )
+# )
+```
+
+### Performance cell type per cell type
+The function `ggplot_true_vs_esti` plots true versus estimated cell fractions of the test data for all cell types .
+
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$true_vs_esti)
+
+# or via function call:
+# print(
+#   ggplot_true_vs_esti(
+#     DTD.model = model,
+#     X.matrix = X.matrix,
+#     test.data = test.data,
+#     estimate.c.type = "direct"
+#   )
+# )
+```
+
+### Histogram of g-vector
+ `ggplot_ghistogram` plots the optimal gene weight vector $g$.
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$histogram)
+# or via function call:
+# print(
+#   ggplot_ghistogram(
+#     DTD.model = model
+#   )
+# )
+```
+
+### g-Path
+Additional useful information that can be gained from the `History` of the `tweak.vec` can be visualized using the `ggplot_gpath` function.
+In the plot below each line tracks the change of one $g_i$ during all iterations. In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. Accordingly, there are `r nrow(X.matrix)` lines in the plot. Notice, that most of the change in $g$ takes place in the early steps of the algorihtm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10) to transform the iteration axis.  \cr
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$path)
+# or via function call:
+
+# singlePic <- ggplot_gpath(
+#   DTD.model = model,
+#   number.pics = 1,
+#   title =  "All genes",
+#   G.TRANSFORM.FUN = log2,
+#   y.lab = "log2(g)"
+# )
+# print(singlePic$gPath)
+```  
+In the `ggplot_gPath` function, each $g$ is visualized with one line. To visualize only a subset of $g$, selected features can be indicated by the option `subset`: 
+```{r, fig.width = 7, fig.align="center"}
+singlePic.subset <- ggplot_gpath(
+  DTD.model = model,
+  number.pics = 1,
+  title =  "Gene Subset",
+  G.TRANSFORM.FUN = log2,
+  y.lab = "log2(g)",
+  subset = c("gene22", "gene37")
+)
+print(singlePic.subset$gPath)
+```
+Alternatively, you can specify into how many pictures the plot should be split. For example, if you split the plot into 2 pictures, the function groups all $g$ who result below the median all $g$ into the first picture, and all $g$ that result above the median into the second picture:
+```{r, fig.width = 7, fig.align="center"}
+multPic <- ggplot_gpath(
+  DTD.model = model,
+  number.pics = 2,
+  title =  "All Genes, split into 2",
+  G.TRANSFORM.FUN = log2,
+  y.lab = "log2(g)"
+)
+print(multPic$gPath)
+```
+By default, the `ggplot_gpath` function does not plot a legend. There is the boolean argument `plot.legend`. If it is set `TRUE`, a TableGrob object will be stored in the `legend` entry, holding the legend-plot. 
+
+### Scaled heat maps  
+The effect of the g-vector on deconvolution can be visualized when plotting the reference matrix `X`, multiplied with `g`, as a heatmap. 
+The function `ggplot_heatmap` takes as input a `DTD.model` (either the output of `train_deconvolution_model`, `DTD_cv_lambda`, `descent_generalized_fista` or a numeric vector, which will be interpreted as a `g` vector). Rows and columns are clustered hierarchically.  
+The heatmap becomes more informative, if only a subset of features is included. 
+Here, we implemented two subsetting methods:  
+
+* subsetting by rownames: apply a vector of feature names. The clustering and plotting will only be done on the selected subet.
+* subsetting by *explained correlation*: Explained correlation is a measure to assess the effect of each feature in the deconvolution process. Let the complete model deconvolute a test set with 75% correlation. If feature i is removed from the model (by setting its entry in `g[i] = 0`), the deconvolution correlation will change, e.g. to 72%. Then gene `i` explains 3% of the correlation. The measure of *explained correlation* can iteratively be applied to each feature. Using the *explained correlation* ranking, only a top_n subset of features can be used for clustering and visualizing the heatmap.
+
+Note that subsetting by rownames does not require a test set. Subsetting by *explained correlation* requires a test set. 
+When calling `train_deconvolution_model` a heatmap including all features is plotted, and included in the `pics` list. 
+```{r, fig.width = 7, fig.align="center"}
+# print via model$pics list:
+print(model$pics$Xheatmap)
+# or via function call:
+# print(
+#   ggplot_heatmap(
+#     DTD.model = model,
+#     test.data = test.data,
+#     estimate.c.type = "direct", 
+#     feature.subset = 0.1
+#   )
+# )
+```
+ 
+### Cross validation
+You can visualize the cross-validation process via:
+```{r, fig.width = 7, fig.align='center'}
+# print via model$pics list:
+print(model$pics$cv)
+# or via function call:
+# print(
+#   ggplot_cv(
+#     DTD.model = model,
+#     title =  "DTD Vignette"
+#   )
+# )
+```
+
+## Session Info  
+
+```{r}
+sessionInfo()
+```
+
+# Literature  
