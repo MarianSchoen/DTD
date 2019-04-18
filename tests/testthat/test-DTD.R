@@ -50,7 +50,7 @@ test_that("normalize_to_count ", {
                "In normalize_to_count: 'count' is not a single integer")
   expect_error(normalize_to_count(exp.data = random.data, count = c(1, 2, 3)),
                "In normalize_to_count: 'count' is not a single integer")
-  expect_error(normalize_to_count(exp.data = 1),
+  expect_error(normalize_to_count(exp.data = 1, count = 1),
                "In normalize_to_count: exp.data is not of matrix format")
   expect_error(normalize_to_count(exp.data = matrix(-9:-1, nrow = 3)),
                "In normalize_to_count: exp.data includes negative values")
@@ -796,21 +796,11 @@ context("Test ggplot_cv ")
 test_that("ggplot_cv ", {
   expect_error(
     ggplot_cv(DTD.model = catch,
-              main = "iwas",
+              title = "iwas",
               LAMBDA.TRANS.FUN = as.character(),
               x.lab = "1",
               y.lab = "2"),
     "In ggplot_cv: provided 'LAMBDA.TRANS.FUN' does not return a numeric, if called with '2'"
-  )
-  tmp <- catch$cv.obj
-  rownames(tmp) <- NULL
-  expect_error(
-      ggplot_cv(DTD.model = tmp,
-                main = "iwas",
-                LAMBDA.TRANS.FUN = log2,
-                x.lab = "1",
-                y.lab = "2"),
-      "In ggplot_cv: 'DTD.model' does not fit"
   )
 })
 
@@ -918,8 +908,7 @@ test_that("ggplot_true_vs_esti",{
                                 estimate.c.type = "direct"),
             "In ggplot_true_vs_esti: 'test.data' must be provided as a list with two entries: 'quantities' and 'mixtures'."
           )
-}
-)
+})
 context("Test ggplot_ghistorgram ")
 test_that("ggplot_ghistorgram ", {
   expect_error(
@@ -967,8 +956,7 @@ test_that("ggplot_gpath ", {
                x.lab = "",
                subset = NA,
                title = "",
-               show.legend = FALSE),
-    "In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)"
+               show.legend = FALSE)
   )
   expect_error(
     ggplot_gpath(DTD.model = catch,

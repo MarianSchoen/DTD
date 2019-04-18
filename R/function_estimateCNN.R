@@ -6,11 +6,11 @@
 #'
 #' @param X.matrix numeric matrix with cells as columns, and features as rows.
 #'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-#'  includes the reference matrix X (default for \code{\link{train_correlatio_model}})
+#'  includes the reference matrix X (default for \code{\link{train_deconvolution_model}})
 #' @param new.data numeric matrix with samples as columns, and features as rows.
 #' In the formula above denoated as Y.
 #' @param DTD.model either a numeric vector with length of nrow(X),
-#' or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 #' or\code{\link{descent_generalized_fista}}. In the equation above
 #'   the DTD.model provides the vector g.
 #'
@@ -34,7 +34,12 @@
 #' true.c <- rnorm(n = ncol(random.data), mean = 0.1, sd = 0.5)
 #'
 #' # calculate bulk y = Xc * some_error
-#' bulk <- as.matrix(random.data %*% true.c * rnorm(n = nrow(random.data), mean = 1, sd = 0.01), ncol = 1)
+#' bulk <- as.matrix(
+#'     random.data %*% true.c * rnorm(
+#'         n = nrow(random.data),
+#'         mean = 1,
+#'         sd = 0.01),
+#'     ncol = 1)
 #' colnames(bulk) <- "mixture1"
 #'
 #' # estimate c

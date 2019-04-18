@@ -10,7 +10,7 @@ ggplot_gpath(DTD.model, number.pics = 3,
   show.legend = FALSE)
 }
 \arguments{
-\item{DTD.model}{: list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+\item{DTD.model}{: list as returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 or \code{\link{descent_generalized_fista}}. Must include a 'History' entry.}
 
 \item{number.pics}{: integer, into how many pictures should the resutlt be split. (defaults to 3)}

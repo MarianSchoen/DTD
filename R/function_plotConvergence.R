@@ -3,7 +3,7 @@
 #' The "ggplot_convergence" function uses ggplot2 and reshape2 to visualize the decrease of the loss-function after
 #' a model has been trained.
 #'
-#' As input parameter it needs the output of \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' As input parameter it needs the output of \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 #' or \code{\link{descent_generalized_fista}}.
 #' If the `DTD.model` includes a 'History' entry, and a `test.data` is available
 #' the loss function can be evaluated for each intermediate steps of the optimization.
@@ -11,7 +11,7 @@
 #' and one for the test.data.\cr
 #' For an example see section "Visualization of learn curve" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param DTD.model list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' @param DTD.model list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 #' or \code{\link{descent_generalized_fista}}.
 #' @param test.data list of two matrices, named "mixtures" and "quantities".
 #' For examples see \code{\link{mix_samples}}, \code{\link{mix_samples_with_jitter}}
@@ -22,6 +22,9 @@
 #' if estimate.c.type is set to "non_negative" the estimates "C"
 #' must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
 #' @param title string, additionally title (default "")
+#' @param X.matrix numeric matrix with cells as columns, and features as rows.
+#'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
+#'  includes the reference matrix X (default for \code{\link{train_deconvolution_model}})
 #'
 #' @return ggplot object
 #' @export

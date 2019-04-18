@@ -6,11 +6,11 @@
 #'
 #' @param X.matrix numeric matrix with cells as columns, and features as rows.
 #'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-#'  includes the reference matrix X (default for \code{\link{train_correlatio_model}})
+#'  includes the reference matrix X (default for \code{\link{train_deconvolution_model}})
 #' @param new.data numeric matrix with samples as columns, and features as rows.
 #' In the formula above denoated as Y.
 #' @param DTD.model either a numeric vector with length of nrow(X),
-#' or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 #' or\code{\link{descent_generalized_fista}}. In the equation above
 #'   the DTD.model provides the vector g.
 #' @param true.compositions numeric matrix with cells as rows, and mixtures as columns.
@@ -172,7 +172,7 @@ evaluate_cor <- function(X.matrix = NA,
   # initialise loss:
   loss <- 0
   for(l1 in 1:nrow(C)){
-    if(sd(esti.cs[l1, ]) != 0){
+    if(stats::sd(esti.cs[l1, ]) != 0){
       # calculate the correlation per Type and add them up
       loss <- loss + stats::cor(C[l1, ], esti.cs[l1, ])
     }

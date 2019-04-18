@@ -13,7 +13,7 @@
 #'
 #' For an example see section "Explained correlation" in the package vignette `browseVignettes("DTD")`
 #'
-#' @param DTD.model list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' @param DTD.model list as returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 #' or \code{\link{descent_generalized_fista}}, or a numeric vector, which will be used as 'g'.
 #' @param X.matrix numeric matrix, with features/genes as rows, and cell types as column.
 #' Each column of X.matrix is a reference expression profile.
@@ -181,10 +181,10 @@ ggplot_heatmap <- function(DTD.model,
     tmp.X.matrix <- X.times.g[features, ]
   }
 
-  cell.type.cluster <- hclust(dist(x = t(tmp.X.matrix),
+  cell.type.cluster <- stats::hclust(stats::dist(x = t(tmp.X.matrix),
                                    method = "euclidean"),
                               method = "average")
-  feature.cluster <- hclust(dist(x = tmp.X.matrix,
+  feature.cluster <- stats::hclust(stats::dist(x = tmp.X.matrix,
                                    method = "euclidean"),
                               method = "average")
 
@@ -202,7 +202,7 @@ ggplot_heatmap <- function(DTD.model,
     ordered = TRUE
   )
 
-  pic0 <- ggplot(melted.X, aes(x = Var1, y = Var2)) +
+  pic0 <- ggplot(melted.X, aes(x = .data$Var1, y = .data$Var2)) +
     geom_tile(aes(fill = expression)) +
     scale_fill_gradient(
       low = "darkblue",

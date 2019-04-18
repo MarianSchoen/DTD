@@ -7,7 +7,7 @@
 #' For an example see section "Histogram of g-vector" in the package vignette `browseVignettes("DTD")`
 #'
 #' @param DTD.model either a numeric vector ,
-#' or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+#' or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 #' or\code{\link{descent_generalized_fista}}.
 #' @param n.bins : positive integer, number of bins in the histogram. Defaults to 50
 #' @param TRANSFORM.FUN : function that expects a list of floats, and returns a list of floats

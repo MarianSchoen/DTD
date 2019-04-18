@@ -9,7 +9,7 @@ ggplot_ghistogram(DTD.model, n.bins = 50,
 }
 \arguments{
 \item{DTD.model}{either a numeric vector ,
-or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 or\code{\link{descent_generalized_fista}}.}
 
 \item{n.bins}{: positive integer, number of bins in the histogram. Defaults to 50}

@@ -9,13 +9,13 @@ estimate_c(X.matrix = NA, new.data, DTD.model)
 \arguments{
 \item{X.matrix}{numeric matrix with cells as columns, and features as rows.
 Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-includes the reference matrix X (default for \code{\link{train_correlatio_model}})}
+includes the reference matrix X (default for \code{\link{train_deconvolution_model}})}
 
 \item{new.data}{numeric matrix with samples as columns, and features as rows.
 In the formula above denoated as Y.}
 
 \item{DTD.model}{either a numeric vector with length of nrow(X),
-or a list returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 or\code{\link{descent_generalized_fista}}. In the equation above
   the DTD.model provides the vector g.}
 }

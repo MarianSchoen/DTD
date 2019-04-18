@@ -5,10 +5,11 @@
 \title{clustered heatmap of diag(g) * X}
 \usage{
 ggplot_heatmap(DTD.model, X.matrix = NA, test.data = NULL,
-  estimate.c.type, title = "", feature.subset = 100)
+  estimate.c.type, title = "", feature.subset = 100,
+  log2.expression = TRUE)
 }
 \arguments{
-\item{DTD.model}{list as returned by \code{\link{train_correlatio_model}}, \code{\link{DTD_cv_lambda}},
+\item{DTD.model}{list as returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
 or \code{\link{descent_generalized_fista}}, or a numeric vector, which will be used as 'g'.}
 
 \item{X.matrix}{numeric matrix, with features/genes as rows, and cell types as column.
@@ -30,6 +31,8 @@ must not be negative (non-negative least squares) (see (see \code{\link{estimate
 \item{feature.subset}{numeric or a vector of strings. If it is a numeric, "subset" features will be picked from the
 'explained correlation' ranking (if 'feature.subset' < 1, this is the fraction of feature, if 'feature.subset' > 1
 it is the total amount). If it is a vector of strings, these features will be used.}
+
+\item{log2.expression}{logical, in the heatmap, should the values be log transformed?}
 }
 \value{
 ggplot object
