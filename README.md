@@ -17,7 +17,8 @@ Therefore, install from github with vignette
 ``` r
   devtools::install_github(
     "MarianSchoen/DTD", 
-    build_opts = c("--no-resave-data", "--no-manual")
+    build_opts = c("--no-resave-data", "--no-manual"), 
+    build_vignettes=TRUE
     )
   browseVignettes("DTD")
 ```
