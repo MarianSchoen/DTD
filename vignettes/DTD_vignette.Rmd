@@ -41,15 +41,15 @@ Let
   L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
 \end{equation}
 
-The package DTD learns $g$ by minimizing $L$ on a training set of artificial bulk profiles $Y$ simulated by mixing
+The package DTD learns $g$ by minimizing $L$ on a training set of arteficicial bulk profiles $Y$ simmulated by mixing
 known reference profiles with known fractions $C$. 
-Here $C_{j,.}$ are the true compositions whereas $\widehat{C_{j,.}}(g)$ are the estimated compositions according to equation (2).
+Here $C_{j,.}$ are the true compostions wheras $\widehat{C_{j,.}}(g)$ are the estimated compositions according to equation (2).
 
-The package DTD provides functions to set up the learning process. To run DTD, you need reference profiles of different cell types that either result from single cell data or from sorted cell fractions. After some data preparation a full learning process can be evoked by the following code.
+The package DTD provides functions to set up the learning process. To run DTD you need reference profiles of different cell types that either result from single cell data or from sorted cell fractions. After some data preparation a full learning process can be evoked by the following code.
 
 
 ```{r include=FALSE}
-# I'd like to start with 'training the g vector'. Therefore, I need a lot of stuff ...
+# I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
 library(DTD)
 # fast testing:
 lambda.len <- 4
@@ -148,12 +148,12 @@ library(DTD)
 ```
 
 In practice, the DTD package needs expression measurements of either single cells of known cell type or of sorted cell fractions to train a $g$-vector. 
-In this vignette we will demonstrate its use on simulated data. To this end we have generated a matrix of random data reflecting single cell measurements.
-In fact, the DTD package contains the `generate_random_data` function to simulate such data.
+In this vingnette we will demonstrate its use on simmulated data. To this end we have generated a matrix of random data reflecting single cell measurements.
+In fact the DTD package contains the `generate_random_data` function to simmulate such data.
 It has 3 arguments:
 
-- n.types: integer, number of simulated cell-types. 
-- n.samples.per.type: integer, number of simulated single cell profiles per cell-type.
+- n.types: integer, number of simmulated cell-types. 
+- n.samples.per.type: integer, number of simmulated single cell profiles per cell-type.
 - n.features: integer, number of features per profile.
 
 Here we generate data for  `r number.types` cell types, with `r n.features` features. For each cell type we generate `r n.per.type` single cell profiles. 
@@ -192,7 +192,7 @@ print(colnames(random.data)[example.index])
 ## Data processing 
 
 Notice that the loss-function learning DTD approach works on the original scale. Therefore, any type log transformation on real data needs to be undone.
-For the simulated data there was no such transformation.
+For the simmulated data there was no such transformation.
 Next, we scale every sample of the data set to a fixed number of `r sum(normalized.data[,1])` using the `normalize_to_count` function:
 ```{r}
 # In random.data the number of counts differs over all samples:
@@ -214,7 +214,7 @@ It is used in the training process of the algorithm.
 
 ## Reference matrix X  
 
-Next, we build the reference matrix $X$. $X$ holds data from some but not all input profiles. The profiles used to build $X$ can either be selected manually, or chosen randomly. Within the DTD package we provide the `sample_random_X` function, which generates a reference matrix by randomly selecting samples of the same type, and then averaging them to a reference profile for this type. 
+Next, we build the reference matrix $X$. $X$ holds data from some but not all input profiles. The profiles used to buld $X$ can either be selected manually, or chosen randomly. Within the DTD package we provide the `sample_random_X` function, which generates a reference matrix by randomly selecting samples of the same type, and then averaging them to a reference profile for this type. 
 The parameter `included.in.X` specifies which cell types are included into $X$, while the parameter `perc.of.all.cells` specifies what fraction of cells
 from each type will be used for building $X$.
 
@@ -266,11 +266,11 @@ In addition to the reference matrix $X$, DTD requires training data consisting o
 - Y, a matrix of (typically artificial) tissue profiles. Y has as many rows (=features) as `X.matrix` or `normalized.data`. 
 - C, a composition matrix. C has as many rows as there are cell types in `X.matrix`. 
 
-A column of Y is a simulated bulk tissue profile, where the corresponding row in $C$ annotates the cellular composition of this tissue. 
-From the single cell profiles in the training set (that were not used to build $X$) we randomly sample profiles and average them to generate  
+A column of Y is a simmulated bulk tissue profile, where the coresponding row in $C$ annotes the cellular composition of this tissue. 
+From the single cell profiles in the training set (that were not used to build $X$) we randommly sample profiles and average them to generate  
 artificial tissue profiles. The DTD package provides two methods to generate training and test sets. One method randomly samples cells 
 and averages them as described above. This is the recommended method for large single cell data sets. However, if there are only a few 
-reference samples per cell type (in average below 10 samples per type) we recommend multiplying a jitter on profiles prior to adding them. 
+reference samples per cell type (in average below 10 samples per type) we recommend to multiply a jitter on profiles prior to adding them. 
 For both methods we provide functions within the DTD package.
 
 `mix_samples` randomly selects `n.per.mixture` profiles from `exp.data` and generates bulk profiles. 
@@ -282,7 +282,7 @@ The `mix_samples` function needs the following arguments:
 * included.in.X: vector of strings, here `include.in.X`
 * n.samples: integer, how many in-silicio mixtures should be generated. 
 * n.per.mixture: integer, how many cells should be included in each mixture
-* verbose: logical, should output be printed. 
+* verbose: boolean, should output be printed. 
 ```{r echo=FALSE, results = "asis"}
 cat("```\n")
 cat(
@@ -303,10 +303,10 @@ training.data <- mix_samples(
 )
 str(training.data)
 ```
-Note that all cell types are included in the artificial tissue profiles, but only the fractions of the cell within $X$ are reported in the composition matrix $C$. 
+Note that all cell types are included in the artificial tissue profiles, but only the fractions of the cell within $X$  are reported in the composition matrix $C$. 
 Therefore, the columns in C do not necessarily sum up to 1. 
 
-Using the same function, we generate a test set, but this time we select single cell profiles from the test set. Notice that the single cell profiles used for training and testing are disjoint and so are the profiles used for building $X$.
+Using the same function we generate a test set, but this time we select single cell profiles from the test set. Notice that the single cell profiles used for training and testing are disjoint and so are the profiles used for building $X$.
 
 ```{r}
 indicator.test <- indicator.vector[names(indicator.vector) %in% colnames(test.mat)]
@@ -334,8 +334,8 @@ In the training set imbalanced quantities should be reflected.
 * n.samples: integer, how many in-silicio mixtures should be generated. 
 * exp.data: numeric matrix, here `train.mat`
 * pheno: named vector of strings, here `indicator.vector`
-* verbose: logical, should output be printed?
-* single.special: logical, if `FALSE`  all `major.fraction.type` will be included in all mixtures. If `TRUE` only one `major.fraction.type` will be included per mixture. This option should be used if e.g. `major.fraction.type` represent different tumor types. 
+* verbose: logical,  should output be printed?
+* single.special: logical, if `FALSE`  all `major.fraction.type` will be included in all mixtures. If `TRUE`  only one `major.fraction.type` will be included per mixture. This option should be used if e.g. `major.fraction.type` represent different tumor types. 
 * add.jitter: logical, should the mixtures be multiplied with jitter. 
 * chosen.mean: numeric, mean of jitter
 * chosen.sd: numeric, standard deviation of jitter
@@ -373,7 +373,7 @@ This optimization is done iteratively by gradient descent, using an implementati
 A crucial hyperparameter for the model is $\lambda$. In order to find the optimal $\lambda$ a cross validation is performed. 
 The training procedure can be called via `train_deconvolution_model`, and takes the following arguments: 
 
-* `tweak`: numeric initialization vector for g. Notice, that the names of tweak will be kept during optimization and might be helpful for further visualizations.  
+* `tweak`: numeric initialization vector for g. Notice, that the names of tweak will be kept during optimization, and might be helpful for further visualizations.  
 * X.matrix: numeric matrix, with as many rows as length(tweak). Each column of X.matrix holds a cell type specific reference profile. 
 * train.data.list: list of training profiles, and compsositions. 
 * test.data.list: list of test profiles, and compositions.
@@ -393,12 +393,12 @@ model <- train_deconvolution_model(
   verbose = FALSE
 )
 ```
-The output of `train_deconvolution_model` algorithm is a list. The entry 'cv.obj' holds a list of lists with information about the cross validation (see section "Cross validation"). The entry 'best.model' contains a model trained on the full trainings data set with the best lambda of the cross validation. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function), and a loss vector. The loss vector stores the loss function evaluated in every iteration. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found. Additionally, in the `model` object there is a entry named `reference.X` and `pics`. `reference.X` holds the used reference matrix X, in `pics` there are several ggplot figures to assess the quality of the model. 
+The output of  `train_deconvolution_model` algorithm is a list. The entry 'cv.obj' holds a list of lists with information about the cross validation (see section "Cross validation"). The entry 'best.model' contains a model trained on the full trainings data set with the best lambda of the cross validation. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function), and a loss vector. The loss vector stores the loss function evaluated in every iteration. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found. Additionally, in the `model` object there is a entry named `reference.X` and `pics`. `reference.X` holds the used reference matrix X, in `pics` there are several ggplot figures to assess the quality of the model. 
 
 
-### Calibrating the sparseness of g via cross validation
+### Calibrating the sparceness of g via cross validation
 The loss function includes a $L_1$ regularization term, controlled by the regularization parameter $\lambda$. 
-In order to find the optimal $\lambda$ we implemented a k-fold cross validation. The `train_deconvolution_model` function automatically performs a cross validation. The crucial arguments of the cross validation are the following. These can be passed as '...' to the `train_deconvolution_model` function:
+In order to find the optimal  $\lambda$  we implemented a k-fold cross validation. The `train_deconvolution_model` function automatically performs a cross validation. The crucial arguments of the cross validation are the following. These can be passed as '...' to the `train_deconvolution_model` function:
 
 - lambda.seq: numeric vector or NULL. Sequence of $\lambda$, for which models are trained. For each $\lambda$ `n.folds` models are trained, and tested in a sense of k-fold cross validation.  If `lambda.seq` is set to NULL (Default-value), a sequence of $\lambda$ will be generated based on the dimension of the training set. 
 - n.folds: integer, number of folds for k-fold cross validation
@@ -409,7 +409,7 @@ The return object from the cross validation is a list with 2 entries. The `cv.ob
 
 ## Visualizations
 
-Each of the following visualizations is called automatically after training a model with the `train_deconvolution_model` function. They are stored as a list of ggplot object and can be found in the `pics` entry of the model.   
+Each of the following visualizations is called automatically after training a model with the `train_deconvolution_model` function. They are stored as a list of ggplot object, and can be found in the `pics` entry of the model.   
 
 ### Visualization of the learning curve  
 
@@ -431,7 +431,7 @@ print(model$pics$convergence)
 ```
 
 ### Performance cell type per cell type
-The function `ggplot_true_vs_esti` plots true versus estimated cell fractions of the test data for all cell types.
+The function `ggplot_true_vs_esti` plots true versus estimated cell fractions of the test data for all cell types .
 
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
@@ -501,7 +501,7 @@ multPic <- ggplot_gpath(
 )
 print(multPic$gPath)
 ```
-By default, the `ggplot_gpath` function does not plot a legend. There is the logical argument `plot.legend`. If it is set `TRUE`, a TableGrob object will be stored in the `legend` entry, holding the legend-plot. 
+By default, the `ggplot_gpath` function does not plot a legend. There is the boolean argument `plot.legend`. If it is set `TRUE`, a TableGrob object will be stored in the `legend` entry, holding the legend-plot. 
 
 ### Scaled heat maps  
 The effect of the g-vector on deconvolution can be visualized when plotting the reference matrix `X`, multiplied with `g`, as a heatmap. 
@@ -509,11 +509,11 @@ The function `ggplot_heatmap` takes as input a `DTD.model` (either the output of
 The heatmap becomes more informative, if only a subset of features is included. 
 Here, we implemented two subsetting methods:  
 
-* subsetting by rownames: apply a vector of feature names. The clustering and plotting will only be done on the selected subset.
+* subsetting by rownames: apply a vector of feature names. The clustering and plotting will only be done on the selected subet.
 * subsetting by *explained correlation*: Explained correlation is a measure to assess the effect of each feature in the deconvolution process. Let the complete model deconvolute a test set with 75% correlation. If feature i is removed from the model (by setting its entry in `g[i] = 0`), the deconvolution correlation will change, e.g. to 72%. Then gene `i` explains 3% of the correlation. The measure of *explained correlation* can iteratively be applied to each feature. Using the *explained correlation* ranking, only a top_n subset of features can be used for clustering and visualizing the heatmap.
 
 Note that subsetting by rownames does not require a test set. Subsetting by *explained correlation* requires a test set. 
-When calling `train_deconvolution_model` a heatmap including all features is plotted and included in the `pics` list. 
+When calling `train_deconvolution_model` a heatmap including all features is plotted, and included in the `pics` list. 
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
 print(model$pics$Xheatmap)
