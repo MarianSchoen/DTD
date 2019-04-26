@@ -41,9 +41,9 @@ Let
   L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
 \end{equation}
 
-The package DTD learns $g$ by minimizing $L$ on a training set of arteficicial bulk profiles $Y$ simmulated by mixing
+The package DTD learns $g$ by minimizing $L$ on a training set of artificial bulk profiles $Y$ simulated by mixing
 known reference profiles with known fractions $C$. 
-Here $C_{j,.}$ are the true compostions wheras $\widehat{C_{j,.}}(g)$ are the estimated compositions according to equation (2).
+Here $C_{j,.}$ are the true compositions whereas $\widehat{C_{j,.}}(g)$ are the estimated compositions according to equation (2).
 
 The package DTD provides functions to set up the learning process. To run DTD you need reference profiles of different cell types that either result from single cell data or from sorted cell fractions. After some data preparation a full learning process can be evoked by the following code.
 
@@ -148,12 +148,12 @@ library(DTD)
 ```
 
 In practice, the DTD package needs expression measurements of either single cells of known cell type or of sorted cell fractions to train a $g$-vector. 
-In this vingnette we will demonstrate its use on simmulated data. To this end we have generated a matrix of random data reflecting single cell measurements.
-In fact the DTD package contains the `generate_random_data` function to simmulate such data.
+In this vignette we will demonstrate its use on simulated data. To this end we have generated a matrix of random data reflecting single cell measurements.
+In fact the DTD package contains the `generate_random_data` function to simulate such data.
 It has 3 arguments:
 
-- n.types: integer, number of simmulated cell-types. 
-- n.samples.per.type: integer, number of simmulated single cell profiles per cell-type.
+- n.types: integer, number of simulated cell-types. 
+- n.samples.per.type: integer, number of simulated single cell profiles per cell-type.
 - n.features: integer, number of features per profile.
 
 Here we generate data for  `r number.types` cell types, with `r n.features` features. For each cell type we generate `r n.per.type` single cell profiles. 
@@ -192,7 +192,7 @@ print(colnames(random.data)[example.index])
 ## Data processing 
 
 Notice that the loss-function learning DTD approach works on the original scale. Therefore, any type log transformation on real data needs to be undone.
-For the simmulated data there was no such transformation.
+For the simulated data there was no such transformation.
 Next, we scale every sample of the data set to a fixed number of `r sum(normalized.data[,1])` using the `normalize_to_count` function:
 ```{r}
 # In random.data the number of counts differs over all samples:
@@ -214,7 +214,7 @@ It is used in the training process of the algorithm.
 
 ## Reference matrix X  
 
-Next, we build the reference matrix $X$. $X$ holds data from some but not all input profiles. The profiles used to buld $X$ can either be selected manually, or chosen randomly. Within the DTD package we provide the `sample_random_X` function, which generates a reference matrix by randomly selecting samples of the same type, and then averaging them to a reference profile for this type. 
+Next, we build the reference matrix $X$. $X$ holds data from some but not all input profiles. The profiles used to bud $X$ can either be selected manually, or chosen randomly. Within the DTD package we provide the `sample_random_X` function, which generates a reference matrix by randomly selecting samples of the same type, and then averaging them to a reference profile for this type. 
 The parameter `included.in.X` specifies which cell types are included into $X$, while the parameter `perc.of.all.cells` specifies what fraction of cells
 from each type will be used for building $X$.
 
@@ -266,8 +266,8 @@ In addition to the reference matrix $X$, DTD requires training data consisting o
 - Y, a matrix of (typically artificial) tissue profiles. Y has as many rows (=features) as `X.matrix` or `normalized.data`. 
 - C, a composition matrix. C has as many rows as there are cell types in `X.matrix`. 
 
-A column of Y is a simmulated bulk tissue profile, where the coresponding row in $C$ annotes the cellular composition of this tissue. 
-From the single cell profiles in the training set (that were not used to build $X$) we randommly sample profiles and average them to generate  
+A column of Y is a simulated bulk tissue profile, where the corresponding row in $C$ annotates the cellular composition of this tissue. 
+From the single cell profiles in the training set (that were not used to build $X$) we randomly sample profiles and average them to generate  
 artificial tissue profiles. The DTD package provides two methods to generate training and test sets. One method randomly samples cells 
 and averages them as described above. This is the recommended method for large single cell data sets. However, if there are only a few 
 reference samples per cell type (in average below 10 samples per type) we recommend to multiply a jitter on profiles prior to adding them. 
@@ -375,7 +375,7 @@ The training procedure can be called via `train_deconvolution_model`, and takes 
 
 * `tweak`: numeric initialization vector for g. Notice, that the names of tweak will be kept during optimization, and might be helpful for further visualizations.  
 * X.matrix: numeric matrix, with as many rows as length(tweak). Each column of X.matrix holds a cell type specific reference profile. 
-* train.data.list: list of training profiles, and compsositions. 
+* train.data.list: list of training profiles, and compositions. 
 * test.data.list: list of test profiles, and compositions.
 * ... any argument that will be passed to `DTD_cv_lambda` and `descent_generalized_fista`. E.g. `maxiter`, `verbose` or `lambda.length`
 
@@ -463,7 +463,7 @@ print(model$pics$histogram)
 
 ### g-Path
 Additional useful information that can be gained from the `History` of the `tweak.vec` can be visualized using the `ggplot_gpath` function.
-In the plot below each line tracks the change of one $g_i$ during all iterations. In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. Accordingly, there are `r nrow(X.matrix)` lines in the plot. Notice, that most of the change in $g$ takes place in the early steps of the algorihtm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10) to transform the iteration axis.  \cr
+In the plot below each line tracks the change of one $g_i$ during all iterations. In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. Accordingly, there are `r nrow(X.matrix)` lines in the plot. Notice, that most of the change in $g$ takes place in the early steps of the algorithm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10) to transform the iteration axis.  \cr
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
 print(model$pics$path)
@@ -509,7 +509,7 @@ The function `ggplot_heatmap` takes as input a `DTD.model` (either the output of
 The heatmap becomes more informative, if only a subset of features is included. 
 Here, we implemented two subsetting methods:  
 
-* subsetting by rownames: apply a vector of feature names. The clustering and plotting will only be done on the selected subet.
+* subsetting by rownames: apply a vector of feature names. The clustering and plotting will only be done on the selected subset.
 * subsetting by *explained correlation*: Explained correlation is a measure to assess the effect of each feature in the deconvolution process. Let the complete model deconvolute a test set with 75% correlation. If feature i is removed from the model (by setting its entry in `g[i] = 0`), the deconvolution correlation will change, e.g. to 72%. Then gene `i` explains 3% of the correlation. The measure of *explained correlation* can iteratively be applied to each feature. Using the *explained correlation* ranking, only a top_n subset of features can be used for clustering and visualizing the heatmap.
 
 Note that subsetting by rownames does not require a test set. Subsetting by *explained correlation* requires a test set. 
