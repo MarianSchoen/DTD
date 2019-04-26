@@ -18,7 +18,7 @@
 #' @param n.samples integer above 0, numbers of samples to be drawn (defaults to 1000)
 #' @param exp.data non-negative numeric matrix, with features as rows and samples as columns
 #' @param single.special logical, in a mixture, should all special names be used? (=> TRUE) Or, should a mixture only include one special sample? (=> FALSE)(Defaults to FALSE)
-#' @param add.jitter logical, should the mixtures be mulitplied with a vector of normally distributed numbers? (JITTER)
+#' @param add.jitter logical, should the mixtures be multiplied with a vector of normally distributed numbers? (JITTER)
 #' @param verbose logical, should the function print about progress to the terminal? (Defaults to FALSE)
 #' @param pheno named vector of strings, with pheno information ('pheno') for each sample ('name(pheno)') in exp.data
 #' @param chosen.mean float, mean of jitter (Default: 1)
