@@ -82,6 +82,9 @@ ggplot_heatmap <- function(DTD.model,
   # because if subset is a list of genes, I don't need it
   # estimate.c.type is moved as well
 
+  # logical, if features has been set
+  features.set <- FALSE
+
   # safety check: subset
   if(length(feature.subset) != 1 && all(is.character(feature.subset))){
     useable.subset <- intersect(feature.subset, rownames(X.matrix))
@@ -89,6 +92,7 @@ ggplot_heatmap <- function(DTD.model,
       stop("In ggplot_heatmap: 'feature.subset' is provided as vector of character. However, none of them can be found in rownames(X.matrix).")
     }else{
       features <- useable.subset
+      features.set <- TRUE
     }
   }else{
     test <- test_numeric(feature.subset,
@@ -107,12 +111,16 @@ ggplot_heatmap <- function(DTD.model,
     stop("In ggplot_cv: provided 'title' can not be used as.character.")
   }
   # end -> title
-
-  if(is.null(test.data) && !exists("features")){
-    features <- rownames(X.matrix)
+  # if there is no test.data, features can not be detected via explained correlation ...
+  if(is.null(test.data)){
+    # ... therefore, set features to the rownames (complete X)
+    if(!features.set){ # If the input feature.subset is a vector of strings, "features" has already been set
+      features <- rownames(X.matrix)
+      features.set <- TRUE
+    }
   }
 
-  if(!exists("features")){
+  if(!features.set){
     # safety check: test.data
     if(is.list(test.data) && length(test.data) == 2){
       if(!all(c("quantities", "mixtures") %in%  names(test.data))){
