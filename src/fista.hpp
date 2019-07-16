@@ -15,7 +15,7 @@ using mat = Eigen::MatrixXd;
 using namespace Eigen;
 
 namespace dtd {
-  mat invxtgx(mat const & x, VectorXd const & g);
+  void invxtgx(mat const & x, vec const & g, mat & xi);
   class GoertlerModel {
   private:
     int m_ngenes;
@@ -76,4 +76,13 @@ inline mat matFromPtr(ftype* d, unsigned int rows, unsigned int cols) {
       m(j,i) = d[i*rows+j];
   }
   return m;
+}
+inline std::vector<ftype> vecFromMat(mat const & m) {
+  std::vector<ftype> res(m.size());
+  for( int i = 0; i < m.rows(); ++i) {
+    for( int j = 0; j < m.cols(); ++j) {
+      res[i*m.cols()+j] = m(i,j);
+    }
+  }
+  return res;
 }

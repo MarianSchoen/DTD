@@ -6,34 +6,25 @@
 #include <cmath>
 
 namespace dtd {
-  mat invxtgx(mat const & x, vec const & g) {
+  void invxtgx(mat const & x, vec const & g, mat & xi) {
     mat xtgx = x.transpose()*g.asDiagonal()*x;
-    mat xi = xtgx.llt().solve(mat::Identity(x.cols(), x.cols()));
-    std::cout << xi << "\n";
-    return xi;
+    xi.resize(x.cols(), x.cols());
+    xi = xtgx.llt().solve(mat::Identity(x.cols(), x.cols()));
+    std::cout <<"from c++:\n"<< xi << "\n";
+    // return xi;
   }
   namespace stat {
-    ftype mean(vec const & v) {
-      return v.sum() / v.size();
-    }
     ftype var(vec const & v) {
-      ftype f = mean(v);
-      ftype res(0.0);
-      for( int i = 0; i < v.size(); ++i) {
-        res += std::pow((f - v(i)), 2);
-      }
-      return res;
+      vec vm = v.array() - v.mean();
+      auto n = v.size();
+      return vm.dot(vm) / (n-1);
     }
     ftype cov(vec const & a, vec const & b) {
-      ftype ma = mean(a);
-      ftype mb = mean(b);
-      ftype res = 0.0;
-      for( int ia = 0; ia < a.size(); ++ia) {
-        for( int ib = 0; ib < b.size(); ++ib) {
-          res += (ma-a(ia))*(mb-b(ib));
-        }
-      }
-      return res;
+      int n = a.size();
+      assert(n == b.size());
+      vec am = a.array() - a.mean();
+      vec bm = b.array() - b.mean();
+      return am.dot(bm)/(n-1);
     }
   }
   ftype GoertlerModel::eval(vec const & g) const {
