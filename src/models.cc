@@ -12,7 +12,14 @@ namespace dtd {
       std::cout <<"from c++:\n"<< xi << "\n";
       return xi;
     }
+    mat estimate_c_direct(mat const & x, mat const & y, vec const & g, mat const & xtgxi) {
+      return xtgxi*x.transpose()*g.asDiagonal()*y;
+    }
     ftype GoertlerModel::eval(vec const & g) const {
+      double res(0.0);
+      mat xtgxi = invxtgx(m_x, g);
+      mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
+
       return 0.0;
     }
     void GoertlerModel::grad(vec & gr, vec const & g) const {

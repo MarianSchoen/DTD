@@ -49,3 +49,10 @@ std::vector<double> xtgxinv(std::vector<double> const & xv, std::vector<double> 
   MatrixXd g = vecToEVec(gv);
   return ematToVec(dtd::models::invxtgx(x,g));
 }
+
+double var(std::vector<double> const & x) {
+  return dtd::stat::var(vecToEVec(x));
+}
+double cov(std::vector<double> const & x, std::vector<double> const & y) {
+  return dtd::stat::cov(vecToEVec(x), vecToEVec(y));
+}
