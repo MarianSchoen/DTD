@@ -17,8 +17,12 @@ endmacro(use_cxx11)
 
 use_cxx11()
 
-add_library( dtd SHARED src/fista.cc src/fista.hpp ) #add header files here
+add_library( dtd STATIC src/utils.cc src/models.cc src/fista.hpp src/utils.hpp src/models.hpp) #add header files here
 set_target_properties(dtd PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
+add_library( dtd_jl SHARED src/interface_jl.cc src/interface_jl.hpp )
+target_link_libraries(dtd_jl dtd)
+set_target_properties(dtd_jl PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Werror -Wshadow -Wnon-virtual-dtor -pedantic")
 SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wall -Werror -Wshadow -Wnon-virtual-dtor -pedantic")

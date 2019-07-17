@@ -4,46 +4,38 @@ using StatsBase, Statistics
 using Test
 
 # this is meant to be run from within the build directory
-addHeaderDir("../src/")
+addHeaderDir("./src/")
 addHeaderDir("/usr/include/eigen3/")
-Libdl.dlopen(pwd() * "/libdtd.so", Libdl.RTLD_GLOBAL)
-cxxinclude("../src/fista.hpp")
+Libdl.dlopen(pwd() * "/build/libdtd_jl.so", Libdl.RTLD_GLOBAL)
+cxxinclude(pwd() * "/src/interface_jl.hpp")
 
-const ngenes=100
+const ngenes=10
 const ncells=5
+
+x = rand(ngenes, ncells)
 g = rand(ngenes)
-h = rand(ngenes)
-x = rand(ngenes,ncells)
+print(x)
 
-#s = @cxxnew dtd::FistaSolver(pointer(testdata), length(testdata));
-g_cxx = @cxxnew vecFromPtr(pointer(g), length(g));
-h_cxx = @cxxnew vecFromPtr(pointer(h), length(h));
-x_cxx = @cxxnew matFromPtr(pointer(x), size(x, 1), size(x, 2))
-
-var_cxx = @cxx dtd::stat::var(g_cxx)
-var_jl = var(g)
-@test isapprox(var_cxx, var_jl)
-
-cov_cxx = @cxx dtd::stat::cov(g_cxx, h_cxx)
-cov_jl = cov(g, h)
-@test isapprox(cov_cxx, cov_jl)
-
-# this works but is awkward. why does returning a vector not work??
-xi = Matrix{Float64}(undef, ncells, ncells)
-xi_cxx = @cxxnew matFromPtr(pointer(xi), size(xi, 1), size(xi, 2))
-icxx" dtd::invxtgx($x_cxx, $g_cxx, $xi_cxx); "
-xi_cxx = reshape(collect(icxx" vecFromMat($xi_cxx); "), ncells, ncells)
-
-@test isapprox(xi_cxx, xtgx_inv(x,g))
+# TODO: test that matrix conserves rows & cols...
 
 
+# function jlmat(a :: Array{Float64,2})
+a = x
+ptr=pointer(a)
+rows=size(a, 1)
+cols=size(a, 2)
+matcols=rows*cols
+# cxx_v = icxx"JuliaMatrix($ptr, $rows, $cols);"
+cxx_x = icxx"ptrToVec($ptr, $matcols);"
+println("from julia: x=", collect(cxx_x));
+println("from julia: x=", collect(cxx_x));
+ptrg=pointer(g)
+rows = size(g,1)
+cxx_g = icxx"ptrToVec($ptrg, $rows);"
+println("from julia: g=", collect(cxx_g));
 
+res=icxx"xtgxinv($cxx_x, $cxx_g, $ngenes, $ncells);"
+res_v = collect(res)
+xtgxi_cxx = reshape(collect(res), (ncells, ncells));
+println("from julia: res: ", xtgxi_cxx);
 
-
-# @test isapprox(cov_cxx, cov_jl)
-
-# using Testing
-# @test isapprox(xinv_cxx, xinv_jl)
-
-# solver = @cxxnew dtd::FistaSolver(g_cxx);
-# @cxx solver->iterate();
