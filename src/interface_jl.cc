@@ -73,3 +73,18 @@ std::vector<double> gradGoertlerModel(dtd::models::GoertlerModel const * model, 
   model->grad(grad, vecToEVec(g));
   return ematToVec(grad);
 }
+
+double solveFista(dtd::models::GoertlerModel const * model, std::vector<double> & params, double lambda, std::size_t maxiter){
+  dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver(*model);
+  solver.setG(vecToEVec(params));
+  solver.solve( maxiter, lambda);
+  params = evecToVec(solver.getG());
+  return solver.feval();
+}
+
+double bb_learning_rate(dtd::models::GoertlerModel const * model, std::vector<double> const & params) {
+  // TODO:  interface the other parameters of the fista solver, e.g., lambda, linesearchspeed, etc. pp.
+  // what is a good way to do this?
+  vec g = vecToEVec(params);
+  return dtd::solvers::bb_learning_rate(*model, g);
+}

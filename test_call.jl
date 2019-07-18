@@ -73,3 +73,35 @@ cxx_fnval = icxx" evalGoertlerModel($model, $cxx_g);"
 cxx_grad= icxx" gradGoertlerModel($model, $cxx_g);"
 cxx_grad = collect(cxx_grad)
 @test isapprox(collect(cxx_grad), gradient_L(x,y,g,c))
+
+# wrapper fn:
+function gradientfun!(gr, g)
+    gr .= gradient_L(x,y,g,c)
+end
+function fn(g)
+    return eval_L(x,y,g,c)
+end
+
+# step width determination
+cxx_sw = icxx" bb_learning_rate($model, $cxx_g);"
+jl_sw = learning_rate_BB!(gradientfun!, g);
+
+# TODO: test clampPos / clampNeg, pos_subspace, norm,..
+
+# one iteration of fista
+lambda=0.01
+maxiter=2 # maxiter = 1 does nothing.
+learning_rate=0.1
+linesearchspeed = 2
+cycles = 5
+cxx_fval_after_one_iteration = icxx"solveFista($model, $cxx_g, $lambda, $maxiter);"
+g_iter = copy(g)
+# check that all preconditions are still met:
+@test all(g_iter .> 0)
+@test isapprox(collect(cxx_g), g_iter)
+println("run fista from julia: g = ", g_iter)
+# run fista:
+fista_impl!(g_iter, lambda, maxiter, learning_rate, gradientfun!, soft_thresholding, nesterov_factor, positive_subspace, fn, forceNormToOne!, linesearchspeed, cycles, true)
+# compare results:
+@test isapprox(g_iter, collect(cxx_g))
+@test isapprox(cxx_fval_after_one_iteration, fn(g_iter))

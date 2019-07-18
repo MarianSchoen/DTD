@@ -5,12 +5,13 @@
 
 namespace dtd {
   namespace models {
+    template<typename T>
+    int sgn(T x) {
+      return (T(0) < x) - (x < T(0));
+    }
     mat invxtgx(mat const & x, vec const & g) {
-      std::cout << "x: " << x.rows() << " x " << x.cols() << " matrix.\n";
-      std::cout << "g: " << g.size() << " vector.\n";
       mat xtgx = x.transpose()*g.asDiagonal()*x;
       mat xi = xtgx.llt().solve(mat::Identity(x.cols(), x.cols()));
-      std::cout <<"from c++:\n"<< xi << "\n";
       return xi;
     }
     mat estimate_c_direct(mat const & x, mat const & y, vec const & g, mat const & xtgxi) {
@@ -31,9 +32,14 @@ namespace dtd {
       }
       return res;
     }
-    void clampPos(vec & x) {
+    inline void clampPos(vec & x) {
       for( unsigned int i = 0; i < x.size(); ++i){
         x.coeffRef(i) = std::min(x.coeff(i), 0.0);
+      }
+    }
+    inline void clampNeg(vec & x) {
+      for( unsigned int i = 0; i < x.size(); ++i){
+        x.coeffRef(i) = std::max(x.coeff(i), 0.0);
       }
     }
     void GoertlerModel::grad(vec & gr, vec const & g) const {
@@ -58,6 +64,27 @@ namespace dtd {
       mat tmp = (m_y - m_x*xtgxi*m_x.transpose()*g.asDiagonal()*m_y)*A.transpose()*xtgxi*m_x.transpose();
       gr = tmp.diagonal();
       clampPos(gr);
+    }
+    vec GoertlerModel::threshold(vec const & v, ftype softfactor) const {
+      // TODO: implement more options and dispatch dynamically.
+      // TODO: non-loop based approach may be faster.
+      vec res(v.size());
+      for( int i = 0; i < v.size(); ++i ){
+        double const & x = v.coeff(i);
+        res.coeffRef(i) = sgn(x)*std::max(std::abs(x)-softfactor, 0.0);
+      }
+      return res;
+    }
+    void GoertlerModel::norm_constraint(vec & v) const {
+      // TODO implement option dispatch
+      // norm
+      v = v / v.norm();
+    }
+    vec GoertlerModel::subspace_constraint(vec const & v) const {
+      // set all negative values to zero:
+      vec res(v);
+      clampNeg(res);
+      return res;
     }
   }
 }

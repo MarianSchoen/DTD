@@ -13,3 +13,5 @@ double cov(std::vector<double> const & x, std::vector<double> const & y);
 dtd::models::GoertlerModel makeGoertlerModel(std::vector<double> const & xv, std::vector<double> const & yv, std::vector<double> const & cv, std::size_t ngenes, std::size_t ncells, std::size_t nsamples);
 double evalGoertlerModel(dtd::models::GoertlerModel const * model, std::vector<double> const & g);
 std::vector<double> gradGoertlerModel(dtd::models::GoertlerModel const * model, std::vector<double> const & g);
+double solveFista(dtd::models::GoertlerModel const * model, std::vector<double> & params, double lambda, std::size_t maxiter); // returns fval
+double bb_learning_rate(dtd::models::GoertlerModel const * model, std::vector<double> const & params);

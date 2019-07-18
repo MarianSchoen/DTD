@@ -22,6 +22,9 @@ namespace dtd {
       std::size_t dim() const {
         return static_cast<std::size_t>(m_ngenes);
       }
+      vec threshold(vec const & v, ftype softfactor) const;
+      void norm_constraint(vec & v) const;
+      vec subspace_constraint(vec const & v) const;
     };
   }
 }
