@@ -62,4 +62,14 @@ res=icxx"cov($cxx_g, $cxx_gp);" # returns a number
 res=icxx"var($cxx_g);" # returns a number
 @test isapprox(res, var(g))
 
-# gradient:
+# now we need a model to test:
+model = icxx"new dtd::models::GoertlerModel(makeGoertlerModel($cxx_x, $cxx_y, $cxx_c, $ngenes, $ncells, $nsamples));"
+
+# loss function:
+cxx_fnval = icxx" evalGoertlerModel($model, $cxx_g);"
+@test isapprox(cxx_fnval, eval_L(x,y,g,c))
+
+# gradient
+cxx_grad= icxx" gradGoertlerModel($model, $cxx_g);"
+cxx_grad = collect(cxx_grad)
+@test isapprox(collect(cxx_grad), gradient_L(x,y,g,c))

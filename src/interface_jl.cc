@@ -56,3 +56,20 @@ double var(std::vector<double> const & x) {
 double cov(std::vector<double> const & x, std::vector<double> const & y) {
   return dtd::stat::cov(vecToEVec(x), vecToEVec(y));
 }
+
+dtd::models::GoertlerModel makeGoertlerModel(std::vector<double> const & xv, std::vector<double> const & yv, std::vector<double> const & cv, std::size_t ngenes, std::size_t ncells, std::size_t nsamples) {
+  MatrixXd x = vecToEMat(xv, ngenes, ncells);
+  MatrixXd y = vecToEMat(yv, ngenes, nsamples);
+  MatrixXd c = vecToEMat(cv, ncells, nsamples);
+  return dtd::models::GoertlerModel(x,y,c);
+}
+
+double evalGoertlerModel(dtd::models::GoertlerModel const * model, std::vector<double> const & g) {
+  return model->eval(vecToEVec(g));
+}
+
+std::vector<double> gradGoertlerModel(dtd::models::GoertlerModel const * model, std::vector<double> const & g) {
+  VectorXd grad(g.size());
+  model->grad(grad, vecToEVec(g));
+  return ematToVec(grad);
+}
