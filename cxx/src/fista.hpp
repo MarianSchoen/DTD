@@ -1,7 +1,6 @@
 #include "Eigen/Core"
 #include <functional>
 #include <vector>
-#include <iostream> //TODO: remove
 
 #include "config.hpp"
 #include "utils.hpp"
@@ -88,52 +87,44 @@ namespace dtd {
 
     template<class Model>
     void FistaSolver<Model>::solve(std::size_t maxiter, double lambda) {
-      std::cout << "hello from FistaSolver::solve()\n";
-
       vec y_vec = m_g;
       vec g_new = m_g;
       vec u_vec, g_old;
       ftype fy = m_model.eval(m_g);
       ftype fy_old = fy;
+
+      // TODO preallocate dynamic memory
+
       for( std::size_t iter = 2; iter <= maxiter; ++iter ){
-        std::cout << "DEBUG: " << __LINE__ << "\n";
         ftype rate = m_learning_rate / static_cast<double>(m_cyclelength - 1);
         m_model.grad(m_grad, y_vec);
         // TODO if memory is an issue, rethink this:
         mat testmat = mat(m_cyclelength, m_model.dim());
         vec testy   = vec(m_cyclelength);
-        std::cout << "DEBUG: " << __LINE__ << "\n";
         for(int i = 0; i < m_cyclelength; ++i) {
           double alpha = rate * i;
           testmat.row(i) = m_model.threshold(y_vec - alpha * m_grad, alpha * lambda);
           testy(i) = m_model.eval(testmat.row(i));
         }
-        std::cout << "DEBUG: " << __LINE__ << "\n";
         std::size_t minindex;
         ftype fy = testy.minCoeff(&minindex);
 
-        std::cout << "DEBUG: " << __LINE__ << "\n";
         if( minindex == 0 ) {
           // undershoot -> decrease step size
           m_learning_rate /= m_linesearch_speed;
-          std::cout << "DEBUG: " << __LINE__ << "\n";
         } else if ( minindex == m_cyclelength - 1 ) {
           // overshoot -> increase step size
           m_learning_rate *= m_linesearch_speed;
-          std::cout << "DEBUG: " << __LINE__ << "\n";
         }
-        std::cout << "DEBUG: " << __LINE__ << "\n";
 
         u_vec = testmat.row(minindex);
         m_model.norm_constraint(u_vec);
-        std::cout << "DEBUG: " << __LINE__ << "\n";
 
-        // TODO: swap instead?! (here and below)
         g_old = g_new;
-        std::cout << "DEBUG: " << __LINE__ << "\n";
 
         if( fy_old > fy ) {
           // descent
+          // TODO: swap instead?! (here and below)
           g_new = u_vec;
         } else {
           // ascent
@@ -141,23 +132,20 @@ namespace dtd {
           if( m_restarts )
             m_nesterov_counter = 2;
         }
-        std::cout << "DEBUG: " << __LINE__ << "\n";
+
+        fy_old = fy;
 
         // linesearch for nesterov extrapolation
         ftype factor = nesterov_factor(m_nesterov_counter);
         ftype deltafac = factor / static_cast<double>(m_cyclelength - 1);
-        std::cout << "DEBUG: " << __LINE__ << "\n";
         vec nesterov_dir = g_new - g_old;
-        std::cout << "DEBUG: " << __LINE__ << "\n";
         for( int i = 0; i < m_cyclelength; ++i) {
           ftype alpha = i*deltafac;
           testmat.row(i) = m_model.subspace_constraint(g_new + alpha * nesterov_dir);
           testy(i) = m_model.eval(testmat.row(i));
         }
-        std::cout << "DEBUG: " << __LINE__ << "\n";
         testy.minCoeff(&minindex);
         y_vec = testmat.row(minindex);
-        std::cout << "DEBUG: " << __LINE__ << "\n";
       }
       m_model.norm_constraint(g_new);
       m_g.swap(g_new);

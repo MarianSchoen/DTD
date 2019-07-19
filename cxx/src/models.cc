@@ -9,6 +9,15 @@ namespace dtd {
     int sgn(T x) {
       return (T(0) < x) - (x < T(0));
     }
+    vec softmax(vec const & v, ftype softfactor) {
+      vec res(v.size());
+      // TODO: non-loop based approach may be faster.
+      for( int i = 0; i < v.size(); ++i ){
+        double const & x = v.coeff(i);
+        res.coeffRef(i) = sgn(x)*std::max(std::abs(x)-softfactor, 0.0);
+      }
+      return res;
+    }
     mat invxtgx(mat const & x, vec const & g) {
       mat xtgx = x.transpose()*g.asDiagonal()*x;
       mat xi = xtgx.llt().solve(mat::Identity(x.cols(), x.cols()));
@@ -66,25 +75,30 @@ namespace dtd {
       clampPos(gr);
     }
     vec GoertlerModel::threshold(vec const & v, ftype softfactor) const {
-      // TODO: implement more options and dispatch dynamically.
-      // TODO: non-loop based approach may be faster.
-      vec res(v.size());
-      for( int i = 0; i < v.size(); ++i ){
-        double const & x = v.coeff(i);
-        res.coeffRef(i) = sgn(x)*std::max(std::abs(x)-softfactor, 0.0);
-      }
-      return res;
+      if( m_threshfn == ThresholdFunctions::SOFTMAX )
+        return softmax(v, softfactor);
+      else
+        throw std::runtime_error("unimplemented threshold function.");
     }
     void GoertlerModel::norm_constraint(vec & v) const {
       // TODO implement option dispatch
-      // norm
-      v = v / v.norm();
+      if( m_normfn == NormFunctions::IDENTITY )
+        ; // leave v unchanged
+      else if( m_normfn == NormFunctions::NORM2 )
+        v /= v.norm();
+      else
+        throw std::runtime_error("unimplemented norm function. ");
     }
     vec GoertlerModel::subspace_constraint(vec const & v) const {
-      // set all negative values to zero:
-      vec res(v);
-      clampNeg(res);
-      return res;
+      if( m_subspfn == SubspaceFunctions::POSITIVE ) {
+        // set all negative values to zero:
+        vec res(v);
+        clampNeg(res);
+        return res;
+      }
+      else
+        throw std::runtime_error("unimplemented subspace constraint.");
+
     }
   }
 }
