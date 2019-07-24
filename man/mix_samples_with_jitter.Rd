@@ -25,7 +25,7 @@ occur with higher quantites in the in-silicio mixtures.}
 
 \item{single.special}{logical, in a mixture, should all special names be used? (=> TRUE) Or, should a mixture only include one special sample? (=> FALSE)(Defaults to FALSE)}
 
-\item{add.jitter}{logical, should the mixtures be mulitplied with a vector of normally distributed numbers? (JITTER)}
+\item{add.jitter}{logical, should the mixtures be multiplied with a vector of normally distributed numbers? (JITTER)}
 
 \item{chosen.mean}{float, mean of jitter (Default: 1)}
 
