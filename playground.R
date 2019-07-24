@@ -72,5 +72,6 @@ model <- train_deconvolution_model(
   n.folds = n.folds,
   lambda.len = lambda.len,
   cv.verbose = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  useImplementation = "cxx"
 )

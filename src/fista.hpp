@@ -82,16 +82,18 @@ namespace dtd {
       ftype feval() const {
         return m_model.eval(m_g);
       }
-      void solve(std::size_t iter, double lambda); // returns value of loss function
+      vec solve(std::size_t iter, double lambda); // returns value of loss function
     };
 
     template<class Model>
-    void FistaSolver<Model>::solve(std::size_t maxiter, double lambda) {
+    vec FistaSolver<Model>::solve(std::size_t maxiter, double lambda) {
       vec y_vec = m_g;
       vec g_new = m_g;
       vec u_vec, g_old;
       ftype fy = m_model.eval(m_g);
       ftype fy_old = fy;
+
+      vec fnvals(maxiter-2);
 
       // TODO preallocate dynamic memory
 
@@ -134,6 +136,7 @@ namespace dtd {
         }
 
         fy_old = fy;
+        fnvals(iter-2) = fy;
 
         // linesearch for nesterov extrapolation
         ftype factor = nesterov_factor(m_nesterov_counter);
@@ -149,6 +152,7 @@ namespace dtd {
       }
       m_model.norm_constraint(g_new);
       m_g.swap(g_new);
+      return fnvals;
     }
   }
 }

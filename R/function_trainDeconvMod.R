@@ -47,6 +47,7 @@ train_deconvolution_model <- function(tweak,
                                     train.data.list,
                                     test.data.list = NULL,
                                     estimate.c.type,
+                                    useImplementation = "R",
                                     ...){
 
   if(length(tweak) != nrow(X.matrix)){
@@ -154,49 +155,62 @@ train_deconvolution_model <- function(tweak,
   }
   # end => compatible test
 
-  ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
-                                output.info = c("train_deconvolution_model", "estimate.c.type"))
+  catch <- list()
+  if( useImplementation == "R" ) {
+    ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
+                                  output.info = c("train_deconvolution_model", "estimate.c.type"))
 
 
-  # define wrapper functions for gradient and correlation evaluation
-  DTD.grad.wrapper <- function(tweak,
-                               X = X.matrix,
-                               train.list = train.data.list,
-                               esti.c.type = estimate.c.type) {
-    Y <- train.list$mixtures
-    C <- train.list$quantities
-    grad <- gradient_cor_trace(
-      X = X,
-      Y = Y,
-      C = C,
-      tweak = tweak,
-      estimate.c.type = esti.c.type)
-    return(grad)
-  }
-
-  DTD.evCor.wrapper <- function(tweak,
+    # define wrapper functions for gradient and correlation evaluation
+    DTD.grad.wrapper <- function(tweak,
                                 X = X.matrix,
                                 train.list = train.data.list,
                                 esti.c.type = estimate.c.type) {
-    Y <- train.list$mixtures
-    C <- train.list$quantities
-    loss <- evaluate_cor(
-      X.matrix = X,
-      new.data = Y,
-      true.compositions = C,
-      DTD.model = tweak,
-      estimate.c.type = esti.c.type
-    ) / ncol(X)
-    return(loss)
-  }
+      Y <- train.list$mixtures
+      C <- train.list$quantities
+      grad <- gradient_cor_trace(
+        X = X,
+        Y = Y,
+        C = C,
+        tweak = tweak,
+        estimate.c.type = esti.c.type)
+      return(grad)
+    }
 
-  catch <- DTD_cv_lambda(
-    tweak.start = tweak,
-    train.data.list = train.data.list,
-    F.GRAD.FUN = DTD.grad.wrapper,
-    EVAL.FUN = DTD.evCor.wrapper,
-    ...
-  )
+    DTD.evCor.wrapper <- function(tweak,
+                                  X = X.matrix,
+                                  train.list = train.data.list,
+                                  esti.c.type = estimate.c.type) {
+      Y <- train.list$mixtures
+      C <- train.list$quantities
+      loss <- evaluate_cor(
+        X.matrix = X,
+        new.data = Y,
+        true.compositions = C,
+        DTD.model = tweak,
+        estimate.c.type = esti.c.type
+      ) / ncol(X)
+      return(loss)
+    }
+
+    catch <- DTD_cv_lambda_R(
+      tweak.start = tweak,
+      train.data.list = train.data.list,
+      F.GRAD.FUN = DTD.grad.wrapper,
+      EVAL.FUN = DTD.evCor.wrapper,
+      ...
+    )
+  } else if( useImplementation == "cxx" || useImplementation == "cpp" ) {
+    cat("using cxx implementation!")
+    catch <- DTD_cv_lambda_cxx(
+      tweak.start = tweak,
+      train.data.list = train.data.list,
+      X.matrix = X.matrix,
+      ...
+    )
+  } else {
+    stop(paste("cannot use implementation \"", useImplementation, "\": not implemented."))
+  }
   catch$reference.X <- X.matrix
 
   pics <- vector(mode = "list")

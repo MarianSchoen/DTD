@@ -31,16 +31,13 @@
 #' retrained on the complete dataset as "best.model
 #' @export
 #'
-DTD_cv_lambda <- function(lambda.seq = NULL,
-                          tweak.start,
-                          n.folds = 5,
-                          lambda.length = 10,
-                          train.data.list,
-                          F.GRAD.FUN,
-                          EVAL.FUN,
-                          cv.verbose = TRUE,
-                          warm.start = FALSE,
-                          ...) {
+DTD_cv_lambda_test_input_generic <- function(lambda.seq,
+                                 tweak.start,
+                                 n.folds,
+                                 lambda.length,
+                                 train.data.list,
+                                 cv.verbose,
+                                 warm.start) {
 
   # safety check: tweak.start
   test <- test_tweak_vec(tweak.vec = tweak.start,
@@ -103,22 +100,19 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
                        output.info = c("DTD_cv_lambda", "warm.start"))
   # end -> warm.start
   ####################### end safety check
-
-  # First, all possible training samples get assigned to a bucket:
-  # extract Y:
-  train.Y <- train.data.list$mixtures
+}
+make_buckets <- function(train.Y) {
   # map every sample to a bucket:
   bucket.indicator <- sample(rep(1:n.folds,
-    each = ceiling(ncol(train.Y) / n.folds)
-  ))[1:ncol(train.Y)]
+                             each = ceiling(ncol(train.Y) / n.folds)
+                             ))[1:ncol(train.Y)]
   names(bucket.indicator) <- colnames(train.Y)
-
-  # Next, if no lambda.seq is provided, a generic sequence is created,
+  return(bucket.indicator)
+}
+lambda_sequence <- function(lambda.seq, lambda.length, train.Y) {
+  # if necessary, generate a generic sequence,
   # based on "p" and "n" of the mixture matrix:
   if (is.null(lambda.seq) || is.na(lambda.seq) || !is.numeric(lambda.seq)) {
-    if (!is.numeric(lambda.length)) {
-      lambda.length <- 20
-    }
     p <- nrow(train.Y)
     n <- ncol(train.Y)
     lambda.0 <- sqrt(log(p) / n)
@@ -129,22 +123,195 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
   if(min(lambda.seq) != lambda.seq[1]){
     lambda.seq <- sort(lambda.seq, decreasing = TRUE)
   }
+}
+select.fun <- function(list.entry, samples) {
+  # internal training samples selection function:
+  if (is.matrix(list.entry)) {
+    return(list.entry[, samples])
+  }
+  if (!is.null(names(list.entry))) {
+    return(list.entry[samples])
+  }
+  return(list.entry)
+}
+
+pick.mean.test.results.function <- function(lambda.list){
+  tmp <- lapply(lambda.list, function(each.fold){
+    if("cor.test" %in% names(each.fold)){
+      return(each.fold$cor.test)
+    }else{
+      return(Inf)
+    }
+  })
+  test.vec <- mean(unlist(tmp, use.names = FALSE), na.rm = TRUE)
+  return(test.vec)
+}
+DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
+                              tweak.start,
+                              X.matrix,
+                              n.folds = 5,
+                              lambda.length = 10,
+                              train.data.list,
+                              cv.verbose = TRUE,
+                              warm.start = FALSE,
+                              ...) {
+  DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)
+  if( ! is.numeric(X.matrix) ||
+      ! is.matrix(X.matrix) ||
+      nrow(X.matrix) != nrow(train.data.list$mixtures) ||
+      ncol(X.matrix) != nrow(train.data.list$quantities) ) {
+    cat("X is a ", nrow(X.matrix), " times ", ncol(X.matrix), " matrix.")
+    cat("train.data.list$mixtures: ", nrow(train.data.list$mixtures), " x ", ncol(train.data.list$mixtures))
+    cat("train.data.list$quantities: ", nrow(train.data.list$quantities), " x ", ncol(train.data.list$quantities))
+    stop("X has wrong type or size (should be a numeric ngenes x ncells matrix.")
+  }
+  # short hand:
+  train.Y <- train.data.list$mixtures
+  bucket.indicator <- make_buckets(train.Y)
+
+  if (!is.numeric(lambda.length)) {
+    lambda.length <- 20
+  }
+  lambda.seq <- lambda_sequence(lambda.seq, lambda.length, train.Y)
+
   # after cross validation, a model is trained on the complete training
   # data using the best lambda of the cross validation.
   # The starting tweak for the end model must not be the result of a warm start,
   # therefore store it:
   tweak.start.end.model <- tweak.start
 
-  # internal training samples selection function:
-  select.fun <- function(list.entry, samples) {
-    if (is.matrix(list.entry)) {
-      return(list.entry[, samples])
+  # in older versions, I only kept the resulting loss for every fold and each lambda.
+  # I think, for visualizing the cross validation, and comparing, it is better to return the complete models
+  cv.object <- list()
+
+  # prepare the model:
+  model <- list()
+  model$X = X.matrix
+  # Start of cross validation:
+  for (lambda in lambda.seq) {
+    if (cv.verbose) {
+      pos <- which(lambda.seq == lambda) - 1
+      cat("\ndoing lambda: ", lambda, ", completed ", pos, " of ", length(lambda.seq), ", ", 100 * pos / length(lambda.seq), "% \n")
     }
-    if (!is.null(names(list.entry))) {
-      return(list.entry[samples])
+    if (cv.verbose) {
+      cat("doing l.fold: ")
     }
-    return(list.entry)
+    lambda.fold <- list()
+    for (l.fold in 1:n.folds) {
+      if (cv.verbose) {
+        cat(l.fold, "\t")
+      }
+
+      # Split the complete training data into test and train:
+      test.samples <- names(which(bucket.indicator == l.fold))
+      train.samples <- names(which(bucket.indicator != l.fold))
+
+      # reduce the train to only include the cv train samples ...
+      tmp.train.list <- lapply(train.data.list, select.fun, samples = train.samples)
+
+      # Now, try to train a model on the reduced training set:
+      model$Y <- tmp.train.list$mixtures
+      model$C <- tmp.train.list$quantities
+      model$tweak = tweak.start
+
+      catch <- try(descent_generalized_fista_cxx(
+                              model = model,
+                              lambda = lambda,
+                              ...
+                            ),
+      silent = TRUE
+      )
+
+
+      # TODO: won't happen. think about error handling in cpp and propagating them to R!
+      # If the regularization parameter lambda is to big,
+      # the fista algorithm does not find a model, and throws an error
+      if (any(grepl(pattern = "Error", catch))) {
+        lambda.fold[[as.character(l.fold)]] <- "could not build a model"
+        next
+      }
+      # warm start, after learning a model, keep last tweak vec as start for next model:
+      if (warm.start) {
+        tweak.start <- catch$Tweak
+        }
+      # Evaluate the reached minimum on the test set:
+      tmp.test.list <- lapply(train.data.list, select.fun, samples = test.samples)
+      tmp.eval.fun.test <- function(tmp.tweak, tmp.list = tmp.test.list) {
+        return(EVAL.FUN(tmp.tweak, train.list = tmp.list))
+      }
+      catch$cor.test <- tmp.eval.fun.test(catch$Tweak)
+      lambda.fold[[as.character(l.fold)]] <- catch
+    }
+    cv.object[[as.character(lambda)]] <- lambda.fold
   }
+  if (cv.verbose) {
+    cat("\ncross validation completed, starting to build model on complete data, with  best lambda\n")
+  }
+
+
+  # pick the average mean per lambda:
+  test.result.per.lambda <- lapply(cv.object,
+                                   pick.mean.test.results.function)
+
+  # unlist it => keep names
+  mean.test.results <- unlist(test.result.per.lambda)
+
+  # and rebuild a model on the complete dataset:
+  lmin.pos <- which.min(mean.test.results)
+  lmin <- as.numeric(names(mean.test.results)[lmin.pos])
+
+  model$tweak <- tweak.start.end.model
+  model$Y <- train.data.list$mixtures
+  model$C <- train.data.list$quantities
+
+  bestModel <- descent_generalized_fista_cxx(
+    model,
+    lambda = lmin,
+    save.all.tweaks = TRUE, #<-- currently not supported (but will do!)
+    ...
+  )
+
+  # return the cv.object for plotting, and the model with best lambda
+  ret <- list(cv.obj = cv.object, best.model = bestModel)
+  return(ret)
+}
+DTD_cv_lambda <- function(useImplementation = "R",
+                          ...) {
+  if( useImplementation == "R" ) {
+    return(DTD_cv_lambda_R(...))
+  } else if ( useImplementation == "cxx" || useImplementation == "cpp" ) {
+    return(DTD_cv_lambda_cxx(...))
+  } else {
+    stop(paste("unknown implementation: ", useImplementation))
+  }
+}
+DTD_cv_lambda_R <- function(lambda.seq = NULL,
+                          tweak.start,
+                          n.folds = 5,
+                          lambda.length = 10,
+                          train.data.list,
+                          F.GRAD.FUN,
+                          EVAL.FUN,
+                          cv.verbose = TRUE,
+                          warm.start = FALSE,
+                          ...) {
+  DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)
+
+  # First, all possible training samples get assigned to a bucket:
+  # extract Y:
+  train.Y <- train.data.list$mixtures
+  bucket.indicator <- make_buckets(train.Y)
+
+  if (!is.numeric(lambda.length)) {
+    lambda.length <- 20
+  }
+  lambda.seq <- lambda_sequence(lambda.seq, lambda.length, train.Y)
+
+  # after cross validation, a model is trained on the complete training
+  # data using the best lambda of the cross validation.
+  # The starting tweak for the end model must not be the result of a warm start,
+  # therefore store it:
+  tweak.start.end.model <- tweak.start
 
   # in older versions, I only kept the resulting loss for every fold and each lambda.
   # I think, for visualizing the cross validation, and comparing, it is better to return the complete models
@@ -216,18 +383,6 @@ DTD_cv_lambda <- function(lambda.seq = NULL,
   }
 
   # after the cross validation, find the lambda with best evaluation score
-  pick.mean.test.results.function <- function(lambda.list){
-    tmp <- lapply(lambda.list, function(each.fold){
-        if("cor.test" %in% names(each.fold)){
-          return(each.fold$cor.test)
-        }else{
-          return(Inf)
-        }
-      })
-    test.vec <- mean(unlist(tmp, use.names = FALSE), na.rm = TRUE)
-    return(test.vec)
-  }
-
   # pick the average mean per lambda:
   test.result.per.lambda <- lapply(cv.object,
                                    pick.mean.test.results.function)

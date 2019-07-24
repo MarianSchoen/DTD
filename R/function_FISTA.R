@@ -177,6 +177,7 @@
 #'     estimate.c.type = "direct"
 #'     )/ncol(X.matrix)
 #' cat("Correlation on test data: ", cor.test, "\n")
+#TODO: rename this to descent_generalized_fista_R, write a common interface for it.
 descent_generalized_fista <- function(tweak.vec,
                                       lambda=0,
                                       maxit=1e2,
@@ -470,4 +471,10 @@ descent_generalized_fista <- function(tweak.vec,
     ret$History <- tweak.history
   }
   return(ret)
+}
+descent_generalized_fista_cxx <- function(model, lambda, maxiter, ...) {
+  #TODO: checking (though mostly done within solve_fista_goertler), more options, change model params,...?
+  #TODO: model params should be part of the model!
+  # for now just:
+  return(solve_fista_goertler(model, lambda, maxiter))
 }
