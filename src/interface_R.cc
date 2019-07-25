@@ -48,8 +48,9 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
 
 SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _saveHistory){
   double lambda = REAL(_lambda)[0];
-  int maxiter = REAL(_maxiter)[0]; // TODO: somehow, integers are doubles, actually??
+  int maxiter = INTEGER(_maxiter)[0];
   bool saveHistory = LOGICAL(_saveHistory)[0];
+  saveHistory = false;
   auto model = make_model(model_);
 
   dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
