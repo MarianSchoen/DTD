@@ -18,31 +18,15 @@ SEXP getElementFromRList(SEXP list_r, const char* name) {
     return R_NilValue;
 }
 MatrixXd getMatrixFromR(SEXP mat) {
-  Rprintf("debug4a...\n");
-  double* dmat = REAL(mat);
-  Rprintf("debug4b...\n");
-  int m = INTEGER(GET_DIM(mat))[0]; // TODO, see below !?!?!
-  Rprintf("debug4c...\n");
+  double * dmat = REAL(mat);
+  int m = INTEGER(GET_DIM(mat))[0];
   int n = INTEGER(GET_DIM(mat))[1];
-  MatrixXd res(m,n);
-  for( int i = 0; i < m; ++i) {
-    for( int j = 0; j < n; ++j) {
-      res(i,j) = dmat[i*m+j];
-    }
-  }
-  return res;
+  return MatrixXd(Eigen::Map<MatrixXd>(dmat, m, n)); // Actually DO make a copy, here (to align memory and be safe)
 }
 VectorXd getVectorFromR(SEXP v) {
-  Rprintf("debugv4a...\n");
   double* dv = REAL(v);
-  Rprintf("debugv4b...\n");
   int m = XLENGTH(v);
-  Rprintf("debugv4c...\n");
-  vec res(m);
-  for( int i = 0; i < m; ++i) {
-      res(i) = dv[i];
-  }
-  return res;
+  return VectorXd(Eigen::Map<VectorXd>(dv, m));
 }
 
 void fillPtr(double* dest, MatrixXd const & src) {
@@ -68,9 +52,9 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
   int maxiter = REAL(_maxiter)[0]; // TODO: somehow, integers are doubles, actually??
   auto model = make_model(model_);
 
-  dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver(model);
+  dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
 
-  auto conv_vec = solver.solve( maxiter, lambda);
+  auto conv_vec = solver.solve(model, maxiter, lambda);
 
   const std::array<const char* const, 3> listnames = {"Tweak", "Convergence", "Lambda"};
   const std::size_t listlen = listnames.size();

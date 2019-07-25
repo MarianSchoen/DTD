@@ -75,11 +75,11 @@ namespace dtd {
       ftype feval(Model const & m) const {
         return m.evaluate();
       }
-      void solve(Model & m, std::size_t iter, double lambda); // returns value of loss function
+      vec solve(Model & m, std::size_t iter, double lambda); // returns value of loss function
     };
 
     template<class Model>
-    void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double lambda) {
+    vec FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double lambda) {
       vec y_vec = model.getParams();
       vec g_new = y_vec;
       vec u_vec, g_old;
@@ -146,6 +146,7 @@ namespace dtd {
       }
       model.norm_constraint(g_new);
       model.setParams(g_new);
+      return fnvals;
     }
   }
 }
