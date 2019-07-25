@@ -54,20 +54,22 @@ void fillPtr(double* dest, MatrixXd const & src) {
   }
 }
 
-SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
-  Rprintf("debug1...\n");
-  double lambda = REAL(_lambda)[0];
-  Rprintf("debug2...\n");
-  int maxiter = REAL(_maxiter)[0]; // TODO: somehow, integers are doubles, actually??
-  Rprintf("debug3...\n");
+dtd::models::GoertlerModel make_model(SEXP model_) {
   auto x = getMatrixFromR(getElementFromRList(model_, "X"));
   auto y = getMatrixFromR(getElementFromRList(model_, "Y"));
   auto c = getMatrixFromR(getElementFromRList(model_, "C"));
   auto g = getVectorFromR(getElementFromRList(model_, "tweak"));
 
-  dtd::models::GoertlerModel model(x,y,c);
+  return dtd::models::GoertlerModel(x,y,c, g);
+}
+
+SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
+  double lambda = REAL(_lambda)[0];
+  int maxiter = REAL(_maxiter)[0]; // TODO: somehow, integers are doubles, actually??
+  auto model = make_model(model_);
+
   dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver(model);
-  solver.setG(g);
+
   auto conv_vec = solver.solve( maxiter, lambda);
 
   const std::array<const char* const, 3> listnames = {"Tweak", "Convergence", "Lambda"};
@@ -87,8 +89,8 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
 
   SEXP result = PROTECT(allocVector(VECSXP, listlen));
   // 0: tweak / g
-  SEXP g_r = PROTECT(allocVector(REALSXP, g.size()));
-  fillPtr(REAL(g_r), g);
+  SEXP g_r = PROTECT(allocVector(REALSXP, model.dim()));
+  fillPtr(REAL(g_r), model.getParams());
   SET_VECTOR_ELT(result, 0, g_r);
   // 1: Convergence
   SEXP conv_r = PROTECT(allocVector(REALSXP, conv_vec.size()));
@@ -103,9 +105,17 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
   UNPROTECT(listlen + 4);
   return result;
 }
+SEXP dtd_evaluate_model_goertler(SEXP model_) {
+  auto model = make_model(model_);
+  SEXP res = PROTECT(allocVector(REALSXP, 1));
+  REAL(res)[0] = model.evaluate();
+  UNPROTECT(1);
+  return res;
+}
 extern "C" {
   static const R_CallMethodDef callMethods[] = {
                                                 { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 3},
+                                                { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
                                                 {NULL, NULL, 0}
   };
   void R_init_DTD(DllInfo* info) {

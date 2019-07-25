@@ -237,7 +237,12 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
       # Evaluate the reached minimum on the test set:
       tmp.test.list <- lapply(train.data.list, select.fun, samples = test.samples)
       tmp.eval.fun.test <- function(tmp.tweak, tmp.list = tmp.test.list) {
-        return(EVAL.FUN(tmp.tweak, train.list = tmp.list))
+        thismodel <- list()
+        thismodel$Y <- tmp.list$mixtures
+        thismodel$C <- tmp.list$quantities
+        thismodel$X <- X.matrix
+        thismodel$tweak <- tmp.tweak
+        return(evaluate_model(thismodel))
       }
       catch$cor.test <- tmp.eval.fun.test(catch$Tweak)
       lambda.fold[[as.character(l.fold)]] <- catch

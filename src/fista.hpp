@@ -26,31 +26,26 @@ namespace dtd {
     }
 
     // A model m must implement:
-    // - a loss function, ftype m.eval(vec const & g) const
+    // - a loss function, ftype m.evaluate(vec const & g) const
     // - a gradient, void m.grad(vec & gr, vec const & g) const
     // - a function std::size_t m.dim() const returning the dimension (i.e. the size of g and gr above)
     template<class Model>
     class FistaSolver {
     private:
-      vec m_grad, m_g;
+      vec m_grad;
       ftype m_learning_rate, m_linesearch_speed;
       bool m_restarts;
       int m_cyclelength, m_nesterov_counter;
-      Model m_model;
     public:
-      FistaSolver(Model m, vec g, ftype learningrate, ftype linesearchspeed, int cycles, bool restarts) : m_model(m), m_g(g), m_nesterov_counter(2)
-      { // TODO: avoid copy of model? keep it as a const ref?
-        assert(m.dim() == m_g.size());
-        m_grad.resize(m.dim());
+      FistaSolver(ftype learningrate, ftype linesearchspeed, int cycles, bool restarts) : m_nesterov_counter(2)
+      {
         setLearningRate(learningrate);
         setLinesearchSpeed(linesearchspeed);
         setCyclelength(cycles);
         enableRestart(restarts);
       }
-      FistaSolver(Model m, ftype learningrate, ftype linesearchspeed, int cycles, bool restarts) : FistaSolver(m, vec(m.dim()), learningrate, linesearchspeed, cycles, restarts)
-      {}
       // ctor with some defaults:
-      FistaSolver(Model m) : FistaSolver(m, 0.1, 2.0, 5, true) {}
+      FistaSolver() : FistaSolver(0.1, 2.0, 5, true) {}
 
       // algorithm parameters:
       void setLearningRate(ftype learningrate) {
@@ -59,8 +54,8 @@ namespace dtd {
         m_learning_rate = learningrate;
       }
       ftype getLearningRate() const { return m_learning_rate; }
-      void setLearningAuto() {
-        setLearningRate(bb_learning_rate(m_model, m_g));
+      void setLearningAuto(Model const & m) {
+        setLearningRate(bb_learning_rate(m, m.getParams()));
       }
       void setLinesearchSpeed(ftype lsspeed) {
         if( lsspeed <= 1 )
@@ -76,21 +71,19 @@ namespace dtd {
         m_cyclelength = cyclelen;
       }
       int getCyclelength() const { return m_cyclelength; }
-      void setG(vec const g) { m_g = g; }
-      vec const & getG() const { return m_g; }
       // for external use:
-      ftype feval() const {
-        return m_model.eval(m_g);
+      ftype feval(Model const & m) const {
+        return m.evaluate();
       }
-      vec solve(std::size_t iter, double lambda); // returns value of loss function
+      void solve(Model & m, std::size_t iter, double lambda); // returns value of loss function
     };
 
     template<class Model>
-    vec FistaSolver<Model>::solve(std::size_t maxiter, double lambda) {
-      vec y_vec = m_g;
-      vec g_new = m_g;
+    void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double lambda) {
+      vec y_vec = model.getParams();
+      vec g_new = y_vec;
       vec u_vec, g_old;
-      ftype fy = m_model.eval(m_g);
+      ftype fy = model.evaluate();
       ftype fy_old = fy;
 
       vec fnvals(maxiter-2);
@@ -99,14 +92,14 @@ namespace dtd {
 
       for( std::size_t iter = 2; iter <= maxiter; ++iter ){
         ftype rate = m_learning_rate / static_cast<double>(m_cyclelength - 1);
-        m_model.grad(m_grad, y_vec);
+        model.grad(m_grad, y_vec);
         // TODO if memory is an issue, rethink this:
-        mat testmat = mat(m_cyclelength, m_model.dim());
+        mat testmat = mat(m_cyclelength, model.dim());
         vec testy   = vec(m_cyclelength);
         for(int i = 0; i < m_cyclelength; ++i) {
           double alpha = rate * i;
-          testmat.row(i) = m_model.threshold(y_vec - alpha * m_grad, alpha * lambda);
-          testy(i) = m_model.eval(testmat.row(i));
+          testmat.row(i) = model.threshold(y_vec - alpha * m_grad, alpha * lambda);
+          testy(i) = model.evaluate(testmat.row(i));
         }
         std::size_t minindex;
         ftype fy = testy.minCoeff(&minindex);
@@ -120,7 +113,7 @@ namespace dtd {
         }
 
         u_vec = testmat.row(minindex);
-        m_model.norm_constraint(u_vec);
+        model.norm_constraint(u_vec);
 
         g_old = g_new;
 
@@ -130,7 +123,8 @@ namespace dtd {
           g_new = u_vec;
         } else {
           // ascent
-          fy = m_model.eval(g_new);
+          model.setParams(g_new);
+          fy = model.evaluate(g_new);
           if( m_restarts )
             m_nesterov_counter = 2;
         }
@@ -144,15 +138,14 @@ namespace dtd {
         vec nesterov_dir = g_new - g_old;
         for( int i = 0; i < m_cyclelength; ++i) {
           ftype alpha = i*deltafac;
-          testmat.row(i) = m_model.subspace_constraint(g_new + alpha * nesterov_dir);
-          testy(i) = m_model.eval(testmat.row(i));
+          testmat.row(i) = model.subspace_constraint(g_new + alpha * nesterov_dir);
+          testy(i) = model.evaluate(testmat.row(i));
         }
         testy.minCoeff(&minindex);
         y_vec = testmat.row(minindex);
       }
-      m_model.norm_constraint(g_new);
-      m_g.swap(g_new);
-      return fnvals;
+      model.norm_constraint(g_new);
+      model.setParams(g_new);
     }
   }
 }

@@ -26,10 +26,10 @@ namespace dtd {
     mat estimate_c_direct(mat const & x, mat const & y, vec const & g, mat const & xtgxi) {
       return xtgxi*x.transpose()*g.asDiagonal()*y;
     }
-    ftype GoertlerModel::eval(vec const & g) const {
-      assert(g.size() == m_ngenes);
+    ftype GoertlerModel::evaluate(vec const & g) const {
       double res(0.0);
-      mat xtgxi = invxtgx(m_x, g);
+      assert(g.size() == m_ngenes);
+      mat xtgxi = invxtgx(m_x, g); // TODO: may buffer this?
       assert(xtgxi.rows() == m_ncells);
       assert(xtgxi.cols() == m_ncells);
       mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
@@ -52,10 +52,10 @@ namespace dtd {
       }
     }
     void GoertlerModel::grad(vec & gr, vec const & g) const {
-      assert(g.size() == m_ngenes);
-      if( gr.size() != g.size() )
-        gr.resize(g.size());
-      mat xtgxi = invxtgx(m_x, g);
+      assert( g.size() == m_ngenes);
+      if( gr.size() != m_ngenes);
+        gr.resize(m_ngenes);
+        mat xtgxi = invxtgx(m_x, g); // TODO: may buffer this
       mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
@@ -74,6 +74,7 @@ namespace dtd {
       gr = tmp.diagonal();
       clampPos(gr);
     }
+    void GoertlerModel::grad(vec & gr) const { grad(gr, m_g); }
     vec GoertlerModel::threshold(vec const & v, ftype softfactor) const {
       if( m_threshfn == ThresholdFunctions::SOFTMAX )
         return softmax(v, softfactor);

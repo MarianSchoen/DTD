@@ -57,15 +57,17 @@ double cov(std::vector<double> const & x, std::vector<double> const & y) {
   return dtd::stat::cov(vecToEVec(x), vecToEVec(y));
 }
 
-dtd::models::GoertlerModel makeGoertlerModel(std::vector<double> const & xv, std::vector<double> const & yv, std::vector<double> const & cv, std::size_t ngenes, std::size_t ncells, std::size_t nsamples) {
+dtd::models::GoertlerModel makeGoertlerModel(std::vector<double> const & xv, std::vector<double> const & yv, std::vector<double> const & cv, std::vector<double> const & gv, std::size_t ngenes, std::size_t ncells, std::size_t nsamples) {
   MatrixXd x = vecToEMat(xv, ngenes, ncells);
   MatrixXd y = vecToEMat(yv, ngenes, nsamples);
   MatrixXd c = vecToEMat(cv, ncells, nsamples);
-  return dtd::models::GoertlerModel(x,y,c);
+  VectorXd g = vecToEVec(gv);
+  assert(g.size() == ngenes);
+  return dtd::models::GoertlerModel(x,y,c,g);
 }
 
 double evalGoertlerModel(dtd::models::GoertlerModel const * model, std::vector<double> const & g) {
-  return model->eval(vecToEVec(g));
+  return model->evaluate(vecToEVec(g));
 }
 
 std::vector<double> gradGoertlerModel(dtd::models::GoertlerModel const * model, std::vector<double> const & g) {
@@ -74,12 +76,11 @@ std::vector<double> gradGoertlerModel(dtd::models::GoertlerModel const * model, 
   return ematToVec(grad);
 }
 
-double solveFista(dtd::models::GoertlerModel const * model, std::vector<double> & params, double lambda, std::size_t maxiter){
-  dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver(*model);
-  solver.setG(vecToEVec(params));
-  solver.solve( maxiter, lambda);
-  params = evecToVec(solver.getG());
-  return solver.feval();
+double solveFista(dtd::models::GoertlerModel * model, std::vector<double> & params, double lambda, std::size_t maxiter){
+  dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver; // TODO: pass algorithmic params...
+  solver.solve(*model, maxiter, lambda);
+  params = evecToVec(model->getParams());
+  return model->evaluate();
 }
 
 double bb_learning_rate(dtd::models::GoertlerModel const * model, std::vector<double> const & params) {

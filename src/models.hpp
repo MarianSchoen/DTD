@@ -18,21 +18,27 @@ namespace dtd {
     private:
       int m_ngenes, m_ncells, m_nsamples;
       mat m_x, m_y, m_c;
+      vec m_g;
       NormFunctions m_normfn;
       ThresholdFunctions m_threshfn;
       SubspaceFunctions m_subspfn;
     public:
-      GoertlerModel(mat x, mat y, mat c, NormFunctions fn = NormFunctions::IDENTITY, ThresholdFunctions thresh = ThresholdFunctions::SOFTMAX, SubspaceFunctions subsp = SubspaceFunctions::POSITIVE) : m_x(x), m_y(y), m_c(c), m_ngenes(x.rows()), m_ncells(x.cols()), m_nsamples(y.cols()), m_normfn(fn), m_threshfn(thresh), m_subspfn(subsp) {
+      GoertlerModel(mat x, mat y, mat c, vec g, NormFunctions fn = NormFunctions::IDENTITY, ThresholdFunctions thresh = ThresholdFunctions::SOFTMAX, SubspaceFunctions subsp = SubspaceFunctions::POSITIVE) : m_x(x), m_y(y), m_c(c), m_g(g), m_ngenes(x.rows()), m_ncells(x.cols()), m_nsamples(y.cols()), m_normfn(fn), m_threshfn(thresh), m_subspfn(subsp) {
         assert(m_x.rows() == m_ngenes);
         assert(m_x.cols() == m_ncells);
         assert(m_y.rows() == m_ngenes);
         assert(m_y.cols() == m_nsamples);
         assert(m_c.rows() == m_ncells);
         assert(m_c.cols() == m_nsamples);
+        assert(m_g.size() == m_ngenes && m_g.cols() == 1);
       }
-      ftype eval(vec const & g) const;
+      inline vec const & getParams() const { return m_g; }
+      void setParams(vec const & g) { m_g = g; }
+      ftype evaluate(vec const & params) const;
+      inline ftype evaluate() const { return evaluate(m_g); }
       void grad(vec & gr, vec const & g) const;
-      std::size_t dim() const {
+      void grad(vec & gr) const;
+      inline std::size_t dim() const {
         return static_cast<std::size_t>(m_ngenes);
       }
       vec threshold(vec const & v, ftype softfactor) const;
