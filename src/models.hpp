@@ -23,7 +23,7 @@ namespace dtd {
       ThresholdFunctions m_threshfn;
       SubspaceFunctions m_subspfn;
     public:
-      GoertlerModel(mat x, mat y, mat c, vec g, NormFunctions fn = NormFunctions::IDENTITY, ThresholdFunctions thresh = ThresholdFunctions::SOFTMAX, SubspaceFunctions subsp = SubspaceFunctions::POSITIVE) : m_x(x), m_y(y), m_c(c), m_g(g), m_ngenes(x.rows()), m_ncells(x.cols()), m_nsamples(y.cols()), m_normfn(fn), m_threshfn(thresh), m_subspfn(subsp) {
+      GoertlerModel(mat x, mat y, mat c, vec g, NormFunctions fn = NormFunctions::IDENTITY, ThresholdFunctions thresh = ThresholdFunctions::SOFTMAX, SubspaceFunctions subsp = SubspaceFunctions::POSITIVE) : m_ngenes(x.rows()), m_ncells(x.cols()), m_nsamples(y.cols()), m_x(x), m_y(y), m_c(c), m_g(g), m_normfn(fn), m_threshfn(thresh), m_subspfn(subsp) {
         assert(m_x.rows() == m_ngenes);
         assert(m_x.cols() == m_ncells);
         assert(m_y.rows() == m_ngenes);

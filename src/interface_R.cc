@@ -3,6 +3,7 @@
 #include <R.h>
 #include <Rdefines.h>
 #include <array>
+#include <string>
 
 // copied from https://github.com/rehbergT/dgemm/blob/master/dgemmR/src/wrapper.cpp
 SEXP getElementFromRList(SEXP list_r, const char* name) {
@@ -54,21 +55,32 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
 
   dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
 
-  auto conv_vec = solver.solve(model, maxiter, lambda);
+  VectorXd conv_vec(maxiter-2);
+  MatrixXd history;
+  bool saveHistory = true; // TODO: set from outside
+  if( saveHistory )
+    history.resize(maxiter-2, model.dim());
+  int iter = 0; // not the true "iter", but the actual iteration count (iter - 2)
+  std::function<void(dtd::models::GoertlerModel const & m)> record_solve =
+    [&conv_vec,&history,&iter,saveHistory](dtd::models::GoertlerModel const & m) {
+      conv_vec(iter) = m.evaluate();
+      if( saveHistory ) {
+        history.row(iter) = m.getParams();
+      }
+      iter++;
+    };
 
-  const std::array<const char* const, 3> listnames = {"Tweak", "Convergence", "Lambda"};
+  solver.solve(model, maxiter, lambda, record_solve);
+
+  std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda"};
+  if( saveHistory )
+    listnames.push_back("History");
   const std::size_t listlen = listnames.size();
-  Rprintf("DEBUG: 10\n");
   SEXP listentrynames = PROTECT(allocVector(VECSXP, listlen));
-  Rprintf("DEBUG: 11\n");
   for( auto i = 0u; i < listlen; ++i){
-    Rprintf("DEBUG: 12-%d\n", i);
     SEXP thisName = PROTECT(allocVector(STRSXP, 1));
-    Rprintf("DEBUG: 13-%d\n", i);
-    SET_STRING_ELT(thisName, 0, mkChar(listnames.at(i)));
-    Rprintf("DEBUG: 14-%d\n", i);
+    SET_STRING_ELT(thisName, 0, mkChar(listnames.at(i).c_str()));
     SET_VECTOR_ELT(listentrynames, i, thisName);
-    Rprintf("DEBUG: 15-%d\n", i);
   }
 
   SEXP result = PROTECT(allocVector(VECSXP, listlen));
@@ -85,7 +97,16 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
   SET_VECTOR_ELT(result, 1, conv_r);
   // 2: lambda:
   SET_VECTOR_ELT(result, 2, _lambda); // simply copy back as the SEXP itself
+  // 3: History:
+  if( saveHistory ) {
+    SEXP history_r = PROTECT(allocMatrix(REALSXP, maxiter-2, model.dim()));
+    fillPtr(REAL(history_r), history);
+    SET_VECTOR_ELT(result, 3, history_r);
+  }
+
+  // set names in list:
   setAttrib(result, R_NamesSymbol, listentrynames);
+
   UNPROTECT(listlen + 4);
   return result;
 }
