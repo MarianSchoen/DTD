@@ -272,7 +272,7 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
   bestModel <- descent_generalized_fista_cxx(
     model,
     lambda = lmin,
-    save.all.tweaks = TRUE, #<-- currently not supported (but will do!)
+    save.all.tweaks = TRUE,
     ...
   )
 

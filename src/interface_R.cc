@@ -48,16 +48,16 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   return dtd::models::GoertlerModel(x,y,c, g);
 }
 
-SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
+SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _saveHistory){
   double lambda = REAL(_lambda)[0];
   int maxiter = REAL(_maxiter)[0]; // TODO: somehow, integers are doubles, actually??
+  bool saveHistory = LOGICAL(_saveHistory)[0];
   auto model = make_model(model_);
 
   dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
 
   VectorXd conv_vec(maxiter-2);
   MatrixXd history;
-  bool saveHistory = true; // TODO: set from outside
   if( saveHistory )
     history.resize(maxiter-2, model.dim());
   int iter = 0; // not the true "iter", but the actual iteration count (iter - 2)
@@ -90,9 +90,6 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
   SET_VECTOR_ELT(result, 0, g_r);
   // 1: Convergence
   SEXP conv_r = PROTECT(allocVector(REALSXP, conv_vec.size()));
-  for( std::size_t i = 0; i < conv_vec.size(); ++i){
-    Rprintf("from R: conv_r[%d] = %f\n", i, conv_vec(i));
-  }
   fillPtr(REAL(conv_r), conv_vec);
   SET_VECTOR_ELT(result, 1, conv_r);
   // 2: lambda:
@@ -107,7 +104,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter){
   // set names in list:
   setAttrib(result, R_NamesSymbol, listentrynames);
 
-  UNPROTECT(listlen + 4);
+  UNPROTECT(2*listlen + 1);
   return result;
 }
 SEXP dtd_evaluate_model_goertler(SEXP model_) {
@@ -119,7 +116,7 @@ SEXP dtd_evaluate_model_goertler(SEXP model_) {
 }
 extern "C" {
   static const R_CallMethodDef callMethods[] = {
-                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 3},
+                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 4},
                                                 { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
                                                 {NULL, NULL, 0}
   };

@@ -16,7 +16,7 @@ check_model <- function(model) {
     stop("input matrices have incompatible sizes.")
   }
 }
-solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100) {
+solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.tweaks ) {
   # check input params...
   check_model(model)
   if( ! (is.numeric(lambda) && lambda >= 0.0 )) {
@@ -26,7 +26,7 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100) {
     stop("maxiter is not within range (integer, >= 2)")
   }
 
-  result <- .Call("_dtd_solve_fista_goertler", model, lambda, maxiter, PACKAGE="DTD")
+  result <- .Call("_dtd_solve_fista_goertler", model, lambda, maxiter, save.all.tweaks, PACKAGE="DTD")
   return(result)
 }
 evaluate_model <- function(model) {
