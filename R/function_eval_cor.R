@@ -82,7 +82,7 @@ evaluate_cor <- function(X.matrix = NA,
                       output.info = c("evaluate_cor", "estimate.c.type"))
   # end -> estimate.c.type
 
-  # the reference matrix can either be included in the DTD.model, or has to be past
+  # the reference matrix can either be included in the DTD.model, or has to be passed
   # via the X.matrix argument:
   if(is.matrix(X.matrix) && !any(is.na(X.matrix))){
     X <- X.matrix
