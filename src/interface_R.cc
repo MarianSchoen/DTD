@@ -99,7 +99,11 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   fillPtr(REAL(conv_r), conv_vec);
   SET_VECTOR_ELT(result, 1, conv_r);
   // 2: lambda:
-  SET_VECTOR_ELT(result, 2, _lambda); // simply copy back as the SEXP itself
+  // may also simply copy back as the SEXP itself,
+  // but deep-copying makes the UNPROTECT cleaner...
+  SEXP _newLambda = PROTECT(allocVector(REALSXP, 1));
+  REAL(_newLambda)[0] = lambda;
+  SET_VECTOR_ELT(result, 2, _newLambda);
   // 3: History:
   if( saveHistory ) {
     SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter-2));
@@ -110,7 +114,9 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   // set names in list:
   setAttrib(result, R_NamesSymbol, listentrynames);
 
-  UNPROTECT(2*listlen + 1); // each element in the list has a name + value, +1 from the list itself
+  // each element in the list has a name and value, hence, 2*listlen,
+  // +2 from the list and its vector of names
+  UNPROTECT(2*listlen + 2);
   return result;
 }
 SEXP dtd_evaluate_model_goertler(SEXP model_) {
