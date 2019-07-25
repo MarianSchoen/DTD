@@ -53,7 +53,7 @@ namespace dtd {
     }
     void GoertlerModel::grad(vec & gr, vec const & g) const {
       assert( g.size() == m_ngenes);
-      if( gr.size() != m_ngenes);
+      if( gr.size() != m_ngenes )
         gr.resize(m_ngenes);
         mat xtgxi = invxtgx(m_x, g); // TODO: may buffer this
       mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
