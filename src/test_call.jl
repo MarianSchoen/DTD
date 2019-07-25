@@ -1,13 +1,12 @@
-include("../dtd_julia/main.jl")
+include("../../dtd_julia/main.jl")
 using Cxx, Libdl
 using StatsBase, Statistics
 using Test
 
 # this is meant to be run from within the build directory
-addHeaderDir("./src/")
-addHeaderDir("/usr/include/eigen3/")
+addHeaderDir("./eigen/")
 Libdl.dlopen(pwd() * "/build/libdtd_jl.so", Libdl.RTLD_GLOBAL)
-cxxinclude(pwd() * "/src/interface_jl.hpp")
+cxxinclude(pwd() * "/interface_jl.hpp")
 
 const ngenes=100
 const ncells=5
