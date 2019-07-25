@@ -26,7 +26,7 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.t
     stop("maxiter is not within range (integer, >= 2)")
   }
 
-  result <- .Call("_dtd_solve_fista_goertler", model, lambda, integer(maxiter), save.all.tweaks, PACKAGE="DTD")
+  result <- .Call("_dtd_solve_fista_goertler", as.list(model), as.double(lambda), as.integer(maxiter), as.logical(save.all.tweaks), PACKAGE="DTD")
 
   # take over row and colnames from model:
   names(result$Tweak) <- names(model$tweak)

@@ -55,7 +55,7 @@ namespace dtd {
       assert( g.size() == m_ngenes);
       if( gr.size() != m_ngenes )
         gr.resize(m_ngenes);
-        mat xtgxi = invxtgx(m_x, g); // TODO: may buffer this
+      mat xtgxi = invxtgx(m_x, g); // TODO: may buffer this
       mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
