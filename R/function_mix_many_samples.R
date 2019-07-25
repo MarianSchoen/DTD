@@ -86,10 +86,10 @@ mix_samples <- function(exp.data,
 
   # Safety checks
   if(!is.vector(included.in.X)){
-    stop("in mix_samples_with_jitter: 'included.in.X' is not provided as vector")
+    stop("in mix_samples: 'included.in.X' is not provided as vector")
   }
   if(!is.vector(pheno)){
-    stop("in mix_samples_with_jitter: 'pheno' is not provided as vector")
+    stop("in mix_samples: 'pheno' is not provided as vector")
   }
   if(!is.matrix(exp.data)){
     stop("in mix_samples: 'exp.data' is not a numeric matrix")
