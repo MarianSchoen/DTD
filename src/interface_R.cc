@@ -9,13 +9,11 @@
 SEXP getElementFromRList(SEXP list_r, const char* name) {
     SEXP names = getAttrib(list_r, R_NamesSymbol);
     for (uint32_t i = 0; i < (uint32_t)length(list_r); i++) {
-      Rprintf("DEBUG: cmp %s with %s...\n", CHAR(STRING_ELT(names, i)), name);
         if (strcmp(CHAR(STRING_ELT(names, i)), name) == 0) {
-            Rprintf("DEBUG: element found..");
             return VECTOR_ELT(list_r, i);
         }
     }
-    Rprintf("entry %s not found in list!\n", name);
+    Rprintf("DTD interface: entry %s not found in list!\n", name);
     return R_NilValue;
 }
 MatrixXd getMatrixFromR(SEXP mat) {
@@ -104,7 +102,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   // set names in list:
   setAttrib(result, R_NamesSymbol, listentrynames);
 
-  UNPROTECT(2*listlen + 1);
+  UNPROTECT(2*listlen + 1); // each element in the list has a name + value, +1 from the list itself
   return result;
 }
 SEXP dtd_evaluate_model_goertler(SEXP model_) {
