@@ -54,11 +54,17 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
 
   dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
 
-  VectorXd conv_vec(maxiter-2);
+  VectorXd conv_vec(maxiter-1);
   MatrixXd history;
-  if( saveHistory )
-    history.resize(maxiter-2, model.dim());
-  int iter = 0; // not the true "iter", but the actual iteration count (iter - 2)
+  // first elements are just the status before the iteration:
+  conv_vec(0) = model.evaluate();
+  if( saveHistory ) {
+    history.resize(maxiter-1, model.dim());
+    history.row(0) = model.getParams();
+  }
+  // not the true "iter", but the actual iteration count
+  // 0 is the initial value (iter - 1)
+  int iter = 1;
   std::function<void(dtd::models::GoertlerModel const & m)> record_solve =
     [&conv_vec,&history,&iter,saveHistory](dtd::models::GoertlerModel const & m) {
       conv_vec(iter) = m.evaluate();
