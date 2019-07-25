@@ -127,10 +127,9 @@ ggplot_convergence <- function(DTD.model,
     return(loss)
   }
 
-
   # check if dimensions fit (I)
   if(!is.null(test.data)){
-    if(all(rownames(fista.output$History) %in% rownames(X.matrix))){
+    if(! is.null(rownames(fista.output$History)) && all(rownames(fista.output$History) %in% rownames(X.matrix))  ){
       X.matrix <- X.matrix[rownames(fista.output$History), ]
     }else{
       message("In ggplot_convergence: rownames('X.matrix') does not fit 'DTD.model' (rownames of History entry). Therefore convergence can not be shown on 'test.data'.")
