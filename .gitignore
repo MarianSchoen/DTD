@@ -4,3 +4,8 @@ doc
 .Rhistory
 .RData
 .Ruserdata
+*.o
+*.so
+*.tar.gz
+*.pdf
+.gdbhistory
