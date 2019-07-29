@@ -70,7 +70,8 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   int iter = 1;
   std::function<void(dtd::models::GoertlerModel const & , vec const & )> record_solve =
     [&conv_vec,&history,&iter,saveHistory](dtd::models::GoertlerModel const & m, vec const & paramvec) {
-      conv_vec(iter) = m.evaluate(paramvec);
+      if( iter < conv_vec.size() )
+        conv_vec(iter) = m.evaluate(paramvec);
       if( saveHistory ) {
         // this should never happen, but to be sure and not segfault:
         // (and since we cannot throw...)
@@ -111,7 +112,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   SET_VECTOR_ELT(result, 2, _newLambda);
   // 3: History:
   if( saveHistory ) {
-    SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter-1));
+    SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter));
     fillPtr(REAL(history_r), history);
     SET_VECTOR_ELT(result, 3, history_r);
   }
