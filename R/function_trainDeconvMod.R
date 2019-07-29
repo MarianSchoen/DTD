@@ -155,10 +155,11 @@ train_deconvolution_model <- function(tweak,
   }
   # end => compatible test
 
+  ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
+                                output.info = c("train_deconvolution_model", "estimate.c.type"))
+
   catch <- list()
   if( useImplementation == "R" ) {
-    ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
-                                  output.info = c("train_deconvolution_model", "estimate.c.type"))
 
 
     # define wrapper functions for gradient and correlation evaluation
