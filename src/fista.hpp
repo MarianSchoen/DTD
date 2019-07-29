@@ -129,6 +129,7 @@ namespace dtd {
             m_nesterov_counter = 2;
         }
 
+        callback(model, g_new);
         fy_old = fy;
 
         // linesearch for nesterov extrapolation
@@ -142,7 +143,6 @@ namespace dtd {
         }
         testy.minCoeff(&minindex);
         y_vec = testmat.row(minindex);
-        callback(model, y_vec);
       }
       model.norm_constraint(g_new);
       model.setParams(g_new);
