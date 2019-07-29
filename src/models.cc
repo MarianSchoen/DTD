@@ -39,7 +39,7 @@ namespace dtd {
       for( std::size_t icell = 0; icell < m_ncells; ++icell ){
         res -= stat::cor(m_c.row(icell), c_hat.row(icell));
       }
-      return res;
+      return res / m_ncells;
     }
     inline void clampPos(vec & x) {
       for( unsigned int i = 0; i < x.size(); ++i){
