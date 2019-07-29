@@ -107,6 +107,7 @@ test.data <- mix_samples(
   n.per.mixture = n.per.mixtures,
   verbose = FALSE
 )
+
 start.tweak <- rep(1, nrow(X.matrix))
 names(start.tweak) <- rownames(X.matrix)
 model <- train_deconvolution_model(
@@ -133,7 +134,7 @@ model <- train_deconvolution_model(
   maxit = maxit,
   cv.verbose = FALSE,
   verbose = FALSE
-)
+  )
 print(model$pics$convergence)
 ```
 
