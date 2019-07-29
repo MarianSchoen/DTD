@@ -31,7 +31,7 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.t
   # take over row and colnames from model:
   names(result$Tweak) <- names(model$tweak)
   if( "History" %in% names(result) ) {
-    rownames(result$History) <- rownames(model$tweak)
+    rownames(result$History) <- names(model$tweak)
   }
   return(result)
 }
