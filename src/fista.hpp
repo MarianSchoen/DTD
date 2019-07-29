@@ -1,3 +1,4 @@
+#pragma once
 #include "Eigen/Core"
 #include <functional>
 #include <vector>
@@ -18,7 +19,7 @@ namespace dtd {
       vec deltaX = - grad / grad.norm();
       m.grad(grad2, params + deltaX);
       vec deltaY = grad2 - grad;
-      return deltaX.dot(deltaY) / deltaY.norm();
+      return deltaX.dot(deltaY) / deltaY.dot(deltaY);
     }
 
     inline double nesterov_factor(int k) {
