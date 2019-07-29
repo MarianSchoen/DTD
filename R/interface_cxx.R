@@ -1,3 +1,11 @@
+#' Title
+#'
+#' @param model
+#'
+#' @return
+#' @export
+#'
+#' @examples
 check_model <- function(model) {
   if( ! is.list(model) ) {
     stop("model is not a list.")
@@ -16,6 +24,18 @@ check_model <- function(model) {
     stop("input matrices have incompatible sizes.")
   }
 }
+#' Title
+#'
+#' @param model
+#' @param lambda
+#' @param maxiter
+#' @param save.all.tweaks
+#'
+#' @return
+#' @export
+#' @useDynLib DTD, .registration = TRUE
+#'
+#' @examples
 solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.tweaks ) {
   # check input params...
   check_model(model)
@@ -26,7 +46,14 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.t
     stop("maxiter is not within range (integer, >= 2)")
   }
 
-  result <- .Call("_dtd_solve_fista_goertler", as.list(model), as.double(lambda), as.integer(maxiter), as.logical(save.all.tweaks), PACKAGE="DTD")
+  result <- .Call(
+    "_dtd_solve_fista_goertler",
+    as.list(model),
+    as.double(lambda),
+    as.integer(maxiter),
+    as.logical(save.all.tweaks),
+    PACKAGE="DTD"
+  )
 
   # take over row and colnames from model:
   names(result$Tweak) <- names(model$tweak)
@@ -35,7 +62,19 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.t
   }
   return(result)
 }
+#' Title
+#'
+#' @param model
+#'
+#' @return
+#' @export
+#'
+#' @examples
 evaluate_model <- function(model) {
   check_model(model)
-  return(.Call("_dtd_evaluate_model_goertler", model, PACKAGE = "DTD"))
+  return(.Call(
+    "_dtd_evaluate_model_goertler",
+    model,
+    PACKAGE = "DTD"
+    ))
 }

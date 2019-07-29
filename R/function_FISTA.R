@@ -472,6 +472,18 @@ descent_generalized_fista <- function(tweak.vec,
   }
   return(ret)
 }
+#' Title
+#'
+#' @param model
+#' @param lambda
+#' @param maxiter
+#' @param save.all.tweaks
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 descent_generalized_fista_cxx <- function(model, lambda, maxiter, save.all.tweaks = FALSE, ...) {
   #TODO: checking (though mostly done within solve_fista_goertler), more options, change model params,...?
   #TODO: model params should be part of the model!
