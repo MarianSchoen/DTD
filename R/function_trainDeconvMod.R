@@ -159,8 +159,8 @@ train_deconvolution_model <- function(tweak,
                                 output.info = c("train_deconvolution_model", "estimate.c.type"))
 
   catch <- list()
-  if( useImplementation == "R" ) {
 
+  if( useImplementation == "R" ) {
 
     # define wrapper functions for gradient and correlation evaluation
     DTD.grad.wrapper <- function(tweak,
