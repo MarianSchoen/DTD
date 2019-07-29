@@ -66,7 +66,6 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   }
   // not the true "iter", but the actual iteration count
   // 0 is the initial value (iter - 1)
-  Rprintf("DEBUG: %d\n", __LINE__);
   int iter = 1;
   std::function<void(dtd::models::GoertlerModel const & m)> record_solve =
     [&conv_vec,&history,&iter,saveHistory](dtd::models::GoertlerModel const & m) {
@@ -80,23 +79,18 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
       iter++;
     };
 
-  Rprintf("DEBUG: %d\n", __LINE__);
   solver.solve(model, maxiter, lambda, record_solve);
 
   std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda"};
-  Rprintf("DEBUG: %d\n", __LINE__);
   if( saveHistory )
     listnames.push_back("History");
-  Rprintf("DEBUG: %d\n", __LINE__);
   const std::size_t listlen = listnames.size();
   SEXP listentrynames = PROTECT(allocVector(VECSXP, listlen));
-  Rprintf("DEBUG: %d\n", __LINE__);
   for( auto i = 0u; i < listlen; ++i){
     SEXP thisName = PROTECT(allocVector(STRSXP, 1));
     SET_STRING_ELT(thisName, 0, mkChar(listnames.at(i).c_str()));
     SET_VECTOR_ELT(listentrynames, i, thisName);
   }
-  Rprintf("DEBUG: %d\n", __LINE__);
 
   SEXP result = PROTECT(allocVector(VECSXP, listlen));
   // 0: tweak / g
@@ -114,23 +108,18 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   REAL(_newLambda)[0] = lambda;
   SET_VECTOR_ELT(result, 2, _newLambda);
   // 3: History:
-  Rprintf("DEBUG: %d\n", __LINE__);
   if( saveHistory ) {
     SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter-1));
     fillPtr(REAL(history_r), history.transpose());
     SET_VECTOR_ELT(result, 3, history_r);
-    Rprintf("DEBUG: %d\n", __LINE__);
   }
-  Rprintf("DEBUG: %d\n", __LINE__);
 
   // set names in list:
   setAttrib(result, R_NamesSymbol, listentrynames);
-  Rprintf("DEBUG: %d\n", __LINE__);
 
   // each element in the list has a name and value, hence, 2*listlen,
   // +2 from the list and its vector of names
   UNPROTECT(2*listlen + 2);
-  Rprintf("DEBUG: %d\n", __LINE__);
   return result;
 }
 SEXP dtd_evaluate_model_goertler(SEXP model_) {
