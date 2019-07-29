@@ -53,6 +53,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   auto model = make_model(model_);
 
   dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
+  solver.setLearningAuto(model);
 
   maxiter = std::max(2, maxiter); // "no" error handling
 
