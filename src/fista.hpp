@@ -75,12 +75,12 @@ namespace dtd {
       ftype feval(Model const & m) const {
         return m.evaluate();
       }
-      void solve(Model & m, std::size_t iter, double lambda, std::function<void(Model const & m)> callback);
-      inline void solve(Model & m, std::size_t iter, double lambda) { solve(m, iter, lambda, [](Model const &){}); }
+      void solve(Model & m, std::size_t iter, double lambda, std::function<void(Model const & m, vec const &)> callback);
+      inline void solve(Model & m, std::size_t iter, double lambda) { solve(m, iter, lambda, [](Model const &, vec const &){}); }
     };
 
     template<class Model>
-    void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double lambda, std::function<void(Model const & m)> callback) {
+    void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double lambda, std::function<void(Model const &, vec const &)> callback) {
       vec y_vec = model.getParams();
       vec g_new = y_vec;
       vec u_vec, g_old;
@@ -141,7 +141,7 @@ namespace dtd {
         }
         testy.minCoeff(&minindex);
         y_vec = testmat.row(minindex);
-        callback(model);
+        callback(model, y_vec);
       }
       model.norm_constraint(g_new);
       model.setParams(g_new);
