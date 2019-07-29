@@ -1,5 +1,7 @@
 # I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
-library(DTD)
+#library(DTD)
+library(devtools)
+load_all(".")
 # fast testing:
 lambda.len <- 4
 n.folds <- 2
