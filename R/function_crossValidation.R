@@ -106,7 +106,7 @@ DTD_cv_lambda_R <- function(lambda.seq = NULL,
       )
 
 
-      # If the regularization parameter lambda is to big,
+      # If the regularization parameter lambda is too big,
       # the fista algorithm does not find a model, and throws an error
       if (any(grepl(pattern = "Error", catch))) {
         lambda.fold[[as.character(l.fold)]] <- "could not build a model"
