@@ -33,6 +33,7 @@
 #' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
 #' (see \code{\link{estimate_c}}),
 #' if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
+#' @param useImplementation string, either "R" or "cxx". chooses between the R reference implementation and the faster c++ implementation.
 #'
 #' @return list, including 4 entries:
 #' \itemize{
@@ -154,6 +155,10 @@ train_deconvolution_model <- function(tweak,
     }
   }
   # end => compatible test
+
+  if( useImplementation == "cxx" && estimate.c.type != "direct" ) {
+    stop("only \"direct\" C estimation is implemented within cxx. use R for other ways to estimate C")
+  }
 
   ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
                                 output.info = c("train_deconvolution_model", "estimate.c.type"))
