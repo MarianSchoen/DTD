@@ -97,7 +97,7 @@ namespace dtd {
         mat testmat = mat(m_cyclelength, model.dim());
         vec testy   = vec(m_cyclelength);
         for(int i = 0; i < m_cyclelength; ++i) {
-          double alpha = rate * i;
+          ftype alpha = rate * static_cast<ftype>(i);
           testmat.row(i) = model.threshold(y_vec - alpha * m_grad, alpha * lambda);
           testy(i) = model.evaluate(testmat.row(i));
         }
@@ -137,7 +137,7 @@ namespace dtd {
         ftype deltafac = factor / static_cast<double>(m_cyclelength - 1);
         vec nesterov_dir = g_new - g_old;
         for( int i = 0; i < m_cyclelength; ++i) {
-          ftype alpha = i*deltafac;
+          ftype alpha = static_cast<ftype>(i)*deltafac;
           testmat.row(i) = model.subspace_constraint(g_new + alpha * nesterov_dir);
           testy(i) = model.evaluate(testmat.row(i));
         }

@@ -60,7 +60,8 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   VectorXd conv_vec(maxiter);
   MatrixXd history;
   // first elements are just the status before the iteration:
-  conv_vec(0) = model.evaluate();
+  if( conv_vec.size() > 0 )
+    conv_vec(0) = model.evaluate();
   if( saveHistory ) {
     history.resize(maxiter, model.dim());
     history.row(0) = model.getParams();
