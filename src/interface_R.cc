@@ -46,16 +46,30 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   return dtd::models::GoertlerModel(x,y,c, g);
 }
 
-SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _saveHistory){
+SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate){
   double lambda = REAL(_lambda)[0];
   int maxiter = INTEGER(_maxiter)[0];
   bool saveHistory = LOGICAL(_saveHistory)[0];
+  bool haveLearningrate = LOGICAL(_haveLearningrate)[0];
+  double learningrate = 0.0; // will always throw if left uninitialized
+  if( haveLearningrate )
+    learningrate = REAL(_learningrate)[0];
+  double linesearchspeed = REAL(_linesearchspeed)[0];
+  int cycles = INTEGER(_cycles)[0];
+  bool restarts = LOGICAL(_restarts)[0];
+
 
   try {
     auto model = make_model(model_);
 
     dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
-    solver.setLearningAuto(model);
+    if(not haveLearningrate)
+      solver.setLearningAuto(model);
+    else
+      solver.setLearningRate(learningrate);
+    solver.setLinesearchSpeed(linesearchspeed);
+    solver.setCyclelength(cycles);
+    solver.enableRestart(restarts);
 
     maxiter = std::max(2, maxiter); // "no" error handling
 
@@ -73,7 +87,6 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
     int iter = 1;
     std::function<void(dtd::models::GoertlerModel const & , vec const & )> record_solve =
       [&conv_vec,&history,&iter,saveHistory](dtd::models::GoertlerModel const & m, vec const & paramvec) {
-        Rprintf("history record callback: %d\n", iter);
         if( iter < conv_vec.size() )
           conv_vec(iter) = m.evaluate(paramvec);
         if( saveHistory ) {
@@ -132,7 +145,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
     UNPROTECT(2*listlen + 2);
     return result;
   } catch( std::exception const & exc ){
-    Rprintf("Error in solve_fista: \"%s\". Returning nothing.", exc.what());
+    error(exc.what());
   }
   return R_NilValue;
 }
@@ -144,13 +157,13 @@ SEXP dtd_evaluate_model_goertler(SEXP model_) {
     UNPROTECT(1);
     return res;
   } catch( std::exception const & exc ){
-    Rprintf("Error in dtd_evaluate_model_goertler: \"%s\". Returning nothing.", exc.what());
+    error(exc.what());
   }
   return R_NilValue;
 }
 extern "C" {
   static const R_CallMethodDef callMethods[] = {
-                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 4},
+                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 9},
                                                 { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
                                                 {NULL, NULL, 0}
   };

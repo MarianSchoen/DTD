@@ -36,7 +36,7 @@ check_model <- function(model) {
 #' @useDynLib DTD, .registration = TRUE
 #'
 #' @examples
-solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.tweaks ) {
+solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.tweaks = FALSE, learningrate = NA, linesearchspeed = 2.0, cycles = 5, restarts = TRUE) {
   # check input params...
   check_model(model)
   if( ! (is.numeric(lambda) && lambda >= 0.0 )) {
@@ -52,6 +52,11 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.t
     as.double(lambda),
     as.integer(maxiter),
     as.logical(save.all.tweaks),
+    learningrate,
+    as.double(linesearchspeed),
+    as.integer(cycles),
+    as.logical(restarts),
+    (! is.na(learningrate)),
     PACKAGE="DTD"
   )
 
