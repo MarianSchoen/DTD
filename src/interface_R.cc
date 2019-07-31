@@ -50,91 +50,103 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   double lambda = REAL(_lambda)[0];
   int maxiter = INTEGER(_maxiter)[0];
   bool saveHistory = LOGICAL(_saveHistory)[0];
-  auto model = make_model(model_);
 
-  dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
-  solver.setLearningAuto(model);
+  try {
+    auto model = make_model(model_);
 
-  maxiter = std::max(2, maxiter); // "no" error handling
+    dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
+    solver.setLearningAuto(model);
 
-  VectorXd conv_vec(maxiter);
-  MatrixXd history;
-  // first elements are just the status before the iteration:
-  if( conv_vec.size() > 0 )
-    conv_vec(0) = model.evaluate();
-  if( saveHistory ) {
-    history.resize(maxiter, model.dim());
-    history.row(0) = model.getParams();
-  }
-  // not the true "iter", but the actual iteration count
-  // 0 is the initial value (iter - 1)
-  int iter = 1;
-  std::function<void(dtd::models::GoertlerModel const & , vec const & )> record_solve =
-    [&conv_vec,&history,&iter,saveHistory](dtd::models::GoertlerModel const & m, vec const & paramvec) {
-      if( iter < conv_vec.size() )
-        conv_vec(iter) = m.evaluate(paramvec);
-      if( saveHistory ) {
-        // this should never happen, but to be sure and not segfault:
-        // (and since we cannot throw...)
-        if( iter < history.rows() ) {
-          history.row(iter) = paramvec;
+    maxiter = std::max(2, maxiter); // "no" error handling
+
+    VectorXd conv_vec(maxiter);
+    MatrixXd history;
+    // first elements are just the status before the iteration:
+    if( conv_vec.size() > 0 )
+      conv_vec(0) = model.evaluate();
+    if( saveHistory ) {
+      history.resize(maxiter, model.dim());
+      history.row(0) = model.getParams();
+    }
+    // not the true "iter", but the actual iteration count
+    // 0 is the initial value (iter - 1)
+    int iter = 1;
+    std::function<void(dtd::models::GoertlerModel const & , vec const & )> record_solve =
+      [&conv_vec,&history,&iter,saveHistory](dtd::models::GoertlerModel const & m, vec const & paramvec) {
+        Rprintf("history record callback: %d\n", iter);
+        if( iter < conv_vec.size() )
+          conv_vec(iter) = m.evaluate(paramvec);
+        if( saveHistory ) {
+          // this should never happen, but to be sure and not segfault:
+          // (and since we cannot throw...)
+          if( iter < history.rows() ) {
+            history.row(iter) = paramvec;
+          }
         }
-      }
-      iter++;
-    };
+        iter++;
+      };
 
-  solver.solve(model, maxiter, lambda, record_solve);
+    solver.solve(model, maxiter, lambda, record_solve);
 
-  std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda", "Valid"};
-  if( saveHistory )
-    listnames.push_back("History");
-  const std::size_t listlen = listnames.size();
-  SEXP listentrynames = PROTECT(allocVector(VECSXP, listlen));
-  for( auto i = 0u; i < listlen; ++i){
-    SEXP thisName = PROTECT(allocVector(STRSXP, 1));
-    SET_STRING_ELT(thisName, 0, mkChar(listnames.at(i).c_str()));
-    SET_VECTOR_ELT(listentrynames, i, thisName);
+    std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda", "Valid"};
+    if( saveHistory )
+      listnames.push_back("History");
+    const std::size_t listlen = listnames.size();
+    SEXP listentrynames = PROTECT(allocVector(VECSXP, listlen));
+    for( auto i = 0u; i < listlen; ++i){
+      SEXP thisName = PROTECT(allocVector(STRSXP, 1));
+      SET_STRING_ELT(thisName, 0, mkChar(listnames.at(i).c_str()));
+      SET_VECTOR_ELT(listentrynames, i, thisName);
+    }
+
+    SEXP result = PROTECT(allocVector(VECSXP, listlen));
+    // 0: tweak / g
+    SEXP g_r = PROTECT(allocVector(REALSXP, model.dim()));
+    fillPtr(REAL(g_r), model.getParams());
+    SET_VECTOR_ELT(result, 0, g_r);
+    // 1: Convergence
+    SEXP conv_r = PROTECT(allocVector(REALSXP, conv_vec.size()));
+    fillPtr(REAL(conv_r), conv_vec);
+    SET_VECTOR_ELT(result, 1, conv_r);
+    // 2: lambda:
+    // may also simply copy back as the SEXP itself,
+    // but deep-copying makes the UNPROTECT cleaner...
+    SEXP _newLambda = PROTECT(allocVector(REALSXP, 1));
+    REAL(_newLambda)[0] = lambda;
+    SET_VECTOR_ELT(result, 2, _newLambda);
+    SEXP valid = PROTECT(allocVector(LGLSXP, 1));
+    LOGICAL(valid)[0] = model.isHealthy();
+    SET_VECTOR_ELT(result, 3, valid);
+    // 4: History:
+    if( saveHistory ) {
+      SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter));
+      fillPtr(REAL(history_r), history);
+      SET_VECTOR_ELT(result, 4, history_r);
+    }
+
+    // set names in list:
+    setAttrib(result, R_NamesSymbol, listentrynames);
+
+    // each element in the list has a name and value, hence, 2*listlen,
+    // +2 from the list and its vector of names
+    UNPROTECT(2*listlen + 2);
+    return result;
+  } catch( std::exception const & exc ){
+    Rprintf("Error in solve_fista: \"%s\". Returning nothing.", exc.what());
   }
-
-  SEXP result = PROTECT(allocVector(VECSXP, listlen));
-  // 0: tweak / g
-  SEXP g_r = PROTECT(allocVector(REALSXP, model.dim()));
-  fillPtr(REAL(g_r), model.getParams());
-  SET_VECTOR_ELT(result, 0, g_r);
-  // 1: Convergence
-  SEXP conv_r = PROTECT(allocVector(REALSXP, conv_vec.size()));
-  fillPtr(REAL(conv_r), conv_vec);
-  SET_VECTOR_ELT(result, 1, conv_r);
-  // 2: lambda:
-  // may also simply copy back as the SEXP itself,
-  // but deep-copying makes the UNPROTECT cleaner...
-  SEXP _newLambda = PROTECT(allocVector(REALSXP, 1));
-  REAL(_newLambda)[0] = lambda;
-  SET_VECTOR_ELT(result, 2, _newLambda);
-  SEXP valid = PROTECT(allocVector(LGLSXP, 1));
-  LOGICAL(valid)[0] = model.isHealthy();
-  SET_VECTOR_ELT(result, 3, valid);
-  // 4: History:
-  if( saveHistory ) {
-    SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter));
-    fillPtr(REAL(history_r), history);
-    SET_VECTOR_ELT(result, 4, history_r);
-  }
-
-  // set names in list:
-  setAttrib(result, R_NamesSymbol, listentrynames);
-
-  // each element in the list has a name and value, hence, 2*listlen,
-  // +2 from the list and its vector of names
-  UNPROTECT(2*listlen + 2);
-  return result;
+  return R_NilValue;
 }
 SEXP dtd_evaluate_model_goertler(SEXP model_) {
-  auto model = make_model(model_);
-  SEXP res = PROTECT(allocVector(REALSXP, 1));
-  REAL(res)[0] = model.evaluate();
-  UNPROTECT(1);
-  return res;
+  try {
+    auto model = make_model(model_);
+    SEXP res = PROTECT(allocVector(REALSXP, 1));
+    REAL(res)[0] = model.evaluate();
+    UNPROTECT(1);
+    return res;
+  } catch( std::exception const & exc ){
+    Rprintf("Error in dtd_evaluate_model_goertler: \"%s\". Returning nothing.", exc.what());
+  }
+  return R_NilValue;
 }
 extern "C" {
   static const R_CallMethodDef callMethods[] = {
