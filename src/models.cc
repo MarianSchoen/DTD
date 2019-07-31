@@ -29,10 +29,9 @@ namespace dtd {
     ftype GoertlerModel::evaluate(vec const & g) const {
       double res(0.0);
       assert(g.size() == m_ngenes);
-      mat xtgxi = invxtgx(m_x, g); // TODO: may buffer this?
-      assert(xtgxi.rows() == m_ncells);
-      assert(xtgxi.cols() == m_ncells);
-      mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
+      assert(m_xtgxi.rows() == m_ncells);
+      assert(m_xtgxi.cols() == m_ncells);
+      mat c_hat = estimate_c_direct(m_x,m_y,g,m_xtgxi);
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
 
@@ -55,8 +54,7 @@ namespace dtd {
       assert( g.size() == m_ngenes);
       if( gr.size() != m_ngenes )
         gr.resize(m_ngenes);
-      mat xtgxi = invxtgx(m_x, g); // TODO: may buffer this
-      mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
+      mat c_hat = estimate_c_direct(m_x,m_y,g,m_xtgxi);
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
 
@@ -70,7 +68,7 @@ namespace dtd {
         A.row(icell) = (stat::cov(m_c.row(icell), c_hat.row(icell)) / (m_nsamples * std_c_hat * std_c_hat) * (c_hat.row(icell).array() - mean_c_hat) - (m_c.row(icell).array() - mean_c)/m_nsamples) / (std_c * std_c_hat);
       }
       // TODO: speed this up by ONLY computing the diagonal
-      mat tmp = (m_y - m_x*xtgxi*m_x.transpose()*g.asDiagonal()*m_y)*A.transpose()*xtgxi*m_x.transpose();
+      mat tmp = (m_y - m_x*m_xtgxi*m_x.transpose()*g.asDiagonal()*m_y)*A.transpose()*m_xtgxi*m_x.transpose();
       gr = tmp.diagonal();
       clampPos(gr);
     }

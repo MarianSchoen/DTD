@@ -17,7 +17,7 @@ namespace dtd {
     class GoertlerModel {
     private:
       int m_ngenes, m_ncells, m_nsamples;
-      mat m_x, m_y, m_c;
+      mat m_x, m_y, m_c, m_xtgxi;
       vec m_g;
       NormFunctions m_normfn;
       ThresholdFunctions m_threshfn;
@@ -31,9 +31,11 @@ namespace dtd {
         assert(m_c.rows() == m_ncells);
         assert(m_c.cols() == m_nsamples);
         assert(m_g.size() == m_ngenes && m_g.cols() == 1);
+        m_xtgxi = invxtgx(m_x, m_g);
       }
       inline vec const & getParams() const { return m_g; }
       void setParams(vec const & g) { m_g = g; }
+      inline void setParams(vec const & g) { m_g = g; m_xtgxi = invxtgx(m_x, m_g);}
       ftype evaluate(vec const & params) const;
       inline ftype evaluate() const { return evaluate(m_g); }
       void grad(vec & gr, vec const & g) const;
