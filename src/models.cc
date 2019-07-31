@@ -39,7 +39,7 @@ namespace dtd {
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
 
-      for( std::size_t icell = 0; icell < m_ncells; ++icell ){
+      for( int icell = 0; icell < m_ncells; ++icell ){
         res -= stat::cor(m_c.row(icell), c_hat.row(icell));
       }
       return res / m_ncells;
@@ -64,7 +64,7 @@ namespace dtd {
 
       // naively:
       mat A = mat(m_ncells, m_nsamples);
-      for( unsigned int icell = 0; icell < m_ncells; ++icell){
+      for( int icell = 0; icell < m_ncells; ++icell){
         ftype std_c_hat  = stat::std(c_hat.row(icell));
         ftype std_c      = stat::std(m_c.row(icell));
         ftype mean_c_hat = c_hat.row(icell).mean();

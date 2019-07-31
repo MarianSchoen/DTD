@@ -101,7 +101,7 @@ namespace dtd {
           testmat.row(i) = model.threshold(y_vec - alpha * m_grad, alpha * lambda);
           testy(i) = model.evaluate(testmat.row(i));
         }
-        std::size_t minindex;
+        int minindex;
         ftype fy = testy.minCoeff(&minindex);
 
         if( minindex == 0 ) {
