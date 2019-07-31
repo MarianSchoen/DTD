@@ -57,12 +57,12 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
 
   maxiter = std::max(2, maxiter); // "no" error handling
 
-  VectorXd conv_vec(maxiter-1);
+  VectorXd conv_vec(maxiter);
   MatrixXd history;
   // first elements are just the status before the iteration:
   conv_vec(0) = model.evaluate();
   if( saveHistory ) {
-    history.resize(maxiter-1, model.dim());
+    history.resize(maxiter, model.dim());
     history.row(0) = model.getParams();
   }
   // not the true "iter", but the actual iteration count
