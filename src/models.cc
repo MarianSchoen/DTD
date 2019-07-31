@@ -1,7 +1,6 @@
 #include "models.hpp"
 #include "utils.hpp"
 #include <Eigen/Cholesky>
-#include <iostream> // TODO: remove
 
 namespace dtd {
   namespace models {
@@ -26,12 +25,17 @@ namespace dtd {
     mat estimate_c_direct(mat const & x, mat const & y, vec const & g, mat const & xtgxi) {
       return xtgxi*x.transpose()*g.asDiagonal()*y;
     }
-    ftype GoertlerModel::evaluate(vec const & g) const {
+    bool check_posdefmat(mat const & x, vec const & g, mat const & xtgxi, ftype eps) {
+      const std::size_t n = x.cols();
+      const mat zero = xtgxi * x.transpose() * g.asDiagonal() * x - mat::Identity(n, n);
+      return zero.norm() < n*n*eps;
+    }
+    ftype GoertlerModel::evaluate(vec const & g, mat const & xtgxi) const {
       double res(0.0);
       assert(g.size() == m_ngenes);
-      assert(m_xtgxi.rows() == m_ncells);
-      assert(m_xtgxi.cols() == m_ncells);
-      mat c_hat = estimate_c_direct(m_x,m_y,g,m_xtgxi);
+      assert(xtgxi.rows() == m_ncells);
+      assert(xtgxi.cols() == m_ncells);
+      mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
 
@@ -50,11 +54,11 @@ namespace dtd {
         x.coeffRef(i) = std::max(x.coeff(i), 0.0);
       }
     }
-    void GoertlerModel::grad(vec & gr, vec const & g) const {
+    void GoertlerModel::grad_explicit_inverse(vec & gr, vec const & g, mat const & xtgxi) const {
       assert( g.size() == m_ngenes);
       if( gr.size() != m_ngenes )
         gr.resize(m_ngenes);
-      mat c_hat = estimate_c_direct(m_x,m_y,g,m_xtgxi);
+      mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
 
@@ -68,11 +72,14 @@ namespace dtd {
         A.row(icell) = (stat::cov(m_c.row(icell), c_hat.row(icell)) / (m_nsamples * std_c_hat * std_c_hat) * (c_hat.row(icell).array() - mean_c_hat) - (m_c.row(icell).array() - mean_c)/m_nsamples) / (std_c * std_c_hat);
       }
       // TODO: speed this up by ONLY computing the diagonal
-      mat tmp = (m_y - m_x*m_xtgxi*m_x.transpose()*g.asDiagonal()*m_y)*A.transpose()*m_xtgxi*m_x.transpose();
+      mat tmp = (m_y - m_x*xtgxi*m_x.transpose()*g.asDiagonal()*m_y)*A.transpose()*xtgxi*m_x.transpose();
       gr = tmp.diagonal();
       clampPos(gr);
     }
-    void GoertlerModel::grad(vec & gr) const { grad(gr, m_g); }
+    void GoertlerModel::grad(vec & gr, vec const & param) const {
+      const mat xtgxi = invxtgx(m_x, param);
+      grad_explicit_inverse(gr, param, xtgxi);
+    }
     vec GoertlerModel::threshold(vec const & v, ftype softfactor) const {
       if( m_threshfn == ThresholdFunctions::SOFTMAX )
         return softmax(v, softfactor);

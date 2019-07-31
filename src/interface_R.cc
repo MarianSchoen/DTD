@@ -84,7 +84,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
 
   solver.solve(model, maxiter, lambda, record_solve);
 
-  std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda"};
+  std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda", "Valid"};
   if( saveHistory )
     listnames.push_back("History");
   const std::size_t listlen = listnames.size();
@@ -110,11 +110,14 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
   SEXP _newLambda = PROTECT(allocVector(REALSXP, 1));
   REAL(_newLambda)[0] = lambda;
   SET_VECTOR_ELT(result, 2, _newLambda);
-  // 3: History:
+  SEXP valid = PROTECT(allocVector(LGLSXP, 1));
+  LOGICAL(valid)[0] = model.isHealthy();
+  SET_VECTOR_ELT(result, 3, valid);
+  // 4: History:
   if( saveHistory ) {
     SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter));
     fillPtr(REAL(history_r), history);
-    SET_VECTOR_ELT(result, 3, history_r);
+    SET_VECTOR_ELT(result, 4, history_r);
   }
 
   // set names in list:

@@ -60,6 +60,9 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.t
   if( "History" %in% names(result) ) {
     rownames(result$History) <- names(model$tweak)
   }
+  if( result$Valid == FALSE ) {
+    message("result is INVALID!")
+  }
   return(result)
 }
 #' Title
