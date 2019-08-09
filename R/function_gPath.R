@@ -100,7 +100,7 @@ ggplot_gpath <- function(DTD.model,
   # end -> G.TRANSFORM.FUN
 
   # safety check: ITER.TRANSFORM.FUN
-  useable.iter.trans.fun <- try(ITER.TRANSFORM.FUN(tweak), silent = TRUE)
+  useable.iter.trans.fun <- try(ITER.TRANSFORM.FUN(1:length(tweak)), silent = TRUE)
   if(any(grepl(x = useable.iter.trans.fun, pattern = "Error")) || any(!is.numeric(useable.iter.trans.fun))){
     stop("In ggplot_gpath: 'ITER.TRANSFORM.FUN' does not return numeric vector.")
   }
@@ -123,7 +123,7 @@ ggplot_gpath <- function(DTD.model,
   # Therefore, we calculate how many quantile ranges are necessary (depending on the number.pics parameter)
   pic.sep <- as.numeric(format(x = seq(0, 1, length.out = (number.pics + 1))[2:(number.pics + 1)], digits = 2))
   # Next we calculate the value of the quantiles in our g vector ...
-  quantile.values <- sapply(X = pic.sep, FUN = stats::quantile, x = abs(tweak))
+  quantile.values <- sapply(X = pic.sep, FUN = stats::quantile, x = abs(tweak), na.rm = TRUE)
   # ... and name them without the "%" sign
   names(quantile.values) <- gsub("%", "", names(quantile.values))
 
