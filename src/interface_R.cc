@@ -43,6 +43,16 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   auto c = getMatrixFromR(getElementFromRList(model_, "C"));
   auto g = getVectorFromR(getElementFromRList(model_, "tweak"));
 
+  // crash early (but leave the details to the R space, this is just to prevent segfaults, etc.)
+  if( x.size() == 0 || y.size() == 0 || c.size() == 0 || g.size() == 0)
+    throw std::runtime_error("make_model: (some of the) input data has zero-length. Cannot build a valid model from it.");
+  if( x.rows() !=  g.size() || x.rows() != y.rows() )
+    throw std::runtime_error("make_model: x, y and g have a different number of features.");
+  if( x.cols() != c.rows() )
+    throw std::runtime_error("make_model: x and c have a different number of cells.");
+  if( y.cols() != c.cols() )
+    throw std::runtime_error("make_model: y and c have a different number of samples.");
+
   return dtd::models::GoertlerModel(x,y,c, g);
 }
 
@@ -61,6 +71,8 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
 
   try {
     auto model = make_model(model_);
+    if( maxiter < 2 )
+      throw std::runtime_error("maxiter must be >= 2");
 
     dtd::solvers::FistaSolver<dtd::models::GoertlerModel> solver;
     if(not haveLearningrate)
@@ -70,8 +82,6 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
     solver.setLinesearchSpeed(linesearchspeed);
     solver.setCyclelength(cycles);
     solver.enableRestart(restarts);
-
-    maxiter = std::max(2, maxiter); // "no" error handling
 
     VectorXd conv_vec(maxiter);
     MatrixXd history;
@@ -101,7 +111,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
 
     solver.solve(model, maxiter, lambda, record_solve);
 
-    std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda", "Valid"};
+    std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda"};
     if( saveHistory )
       listnames.push_back("History");
     const std::size_t listlen = listnames.size();
@@ -127,14 +137,11 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
     SEXP _newLambda = PROTECT(allocVector(REALSXP, 1));
     REAL(_newLambda)[0] = lambda;
     SET_VECTOR_ELT(result, 2, _newLambda);
-    SEXP valid = PROTECT(allocVector(LGLSXP, 1));
-    LOGICAL(valid)[0] = model.isHealthy();
-    SET_VECTOR_ELT(result, 3, valid);
-    // 4: History:
+    // 3: History:
     if( saveHistory ) {
       SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter));
       fillPtr(REAL(history_r), history);
-      SET_VECTOR_ELT(result, 4, history_r);
+      SET_VECTOR_ELT(result, 3, history_r);
     }
 
     // set names in list:

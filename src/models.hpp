@@ -21,33 +21,36 @@ namespace dtd {
       int m_ngenes, m_ncells, m_nsamples;
       mat m_x, m_y, m_c, m_xtgxi;
       vec m_g;
-      bool m_healthy;
       NormFunctions m_normfn;
       ThresholdFunctions m_threshfn;
       SubspaceFunctions m_subspfn;
     public:
-      GoertlerModel(mat x, mat y, mat c, vec g, NormFunctions fn = NormFunctions::IDENTITY, ThresholdFunctions thresh = ThresholdFunctions::SOFTMAX, SubspaceFunctions subsp = SubspaceFunctions::POSITIVE) : m_ngenes(x.rows()), m_ncells(x.cols()), m_nsamples(y.cols()), m_x(x), m_y(y), m_c(c), m_g(g), m_healthy(true), m_normfn(fn), m_threshfn(thresh), m_subspfn(subsp) {
-        assert(m_x.rows() == m_ngenes);
-        assert(m_x.cols() == m_ncells);
-        assert(m_y.rows() == m_ngenes);
-        assert(m_y.cols() == m_nsamples);
-        assert(m_c.rows() == m_ncells);
-        assert(m_c.cols() == m_nsamples);
-        assert(m_g.size() == m_ngenes && m_g.cols() == 1);
+      GoertlerModel(mat x, mat y, mat c, vec g, NormFunctions fn = NormFunctions::IDENTITY, ThresholdFunctions thresh = ThresholdFunctions::SOFTMAX, SubspaceFunctions subsp = SubspaceFunctions::POSITIVE) : m_ngenes(x.rows()), m_ncells(x.cols()), m_nsamples(y.cols()), m_x(x), m_y(y), m_c(c), m_g(g), m_normfn(fn), m_threshfn(thresh), m_subspfn(subsp) {
+        // some error checking:
+        if( m_x.rows() != m_ngenes )
+          throw std::runtime_error("number of rows of X is not ngenes.");
+        if( m_x.cols() != m_ncells)
+          throw std::runtime_error("number of cols of X is not ncells.");
+        if( m_y.rows() != m_ngenes)
+          throw std::runtime_error("number of rows of Y is not ngenes.");
+        if( m_y.cols() != m_nsamples)
+          throw std::runtime_error("number of cols of Y is not nsamples.");
+        if( m_c.rows() != m_ncells)
+          throw std::runtime_error("number of rows of C is not ncells.");
+        if( m_c.cols() != m_nsamples)
+          throw std::runtime_error("number of cols of C is not nsamples.");
+        if( m_g.size() != m_ngenes && m_g.cols() == 1)
+          throw std::runtime_error("g is not a ngenes long vector.");
+
         m_xtgxi = invxtgx(m_x, m_g);
-        m_healthy &= check_posdefmat(m_x, m_g, m_xtgxi);
       }
       inline vec const & getParams() const { return m_g; }
       inline void setParams(vec const & g) {
         m_g = g;
         m_xtgxi = invxtgx(m_x, m_g);
-        m_healthy &= check_posdefmat(m_x, m_g, m_xtgxi);
       }
-      bool isHealthy() const { return m_healthy; }
       ftype evaluate(vec const & params) const {
-        // even if this inversion is unsafe, the model itself will still remain "healthy", meaning the combination of g and x lead to a proper inversion.
-        const mat xtgxi = invxtgx(m_x, params);
-        return evaluate(params, xtgxi);
+        return evaluate(params, invxtgx(m_x, params));
       }
       ftype evaluate(vec const & params, mat const & xtgxi) const;
       inline ftype evaluate() const { return evaluate(m_g, m_xtgxi); }

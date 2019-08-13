@@ -18,6 +18,12 @@ namespace dtd {
       return am.dot(bm)/(n-1);
     }
     ftype cor(vec const & a, vec const & b) {
+      auto va = var(a);
+      auto vb = var(b);
+      if( va < a.size()*std::numeric_limits<ftype>::epsilon() ||
+          vb < b.size()*std::numeric_limits<ftype>::epsilon() )
+        throw std::runtime_error("cor: cannot compute correlation of things that don't vary.");
+      assert(va > 0.0 && vb > 0.0);
       return cov(a, b) / std::sqrt(var(a)*var(b));
     }
   }

@@ -1,6 +1,8 @@
 #include "models.hpp"
 #include "utils.hpp"
 #include <Eigen/Cholesky>
+#include <limits>
+#include <iostream>
 
 namespace dtd {
   namespace models {
@@ -18,17 +20,21 @@ namespace dtd {
       return res;
     }
     mat invxtgx(mat const & x, vec const & g) {
+      if( g.minCoeff() < 0 )
+        throw std::runtime_error("invxtgx: g has negative entries and thus, x^T G x is not positive semi-definite and cannot be inverted.");
       mat xtgx = x.transpose()*g.asDiagonal()*x;
+      // inversion happens here:
       mat xi = xtgx.llt().solve(mat::Identity(x.cols(), x.cols()));
+      // the following is just a check. it is a bit costly, but not overly.
+      const std::size_t n = x.cols();
+      const ftype eps = std::numeric_limits<ftype>::epsilon();
+      const mat zero = xi*xtgx - mat::Identity(n, n);
+      if( zero.norm() > n*n*eps )
+        throw std::runtime_error("invxtgx: could not invert x^T G x, probably because the rank of x is too low to compensate for too many zeros in g.");
       return xi;
     }
     mat estimate_c_direct(mat const & x, mat const & y, vec const & g, mat const & xtgxi) {
       return xtgxi*x.transpose()*g.asDiagonal()*y;
-    }
-    bool check_posdefmat(mat const & x, vec const & g, mat const & xtgxi, ftype eps) {
-      const std::size_t n = x.cols();
-      const mat zero = xtgxi * x.transpose() * g.asDiagonal() * x - mat::Identity(n, n);
-      return zero.norm() < n*n*eps;
     }
     ftype GoertlerModel::evaluate(vec const & g, mat const & xtgxi) const {
       double res(0.0);
@@ -39,8 +45,12 @@ namespace dtd {
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
 
-      for( int icell = 0; icell < m_ncells; ++icell ){
-        res -= stat::cor(m_c.row(icell), c_hat.row(icell));
+      try {
+        for( int icell = 0; icell < m_ncells; ++icell ){
+          res -= stat::cor(m_c.row(icell), c_hat.row(icell));
+        }
+      } catch(...) {
+        throw;
       }
       return res / m_ncells;
     }
@@ -69,6 +79,9 @@ namespace dtd {
         ftype std_c      = stat::std(m_c.row(icell));
         ftype mean_c_hat = c_hat.row(icell).mean();
         ftype mean_c     = m_c.row(icell).mean();
+        if( std_c_hat <= c_hat.rows()*std::numeric_limits<ftype>::epsilon() ||
+            std_c     <= m_c.rows()*std::numeric_limits<ftype>::epsilon() )
+          throw std::runtime_error("grad_explicit_inverse: cannot compute gradient, because there is no variance in C over the samples.");
         A.row(icell) = (stat::cov(m_c.row(icell), c_hat.row(icell)) / (m_nsamples * std_c_hat * std_c_hat) * (c_hat.row(icell).array() - mean_c_hat) - (m_c.row(icell).array() - mean_c)/m_nsamples) / (std_c * std_c_hat);
       }
       // TODO: speed this up by ONLY computing the diagonal
@@ -87,7 +100,6 @@ namespace dtd {
         throw std::runtime_error("unimplemented threshold function.");
     }
     void GoertlerModel::norm_constraint(vec & v) const {
-      // TODO implement option dispatch
       if( m_normfn == NormFunctions::IDENTITY )
         ; // leave v unchanged
       else if( m_normfn == NormFunctions::NORM2 )
