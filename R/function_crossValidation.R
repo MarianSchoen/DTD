@@ -167,7 +167,7 @@ DTD_cv_lambda_R <- function(lambda.seq = NULL,
 #' If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
 #' of the training set -  will be generated. Default: NULL
 #' @param tweak.start numeric vector, starting vector for the DTD algorithm.
-#' @param n.folds integer, number of buckets in the cross validation. Defaults to 10
+#' @param n.folds integer, number of buckets in the cross validation.
 #' @param lambda.length integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 10
 #' @param train.data.list list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
 #' Within this list the train/test cross validation will be done.
