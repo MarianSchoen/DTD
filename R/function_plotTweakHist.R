@@ -21,7 +21,7 @@
 #' @export
 #'
 ggplot_ghistogram <- function(DTD.model,
-                              n.bins = 50,
+                              n.bins = NA,
                               TRANSFORM.FUN = DTD::identity,
                               title = "",
                               x.lab = "g-vec") {
@@ -44,6 +44,9 @@ ggplot_ghistogram <- function(DTD.model,
   }
 
   # safety check: n.bins
+  if(any(is.na(n.bins))){
+    n.bins <- round(0.25 * length(tweak))
+  }
   test <- test_integer(test.value = n.bins,
                        output.info = c("ggplot_ghistogram", "n.bins"),
                        min = 1,
