@@ -37,11 +37,38 @@ void fillPtr(double* dest, MatrixXd const & src) {
   }
 }
 
+dtd::models::NormFunctions intToNormFn(int id){
+  if( id == 0 ) {
+    return dtd::models::NormFunctions::IDENTITY;
+  } else if( id == 1 ) {
+    return dtd::models::NormFunctions::NORM2;
+  } else {
+    throw std::runtime_error("no such norm function.");
+  }
+}
+dtd::models::ThresholdFunctions intToThreshFn(int id){
+  if( id == 0 ) {
+    return dtd::models::ThresholdFunctions::SOFTMAX;
+  } else {
+    throw std::runtime_error("no such threshold function.");
+  }
+}
+dtd::models::SubspaceFunctions intToSubspFn(int id){
+  if( id == 0 ) {
+    return dtd::models::SubspaceFunctions::POSITIVE;
+  } else {
+    throw std::runtime_error("no such subspace function.");
+  }
+}
+
 dtd::models::GoertlerModel make_model(SEXP model_) {
   auto x = getMatrixFromR(getElementFromRList(model_, "X"));
   auto y = getMatrixFromR(getElementFromRList(model_, "Y"));
   auto c = getMatrixFromR(getElementFromRList(model_, "C"));
   auto g = getVectorFromR(getElementFromRList(model_, "tweak"));
+  int normid = INTEGER(getElementFromRList(model_, "normfnid"))[0];
+  int threshfnid = INTEGER(getElementFromRList(model_, "threshfnid"))[0];
+  int subspfnid = INTEGER(getElementFromRList(model_, "subspfnid"))[0];
 
   // crash early (but leave the details to the R space, this is just to prevent segfaults, etc.)
   if( x.size() == 0 || y.size() == 0 || c.size() == 0 || g.size() == 0)
@@ -53,7 +80,7 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   if( y.cols() != c.cols() )
     throw std::runtime_error("make_model: y and c have a different number of samples.");
 
-  return dtd::models::GoertlerModel(x,y,c, g);
+  return dtd::models::GoertlerModel(x,y,c,g, intToNormFn(normid), intToThreshFn(threshfnid), intToSubspFn(subspfnid));
 }
 
 SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate){

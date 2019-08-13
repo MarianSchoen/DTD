@@ -402,7 +402,7 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
   cv.object <- list()
 
   # prepare the model:
-  model <- list()
+  model <- empty_model()
   model$X <- X.matrix
   # Start of cross validation:
   for (lambda in lambda.seq) {
@@ -455,7 +455,7 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
       # Evaluate the reached minimum on the test set:
       tmp.test.list <- lapply(train.data.list, select.fun, samples = test.samples)
       tmp.eval.fun.test <- function(tmp.tweak, tmp.list = tmp.test.list) {
-        thismodel <- list()
+        thismodel <- empty_model()
         thismodel$Y <- tmp.list$mixtures
         thismodel$C <- tmp.list$quantities
         thismodel$X <- X.matrix

@@ -1,11 +1,9 @@
 #' Title
 #'
-#' @param model
+#' @param model list to be checked if it conforms with the model needed in solve_fista_goertler
 #'
-#' @return
-#' @export
+#' @return nothing is everything is okay
 #'
-#' @examples
 check_model <- function(model) {
   if( ! is.list(model) ) {
     stop("model is not a list.")
@@ -16,12 +14,47 @@ check_model <- function(model) {
           "tweak" %in% names(model) )) {
     stop("list \"model\" does not contain elements X, Y, C and tweak");
   }
+  if( ! ( "normfnid" %in% names(model) &&
+          "threshfnid" %in% names(model) &&
+          "subspfnid" %in% names(model)) ) {
+    stop("list \"model\" does not contain function enums (normfnid, threshfnid, subspfnid)");
+  }
                                         # size checking
   if( ! (nrow(model$X) == nrow(model$Y) &&
          ncol(model$X) == nrow(model$C) &&
          ncol(model$C) == ncol(model$Y) &&
          nrow(model$X) == length(model$tweak) ) ) {
     stop("input matrices have incompatible sizes.")
+  }
+}
+empty_model <- function() {
+  model <- list()
+  model$normfnid <- 0
+  model$threshfnid <- 0
+  model$subspfnid <- 0
+  return(model)
+}
+set_model_normfunction <- function(model, normfnname) {
+  if( normfnname == 'IDENTITY' || normfnname == 'identity') {
+    model$normfnid <- 0
+  } else if( normfnname == 'NORM2' || normfnname == 'norm2' ) {
+    model$normfnid <- 1
+  } else {
+    stop("invalid or unimplemented norm function.")
+  }
+}
+set_model_subspacefunction <- function(model, subspfnname) {
+  if( subspfnname == 'POSITIVE' || subspfnname == 'positive' || subspfnname == '+' ) {
+    model$subspfnid <- 0
+  } else {
+    stop("invalid or unimplemented subsp function.")
+  }
+}
+set_model_threshfunction <- function(model, threshfnname) {
+  if( threshfnname == 'POSITIVE' || threshfnname == 'positive' || threshfnname == '+' ) {
+    model$threshfnid <- 0 
+  } else {
+    stop("invalid or unimplemented thresh function.")
   }
 }
 #' Title
