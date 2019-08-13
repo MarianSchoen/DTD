@@ -87,14 +87,14 @@ namespace dtd {
       ftype fy = model.evaluate();
       ftype fy_old = fy;
 
-      // TODO preallocate dynamic memory
+      mat testmat = mat(m_cyclelength, model.dim());
+      vec testy   = vec(m_cyclelength);
+      vec nesterov_dir = vec(model.dim());
 
       for( std::size_t iter = 2; iter <= maxiter; ++iter ){
         ftype rate = m_learning_rate / static_cast<double>(m_cyclelength - 1);
         model.grad(m_grad, y_vec);
         // TODO if memory is an issue, rethink this:
-        mat testmat = mat(m_cyclelength, model.dim());
-        vec testy   = vec(m_cyclelength);
         for(int i = 0; i < m_cyclelength; ++i) {
           ftype alpha = rate * static_cast<ftype>(i);
           testmat.row(i) = model.threshold(y_vec - alpha * m_grad, alpha * lambda);
@@ -133,7 +133,7 @@ namespace dtd {
         // linesearch for nesterov extrapolation
         ftype factor = nesterov_factor(m_nesterov_counter);
         ftype deltafac = factor / static_cast<double>(m_cyclelength - 1);
-        vec nesterov_dir = g_new - y_vec; // 0 up to normalization of g_new
+        nesterov_dir = g_new - y_vec; // 0 up to normalization of g_new
         for( int i = 0; i < m_cyclelength; ++i) {
           ftype alpha = static_cast<ftype>(i)*deltafac;
           testmat.row(i) = model.subspace_constraint(g_new + alpha * nesterov_dir);
