@@ -177,6 +177,7 @@ DTD_cv_lambda_R <- function(lambda.seq = NULL,
 #' @param warm.start logical, should the solution of a previous model of the cross validation be used as a start
 #'  in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.
 #'
+#' @export
 DTD_cv_lambda_test_input_generic <- function(lambda.seq,
                                  tweak.start,
                                  n.folds,
