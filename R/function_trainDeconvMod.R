@@ -48,7 +48,7 @@ train_deconvolution_model <- function(tweak,
                                     train.data.list,
                                     test.data.list = NULL,
                                     estimate.c.type,
-                                    useImplementation = "R",
+                                    useImplementation = "cxx",
                                     ...){
 
   if(length(tweak) != nrow(X.matrix)){
