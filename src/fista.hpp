@@ -84,7 +84,6 @@ namespace dtd {
     void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double lambda, std::function<void(Model const &, vec const &)> callback) {
       vec y_vec = model.getParams();
       vec g_new = y_vec;
-      vec g_old;
       ftype fy = model.evaluate();
       ftype fy_old = fy;
 
@@ -112,17 +111,16 @@ namespace dtd {
           m_learning_rate *= m_linesearch_speed;
         }
 
-        g_old = g_new;
 
         if( fy_old > fy ) {
           // descent
           // TODO: swap instead?! (here and below)
+          y_vec = g_new;
           g_new = testmat.row(minindex);
           model.norm_constraint(g_new);
         } else {
           // ascent
-          // reset g_new (this happens only very rarely)
-          g_new = g_old;
+          // reset f_y to its previous value
           model.setParams(g_new);
           fy = model.evaluate(g_new);
           if( m_restarts )
@@ -135,7 +133,7 @@ namespace dtd {
         // linesearch for nesterov extrapolation
         ftype factor = nesterov_factor(m_nesterov_counter);
         ftype deltafac = factor / static_cast<double>(m_cyclelength - 1);
-        vec nesterov_dir = g_new - g_old;
+        vec nesterov_dir = g_new - y_vec; // 0 up to normalization of g_new
         for( int i = 0; i < m_cyclelength; ++i) {
           ftype alpha = static_cast<ftype>(i)*deltafac;
           testmat.row(i) = model.subspace_constraint(g_new + alpha * nesterov_dir);
