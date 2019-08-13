@@ -84,7 +84,7 @@ namespace dtd {
     void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double lambda, std::function<void(Model const &, vec const &)> callback) {
       vec y_vec = model.getParams();
       vec g_new = y_vec;
-      vec u_vec, g_old;
+      vec g_old;
       ftype fy = model.evaluate();
       ftype fy_old = fy;
 
@@ -112,17 +112,17 @@ namespace dtd {
           m_learning_rate *= m_linesearch_speed;
         }
 
-        u_vec = testmat.row(minindex);
-        model.norm_constraint(u_vec);
-
         g_old = g_new;
 
         if( fy_old > fy ) {
           // descent
           // TODO: swap instead?! (here and below)
-          g_new = u_vec;
+          g_new = testmat.row(minindex);
+          model.norm_constraint(g_new);
         } else {
           // ascent
+          // reset g_new (this happens only very rarely)
+          g_new = g_old;
           model.setParams(g_new);
           fy = model.evaluate(g_new);
           if( m_restarts )
