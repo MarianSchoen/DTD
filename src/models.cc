@@ -2,7 +2,7 @@
 #include "utils.hpp"
 #include <Eigen/Cholesky>
 #include <limits>
-#include <iostream>
+#include <sstream>
 
 namespace dtd {
   namespace models {
@@ -27,10 +27,19 @@ namespace dtd {
       mat xi = xtgx.llt().solve(mat::Identity(x.cols(), x.cols()));
       // the following is just a check. it is a bit costly, but not overly.
       const std::size_t n = x.cols();
-      const ftype eps = std::numeric_limits<ftype>::epsilon();
+      // there is some empirical arbitrariness in here...
+      // but this is probably still save (whenever it failed it was O(1) and not O(1e-13)
+      const ftype eps = 20*n*n*std::numeric_limits<ftype>::epsilon();
       const mat zero = xi*xtgx - mat::Identity(n, n);
-      if( zero.norm() > n*n*eps )
-        throw std::runtime_error("invxtgx: could not invert x^T G x, probably because the rank of x is too low to compensate for too many zeros in g.");
+      if( zero.norm() > eps ){
+        std::stringstream ss;
+        ss << "invxtgx: could not invert x^T G x.\n";
+        ss << "Usually this happens when the rank of x is too low to compensate for too many zeros in g\n";
+        ss << "It may help to decrease lambda.\n\n";
+        ss << "residual: " << zero.norm() << "\n";
+        ss << "admissible threshold: " << eps << "\n";
+        throw std::runtime_error(ss.str());
+      }
       return xi;
     }
     mat estimate_c_direct(mat const & x, mat const & y, vec const & g, mat const & xtgxi) {

@@ -431,6 +431,8 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
       model$C <- tmp.train.list$quantities
       model$tweak = tweak.start
 
+      ## This is a useful debug option
+      ## options(try.outFile=stdout())
       catch <- try(descent_generalized_fista_cxx(
                               model = model,
                               lambda = lambda,
@@ -440,17 +442,16 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
       )
 
 
-      # TODO: won't happen. think about error handling in cpp and propagating them to R!
-      # If the regularization parameter lambda is to big,
+      # If the regularization parameter lambda is too big,
       # the fista algorithm does not find a model, and throws an error
       if (any(grepl(pattern = "Error", catch))) {
-        lambda.fold[[as.character(l.fold)]] <- "could not build a model"
+        lambda.fold[[as.character(l.fold)]] <- paste("could not build a model", catch)
         next
       }
       # warm start, after learning a model, keep last tweak vec as start for next model:
       if (warm.start) {
         tweak.start <- catch$Tweak
-        }
+      }
       # Evaluate the reached minimum on the test set:
       tmp.test.list <- lapply(train.data.list, select.fun, samples = test.samples)
       tmp.eval.fun.test <- function(tmp.tweak, tmp.list = tmp.test.list) {
@@ -459,15 +460,17 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
         thismodel$C <- tmp.list$quantities
         thismodel$X <- X.matrix
         thismodel$tweak <- tmp.tweak
-        return(evaluate_model(thismodel))
+        thisloss <- try(evaluate_model(thismodel), silent=TRUE)
+        if (any(grepl(pattern = "Error", thisloss))) {
+          print(thisloss)
+          return(NA)
+        }
+        return(thisloss)
       }
       catch$cor.test <- tmp.eval.fun.test(catch$Tweak)
       lambda.fold[[as.character(l.fold)]] <- catch
     }
     cv.object[[as.character(lambda)]] <- lambda.fold
-  }
-  if (cv.verbose) {
-    cat("\ncross validation completed, starting to build model on complete data, with  best lambda\n")
   }
 
 
@@ -481,6 +484,10 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
   # and rebuild a model on the complete dataset:
   lmin.pos <- which.min(mean.test.results)
   lmin <- as.numeric(names(mean.test.results)[lmin.pos])
+
+  if (cv.verbose) {
+    cat("\ncross validation completed, starting to build model on complete data, with  best lambda = ", lmin, "\n")
+  }
 
   model$tweak <- tweak.start.end.model
   model$Y <- train.data.list$mixtures
