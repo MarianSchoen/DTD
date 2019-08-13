@@ -271,7 +271,7 @@ A column of Y is a simulated bulk tissue profile, where the corresponding row in
 From the single cell profiles in the training set (that were not used to build $X$) we randomly sample profiles and average them to generate  
 artificial tissue profiles. The DTD package provides two methods to generate training and test sets. One method randomly samples cells 
 and averages them as described above. This is the recommended method for large single cell data sets. However, if there are only a few 
-reference samples per cell type (in average below 10 samples per type) we recommend to multiply a jitter on profiles prior to adding them. 
+reference samples per cell type (in average below 10 samples per type) we recommend to multiply profiles with random quantities and modify each mixture with a multiplicative jitter.
 For both methods we provide functions within the DTD package.
 
 `mix_samples` randomly selects `n.per.mixture` profiles from `exp.data` and generates bulk profiles. 
@@ -322,42 +322,14 @@ test.data <- mix_samples(
 ```
 
 
-The `mix_samples_with_jitter` function needs more preparatory work. 
-It takes the following arguments: 
-
-* major.fraction.type: vector of strings. Cell types included in the 'major.fraction.type' vector will occur with higher quantities in the mixtures 
-* minor.fraction.type: vector of strings. Cell types included in the sample.names vector will occur with lower quantities in the mixtures
-
-The idea behind splitting all samples in the data set into `major.fraction.type` and `minor.fraction.type` is: 
-In a tumor tissue malignant cells make up ~75% of all cells. In contrast to that, certain immune cells (e.g. a macrophage subtypes) make up less than 5 % of all cells. 
-In the training set imbalanced quantities should be reflected. 
-
-* n.samples: integer, how many in-silicio mixtures should be generated. 
-* exp.data: numeric matrix, here `train.mat`
-* pheno: named vector of strings, here `indicator.vector`
-* verbose: logical,  should output be printed?
-* single.special: logical, if `FALSE`  all `major.fraction.type` will be included in all mixtures. If `TRUE`  only one `major.fraction.type` will be included per mixture. This option should be used if e.g. `major.fraction.type` represent different tumor types. 
-* add.jitter: logical, should the mixtures be multiplied with jitter. 
-* chosen.mean: numeric, mean of jitter
-* chosen.sd: numeric, standard deviation of jitter
-* included.in.X: list of strings, here include.in.X
+The `mix_samples_with_jitter` function needs additionally a `prob.each` parameter. In the `mix_samples` function the average quantity for each cell type is its occurence in the `exp.data`. In the `mix_samples_with_jitter` function, the average expected quantity for each cell type is set via `prob.each`. `prob.each` must be a numeric vector, with the same length as `included.in.X`. 
 
 ```{r}
-# Here, we set "Type1" to be special:
-major.fraction.type <- c("Type1")
-# and all other to be normal:
-all.samples <- unique(indicator.vector)
-minor.fraction.type <- all.samples[-which(all.samples %in% major.fraction.type)]
-
-# reduce indicator list to those samples included in training:
-indicator.vector <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
-
 training.data.jitter <- mix_samples_with_jitter(
-  minor.fraction.type = minor.fraction.type,
-  major.fraction.type = major.fraction.type,
-  n.samples = n.samples,
   exp.data = train.mat,
-  pheno = indicator.vector,
+  prob.each = rep(1, length(include.in.X)), # default value
+  n.samples = n.samples,
+  pheno = indicator.train,
   verbose = FALSE,
   add.jitter = TRUE,
   included.in.X = include.in.X
