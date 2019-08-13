@@ -194,7 +194,7 @@ DTD_cv_lambda_test_input_generic <- function(lambda.seq,
   # safety check: n.folds
   test <- test_integer(test.value = n.folds,
                        output.info = c("DTD_cv_lambda", "n.folds"),
-                       min = 1,
+                       min = 2,
                        max = Inf
                        )
   # end -> n.folds
