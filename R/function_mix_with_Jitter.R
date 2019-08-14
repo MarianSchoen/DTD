@@ -14,7 +14,7 @@
 #'  Multiply the profile with its quantity, and average over the resulting mixture. (DTD::mix_samples_with_jitter)
 #'
 #' @param n.samples integer above 0, numbers of samples to be drawn (defaults to 1000)
-#' @param prob.each numeric vector with same length as 'include.in.X.' For each cell type in 'include.in.X'
+#' @param prob.each numeric vector with same length as 'included.in.X.' For each cell type in 'included.in.X'
 #' 'prob.each' holds the average quantity in the mixtures.
 #' @param exp.data non-negative numeric matrix, with features as rows and samples as columns
 #' @param add.jitter logical, should the mixtures be multiplied with a vector of normally distributed numbers? (JITTER)
@@ -22,10 +22,10 @@
 #' @param pheno named vector of strings, with pheno information ('pheno') for each sample ('names(pheno)') in exp.data
 #' @param chosen.mean float, mean of jitter (Default: 1)
 #' @param chosen.sd float, standard deviation of jitter (Default: 0.05)
-#' @param include.in.X vector of strings, indicating types that are in the reference matrix.
+#' @param included.in.X vector of strings, indicating types that are in the reference matrix.
 #' Only those types, and sorted in that order, will be included in the quantity matrix.
 #' Notice, every profile of 'exp.data' might be included in the mixture.
-#' But the quantity matrix only reports quantity information for the cell types in 'include.in.X'.
+#' But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.
 #' @param n.per.mixture integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)
 #'
 #' @return list with two entries. "quantities" matrix (nrow = ncol(exp.data), ncol = nMixtures) and "mixture"
@@ -50,10 +50,10 @@
 #' names(indicator.list) <- colnames(random.data)
 #'
 #' # First, decide which cells should be deconvoluted.
-#' include.in.X <- c("Type2", "Type3", "Type4", "Type5")
+#' included.in.X <- c("Type2", "Type3", "Type4", "Type5")
 #'
 #' training.data <- mix_samples_with_jitter(
-#'     include.in.X = include.in.X
+#'     included.in.X = included.in.X
 #'     , prob.each = c(2,1,1,1)
 #'     , n.samples = 1e3
 #'     , exp.data = random.data
@@ -64,7 +64,7 @@
 #' )
 #'
 mix_samples_with_jitter <- function(
-  include.in.X, # tested
+  included.in.X, # tested
   prob.each = NA, # tested
   n.samples, # tested
   exp.data, # tested
@@ -76,14 +76,14 @@ mix_samples_with_jitter <- function(
   n.per.mixture = 1 # tested
 ){
   # Safety check: pheno, exp.data
-  if(!is.vector(include.in.X)){
-    stop("in mix_samples_with_jitter: 'include.in.X' is not provided as vector")
+  if(!is.vector(included.in.X)){
+    stop("in mix_samples_with_jitter: 'included.in.X' is not provided as vector")
   }
   if(!is.vector(pheno)){
     stop("in mix_samples_with_jitter: 'pheno' is not provided as vector")
   }
-  if(!any(include.in.X %in% pheno)){
-    stop("in mix_samples_with_jitter: no cell type in 'include.in.X' fits 'pheno'")
+  if(!any(included.in.X %in% pheno)){
+    stop("in mix_samples_with_jitter: no cell type in 'included.in.X' fits 'pheno'")
   }
 
   if(!(is.matrix(exp.data) && is.numeric(exp.data))){
@@ -97,15 +97,20 @@ mix_samples_with_jitter <- function(
   # end -> pheno, exp.data
 
   if(any(is.na(prob.each))){
-    prob.each <- rep(1, length(include.in.X))
+    warning("in mix_samples_with_jitter: There are 'NA' in 'prob.each', therfore set it to a all 1 vector")
+    prob.each <- rep(1, length(included.in.X))
   }else{
     if(any(!is.numeric(prob.each))){
       stop("in mix_samples_with_jitter: there are non numeric entries in 'prob.each'.")
     }
+    if(length(prob.each) != length(included.in.X)){
+      stop("in mix_samples_with_jitter: 'length(prob.each)' unequal to 'length(included.in.X)'.")
+    }
+
   }
   prob.each <- prob.each/sum(prob.each)
 
-  len <- length(include.in.X)
+  len <- length(included.in.X)
 
   # Safety check: verbose
   test <- test_logical(test.value = verbose,
@@ -146,7 +151,7 @@ mix_samples_with_jitter <- function(
   rownames(mix.matrix) <- rownames(exp.data)
 
   quant.matrix <- matrix(nrow=len, ncol=0)
-  rownames(quant.matrix) <- include.in.X
+  rownames(quant.matrix) <- included.in.X
 
   for(lrun in 1:n.samples){
     if(verbose){
@@ -171,7 +176,7 @@ mix_samples_with_jitter <- function(
     # Initialise a numerc vector with zeros:
     mixture <- rep(0, nrow(exp.data))
     # Go through all samples:
-    for(lsample in include.in.X){
+    for(lsample in included.in.X){
       # Find all cells in the pheno which match to "lsample"
       potentialCells <- names(pheno[pheno == lsample])
       # sample a subset of the potentiallCells:
@@ -202,8 +207,8 @@ mix_samples_with_jitter <- function(
   }
 
   # only keep the quantity information of cells that are included in X
-  if(!any(is.na(include.in.X))){
-    quant.matrix <- quant.matrix[include.in.X, ]
+  if(!any(is.na(included.in.X))){
+    quant.matrix <- quant.matrix[included.in.X, ]
   }
   # build a return list, and add both matrices:
   rets <- vector(mode="list")
