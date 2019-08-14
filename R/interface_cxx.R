@@ -19,6 +19,10 @@ check_model <- function(model) {
           "subspfnid" %in% names(model)) ) {
     stop("list \"model\" does not contain function enums (normfnid, threshfnid, subspfnid)");
   }
+  # make sure these are integers:
+  model$normfnid <- as.integer(model$normfnid)
+  model$threshfnid <- as.integer(model$threshfnid)
+  model$subspfnid <- as.integer(model$subspfnid)
                                         # size checking
   if( ! (nrow(model$X) == nrow(model$Y) &&
          ncol(model$X) == nrow(model$C) &&
@@ -29,30 +33,30 @@ check_model <- function(model) {
 }
 empty_model <- function() {
   model <- list()
-  model$normfnid <- 0
-  model$threshfnid <- 0
-  model$subspfnid <- 0
+  model$normfnid <- as.integer(0)
+  model$threshfnid <- as.integer(0)
+  model$subspfnid <- as.integer(0)
   return(model)
 }
 set_model_normfunction <- function(model, normfnname) {
   if( normfnname == 'IDENTITY' || normfnname == 'identity') {
-    model$normfnid <- 0
+    model$normfnid <- as.integer(0)
   } else if( normfnname == 'NORM2' || normfnname == 'norm2' ) {
-    model$normfnid <- 1
+    model$normfnid <- as.integer(1)
   } else {
     stop("invalid or unimplemented norm function.")
   }
 }
 set_model_subspacefunction <- function(model, subspfnname) {
   if( subspfnname == 'POSITIVE' || subspfnname == 'positive' || subspfnname == '+' ) {
-    model$subspfnid <- 0
+    model$subspfnid <- as.integer(0)
   } else {
     stop("invalid or unimplemented subsp function.")
   }
 }
 set_model_threshfunction <- function(model, threshfnname) {
   if( threshfnname == 'POSITIVE' || threshfnname == 'positive' || threshfnname == '+' ) {
-    model$threshfnid <- 0 
+    model$threshfnid <- as.integer(0)
   } else {
     stop("invalid or unimplemented thresh function.")
   }
