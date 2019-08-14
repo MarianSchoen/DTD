@@ -33,9 +33,12 @@ namespace dtd {
       const mat zero = xi*xtgx - mat::Identity(n, n);
       if( zero.norm() > eps ){
         std::stringstream ss;
-        ss << "invxtgx: could not invert x^T G x.\n";
-        ss << "Usually this happens when the rank of x is too low to compensate for too many zeros in g\n";
-        ss << "It may help to decrease lambda.\n\n";
+        ss << "invxtgx: could not invert X^T diag(g) X.\n";
+        ss << "Usually this happens when the rank of X is too low to compensate for too many zeros in g\n";
+        ss << "It may help to: \n";
+        ss << " * decrease lambda \n";
+        ss << " * increase the number of features \n";
+        ss << " * increase number of lambas\n\n";
         ss << "residual: " << zero.norm() << "\n";
         ss << "admissible threshold: " << eps << "\n";
         throw std::runtime_error(ss.str());
