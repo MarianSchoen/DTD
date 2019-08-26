@@ -32,7 +32,6 @@
 #'
 #' @import ggplot2
 #' @import reshape2
-#' @
 #'
 #' @return ggplot object
 #' @export
