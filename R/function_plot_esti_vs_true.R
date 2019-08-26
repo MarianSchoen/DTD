@@ -32,6 +32,7 @@
 #'
 #' @import ggplot2
 #' @import reshape2
+#' @
 #'
 #' @return ggplot object
 #' @export
@@ -217,12 +218,12 @@ ggplot_true_vs_esti <- function(DTD.model,
   }
 
   levels(complete$variable) <- newLabels
-
   # and plot it
   pic <- ggplot2::ggplot(complete, aes_string(y = "value", x = "true", color = "variable")) +
     ggplot2::ylab("estimated") + xlab("true") +
     ggplot2::ggtitle(tit) +
-    ggplot2::facet_grid(. ~ variable, scales = "free") +
+    ggplot2::facet_grid(. ~ variable
+                        , scales = "free") +
     ggplot2::theme(axis.text.x = element_text(angle = 90))
 
   # If required, remove legend
@@ -236,5 +237,27 @@ ggplot_true_vs_esti <- function(DTD.model,
   } else {
     pic <- pic + ggplot2::geom_point(aes_string(shape = "shapeIndi"))
   }
+
+  if(requireNamespace("ggforce", quietly = TRUE)){
+    pic.list <- list()
+
+    for(l.type in 1:ncol(X.matrix)){
+      pic.list[[l.type]] <- pic + ggforce::facet_grid_paginate(
+        ~variable
+        , page = l.type
+        , nrow = 1
+        , ncol = 1
+        , scales = "free") +
+        theme(legend.position = "none")
+    }
+    pic <- list(
+      pic,
+      cowplot::plot_grid(
+      plotlist = pic.list
+      , ncol =  4
+      )
+    )
+  }
+
   return(pic)
 }
