@@ -369,6 +369,7 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
                               train.data.list,
                               cv.verbose = TRUE,
                               warm.start = FALSE,
+                              estimate.c.type = "direct",
                               ...) {
   DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)
   if( ! is.numeric(X.matrix) ||
@@ -404,6 +405,7 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
   # prepare the model:
   model <- empty_model()
   model$X <- X.matrix
+  model <- set_model_coeff_estimation(model, estimate.c.type)
   # Start of cross validation:
   for (lambda in lambda.seq) {
     if (cv.verbose) {

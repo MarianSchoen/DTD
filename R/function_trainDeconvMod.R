@@ -156,10 +156,6 @@ train_deconvolution_model <- function(tweak,
   }
   # end => compatible test
 
-  if( useImplementation == "cxx" && estimate.c.type != "direct" ) {
-    stop("only \"direct\" C estimation is implemented within cxx. use R for other ways to estimate C")
-  }
-
   ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
                                 output.info = c("train_deconvolution_model", "estimate.c.type"))
 
@@ -212,6 +208,7 @@ train_deconvolution_model <- function(tweak,
       tweak.start = tweak,
       train.data.list = train.data.list,
       X.matrix = X.matrix,
+      estimate.c.type = estimate.c.type,
       ...
     )
   } else {

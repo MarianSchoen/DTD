@@ -60,6 +60,15 @@ dtd::models::SubspaceFunctions intToSubspFn(int id){
     throw std::runtime_error("no such subspace function.");
   }
 }
+dtd::models::CoeffEstimation intToCoeffEstim(int id){
+  if( id == 0 ) {
+    return dtd::models::CoeffEstimation::DIRECT;
+  } else if( id == 1 ) {
+    return dtd::models::CoeffEstimation::NNLS;
+  } else {
+    throw std::runtime_error("no such subspace function.");
+  }
+}
 
 dtd::models::GoertlerModel make_model(SEXP model_) {
   auto x = getMatrixFromR(getElementFromRList(model_, "X"));
@@ -69,6 +78,7 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   int normid = INTEGER(getElementFromRList(model_, "normfnid"))[0];
   int threshfnid = INTEGER(getElementFromRList(model_, "threshfnid"))[0];
   int subspfnid = INTEGER(getElementFromRList(model_, "subspfnid"))[0];
+  int estim_c = INTEGER(getElementFromRList(model_, "coeffestim"))[0];
 
   // crash early (but leave the details to the R space, this is just to prevent segfaults, etc.)
   if( x.size() == 0 || y.size() == 0 || c.size() == 0 || g.size() == 0)
@@ -80,7 +90,7 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   if( y.cols() != c.cols() )
     throw std::runtime_error("make_model: y and c have a different number of samples.");
 
-  return dtd::models::GoertlerModel(x,y,c,g, intToNormFn(normid), intToThreshFn(threshfnid), intToSubspFn(subspfnid));
+  return dtd::models::GoertlerModel(x,y,c,g, intToNormFn(normid), intToThreshFn(threshfnid), intToSubspFn(subspfnid), intToCoeffEstim(estim_c));
 }
 
 SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate){

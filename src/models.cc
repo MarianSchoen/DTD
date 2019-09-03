@@ -1,5 +1,6 @@
 #include "models.hpp"
 #include "utils.hpp"
+#include "nnls.hpp"
 #include <Eigen/Cholesky>
 #include <limits>
 #include <sstream>
@@ -48,12 +49,39 @@ namespace dtd {
     mat estimate_c_direct(mat const & x, mat const & y, vec const & g, mat const & xtgxi) {
       return xtgxi*x.transpose()*g.asDiagonal()*y;
     }
+    mat estimate_c_nnls(mat const & x, mat const & y, vec const & g) {
+      mat gx = g.asDiagonal()*x;
+      mat res = mat(x.cols(), y.cols());
+      for( int i = 0; i < y.cols(); ++i ){
+        res.col(i) = nnls(gx, g.asDiagonal()*y.col(i));
+      }
+      return res;
+    }
+    mat GoertlerModel::estimate_c(vec const & g) const {
+      if( m_estim_c == CoeffEstimation::DIRECT ) {
+        mat xtgxi = invxtgx(m_x, g);
+        return estimate_c_direct(m_x, m_y, g, xtgxi);
+      } else if( m_estim_c == CoeffEstimation::NNLS ){
+        return estimate_c_nnls(m_x, m_y, g);
+      } else {
+        throw std::runtime_error("unimplemented estimate_C function.");
+      }
+    }
+    mat GoertlerModel::estimate_c(vec const & g, mat const & xtgxi) const {
+      if( m_estim_c == CoeffEstimation::DIRECT ) {
+        return estimate_c_direct(m_x, m_y, g, xtgxi);
+      } else if( m_estim_c == CoeffEstimation::NNLS ){
+        return estimate_c_nnls(m_x, m_y, g);
+      } else {
+        throw std::runtime_error("unimplemented estimate_C function.");
+      }
+    }
     ftype GoertlerModel::evaluate(vec const & g, mat const & xtgxi) const {
       double res(0.0);
       assert(g.size() == m_ngenes);
       assert(xtgxi.rows() == m_ncells);
       assert(xtgxi.cols() == m_ncells);
-      mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
+      mat c_hat = this->estimate_c(g);
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
 
@@ -80,7 +108,7 @@ namespace dtd {
       assert( g.size() == m_ngenes);
       if( gr.size() != m_ngenes )
         gr.resize(m_ngenes);
-      mat c_hat = estimate_c_direct(m_x,m_y,g,xtgxi);
+      mat c_hat = this->estimate_c(g, xtgxi);
       assert(c_hat.rows() == m_ncells);
       assert(c_hat.cols() == m_nsamples);
 

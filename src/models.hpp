@@ -14,6 +14,10 @@ namespace dtd {
     enum class SubspaceFunctions {
                                    POSITIVE
     };
+    enum class CoeffEstimation {
+                                DIRECT,
+                                NNLS
+    };
     mat invxtgx(mat const & x, vec const & g);
     class GoertlerModel {
     private:
@@ -23,8 +27,9 @@ namespace dtd {
       NormFunctions m_normfn;
       ThresholdFunctions m_threshfn;
       SubspaceFunctions m_subspfn;
+      CoeffEstimation m_estim_c;
     public:
-      GoertlerModel(mat x, mat y, mat c, vec g, NormFunctions fn = NormFunctions::IDENTITY, ThresholdFunctions thresh = ThresholdFunctions::SOFTMAX, SubspaceFunctions subsp = SubspaceFunctions::POSITIVE) : m_ngenes(x.rows()), m_ncells(x.cols()), m_nsamples(y.cols()), m_x(x), m_y(y), m_c(c), m_g(g), m_normfn(fn), m_threshfn(thresh), m_subspfn(subsp) {
+      GoertlerModel(mat x, mat y, mat c, vec g, NormFunctions fn = NormFunctions::IDENTITY, ThresholdFunctions thresh = ThresholdFunctions::SOFTMAX, SubspaceFunctions subsp = SubspaceFunctions::POSITIVE, CoeffEstimation estimC = CoeffEstimation::DIRECT) : m_ngenes(x.rows()), m_ncells(x.cols()), m_nsamples(y.cols()), m_x(x), m_y(y), m_c(c), m_g(g), m_normfn(fn), m_threshfn(thresh), m_subspfn(subsp), m_estim_c(estimC) {
         // some error checking:
         if( m_x.rows() != m_ngenes )
           throw std::runtime_error("number of rows of X is not ngenes.");
@@ -43,6 +48,8 @@ namespace dtd {
 
         m_xtgxi = invxtgx(m_x, m_g);
       }
+      mat estimate_c(vec const & g) const;
+      mat estimate_c(vec const & g, mat const & xtgxi) const;
       inline vec const & getParams() const { return m_g; }
       inline void setParams(vec const & g) {
         m_g = g;

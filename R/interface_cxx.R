@@ -16,13 +16,16 @@ check_model <- function(model) {
   }
   if( ! ( "normfnid" %in% names(model) &&
           "threshfnid" %in% names(model) &&
-          "subspfnid" %in% names(model)) ) {
+          "subspfnid" %in% names(model)) &&
+          "coeffestim" %in% names(model)
+     ) {
     stop("list \"model\" does not contain function enums (normfnid, threshfnid, subspfnid)");
   }
   # make sure these are integers:
   model$normfnid <- as.integer(model$normfnid)
   model$threshfnid <- as.integer(model$threshfnid)
   model$subspfnid <- as.integer(model$subspfnid)
+  model$coeffestim <- as.integer(model$coeffestim)
                                         # size checking
   if( ! (nrow(model$X) == nrow(model$Y) &&
          ncol(model$X) == nrow(model$C) &&
@@ -36,6 +39,7 @@ empty_model <- function() {
   model$normfnid <- as.integer(0)
   model$threshfnid <- as.integer(0)
   model$subspfnid <- as.integer(0)
+  model$coeffestim <- as.integer(0)
   return(model)
 }
 set_model_normfunction <- function(model, normfnname) {
@@ -46,6 +50,7 @@ set_model_normfunction <- function(model, normfnname) {
   } else {
     stop("invalid or unimplemented norm function.")
   }
+  return(model)
 }
 set_model_subspacefunction <- function(model, subspfnname) {
   if( subspfnname == 'POSITIVE' || subspfnname == 'positive' || subspfnname == '+' ) {
@@ -53,6 +58,7 @@ set_model_subspacefunction <- function(model, subspfnname) {
   } else {
     stop("invalid or unimplemented subsp function.")
   }
+  return(model)
 }
 set_model_threshfunction <- function(model, threshfnname) {
   if( threshfnname == 'POSITIVE' || threshfnname == 'positive' || threshfnname == '+' ) {
@@ -60,6 +66,17 @@ set_model_threshfunction <- function(model, threshfnname) {
   } else {
     stop("invalid or unimplemented thresh function.")
   }
+  return(model)
+}
+set_model_coeff_estimation <- function(model, coeffestimname) {
+  if( coeffestimname == 'direct' || coeffestimname == 'DIRECT' ) {
+    model$coeffestim <- as.integer(0)
+  } else if( coeffestimname == 'nnls' || coeffestimname == 'NNLS' || coeffestimname == 'non_negative' ) {
+    model$coeffestim <- as.integer(1)
+  } else {
+    stop("invalid or unimplemented thresh function.")
+  }
+  return(model)
 }
 #' Title
 #'
