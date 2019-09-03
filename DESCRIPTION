@@ -19,5 +19,6 @@ Depends:
 Suggests: 
     knitr,
     rmarkdown,
-    testthat
+    testthat, 
+    ggforce
 VignetteBuilder: knitr
