@@ -15,7 +15,6 @@ namespace dtd {
                                    POSITIVE
     };
     mat invxtgx(mat const & x, vec const & g);
-    bool check_posdefmat(mat const & x, vec const & g, mat const & xtgxi, ftype eps = std::numeric_limits<ftype>::epsilon());
     class GoertlerModel {
     private:
       int m_ngenes, m_ncells, m_nsamples;
