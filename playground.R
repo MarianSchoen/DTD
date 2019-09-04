@@ -2,9 +2,10 @@
 rm(list = ls()); gc()
 
 # I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
-#library(DTD)
-library(devtools)
-load_all(".")
+library(DTD)
+# library(devtools)
+# load_all(".")
+
 # fast testing:
 lambda.len <- 4
 n.folds <- 2
@@ -66,37 +67,37 @@ start.tweak <- rep(1, nrow(X.matrix))
 names(start.tweak) <- rownames(X.matrix)
 
 
-# ab hier c++
-library(microbenchmark)
-
-microbenchmark(
-  "c++" = train_deconvolution_model(
-    tweak = start.tweak,
-    X.matrix = X.matrix,
-    train.data.list = training.data,
-    test.data.list = test.data,
-    estimate.c.type = "direct",
-    maxit = maxit,
-    n.folds = n.folds,
-    lambda.len = lambda.len,
-    cv.verbose = FALSE,
-    verbose = FALSE,
-    useImplementation = "cpp"
-  ),
-  "R" = train_deconvolution_model(
-    tweak = start.tweak,
-    X.matrix = X.matrix,
-    train.data.list = training.data,
-    test.data.list = test.data,
-    estimate.c.type = "direct",
-    maxit = maxit,
-    n.folds = n.folds,
-    lambda.len = lambda.len,
-    cv.verbose = FALSE,
-    verbose = FALSE,
-    useImplementation = "R"
-  )
-)
+# # ab hier c++
+# library(microbenchmark)
+#
+# time.table <- microbenchmark(
+#   "cpp" = train_deconvolution_model(
+#     tweak = start.tweak,
+#     X.matrix = X.matrix,
+#     train.data.list = training.data,
+#     test.data.list = test.data,
+#     estimate.c.type = "direct",
+#     maxit = maxit,
+#     n.folds = n.folds,
+#     lambda.len = lambda.len,
+#     cv.verbose = FALSE,
+#     verbose = FALSE,
+#     useImplementation = "cpp"
+#   ),
+#   "R" = train_deconvolution_model(
+#     tweak = start.tweak,
+#     X.matrix = X.matrix,
+#     train.data.list = training.data,
+#     test.data.list = test.data,
+#     estimate.c.type = "direct",
+#     maxit = maxit,
+#     n.folds = n.folds,
+#     lambda.len = lambda.len,
+#     cv.verbose = FALSE,
+#     verbose = FALSE,
+#     useImplementation = "R"
+#   )
+# )
 
 
 model <- train_deconvolution_model(
@@ -104,10 +105,10 @@ model <- train_deconvolution_model(
   X.matrix = X.matrix,
   train.data.list = training.data,
   test.data.list = test.data,
-  estimate.c.type = "direct",
+  estimate.c.type = "non_negative",
   maxit = maxit,
-  n.folds = 10,
-  lambda.len = 10,
+  n.folds = 5,
+  lambda.len = 20,
   cv.verbose = TRUE,
   verbose = FALSE,
   useImplementation = "cpp"
