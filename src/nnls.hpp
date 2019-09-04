@@ -53,17 +53,18 @@ vec nnls(mat const & a, vec const & y, ftype eps=1e3*std::numeric_limits<ftype>:
     while( (! p.empty()) && (minimum(s, p) <= 0.0) ) {
       std::set<ftype> alphas;
       for( auto e : p ){
-        if( s[e] <= eps ) {
-          alphas.insert(x[e] / (x[e] - s[e]));
+        if( s(e) <= 0.0 ) {
+          alphas.insert(x(e) / (x(e) - s(e)));
         }
       }
       ftype alpha = *std::min_element(alphas.cbegin(), alphas.cend());
-      x = x + alpha * (s - x);
-      for( auto e : p ){
-        if( x[e] == 0.0 ){
-          r.insert(e);
-          p.erase(e);
-        }
+      x += alpha * (s - x);
+      for( auto it = p.begin(); it != p.end(); ) {
+        if( std::abs(x(*it)) <= eps ){
+          r.insert(*it);
+          it = p.erase(it);
+        } else
+          ++it;
       }
       set_s(s, a, r, p, y);
     }
