@@ -107,7 +107,6 @@ ggplot_cv <- function(DTD.model,
       byrow=TRUE)
     )
   rownames(test.results.frame) <- names(test.result.per.lambda)
-
   # for each model, pick "upper.x.axis" information (with same function/lapply construct):
   pick.upper.x.fun <- function(lambda.list){
     tmp <- lapply(lambda.list, function(each.fold){
@@ -123,7 +122,8 @@ ggplot_cv <- function(DTD.model,
           tmp,
           mean,
           na.rm = TRUE),
-        use.names = FALSE)
+        use.names = FALSE),
+      na.rm = TRUE
       )
     return(upper.info.vec)
   }
