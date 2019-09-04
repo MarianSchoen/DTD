@@ -288,7 +288,7 @@ lambda_sequence <- function(lambda.seq, lambda.length, train.Y) {
   # cross validation can be called with warm.start.
   # these warm starts should start with the most unregularized scenario:
   if(min(lambda.seq) != lambda.seq[1]){
-    lambda.seq <- sort(lambda.seq, decreasing = TRUE)
+    lambda.seq <- sort(lambda.seq, decreasing = FALSE)
   }
   return(lambda.seq)
 }
