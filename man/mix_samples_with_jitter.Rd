@@ -2,28 +2,28 @@
 % Please edit documentation in R/function_mix_with_Jitter.R
 \name{mix_samples_with_jitter}
 \alias{mix_samples_with_jitter}
-\title{Mix samples with Jitter}
+\title{Mix samples with jitter}
 \usage{
-mix_samples_with_jitter(minor.fraction.type, major.fraction.type,
-  n.samples, exp.data, pheno, verbose = FALSE, single.special = FALSE,
-  add.jitter = FALSE, chosen.mean = 1, chosen.sd = 0.05,
-  n.per.mixture = 1, included.in.X, min.major = 0.5, max.major = 0.7)
+mix_samples_with_jitter(included.in.X, prob.each = NA, n.samples,
+  exp.data, pheno, verbose = FALSE, add.jitter = FALSE,
+  chosen.mean = 1, chosen.sd = 0.05, n.per.mixture = 1)
 }
 \arguments{
-\item{minor.fraction.type}{vector of strings, have to match colnames(exp.data).}
+\item{included.in.X}{vector of strings, indicating types that are in the reference matrix.
+Only those types, and sorted in that order, will be included in the quantity matrix.
+Notice, every profile of 'exp.data' might be included in the mixture.
+But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.}
 
-\item{major.fraction.type}{vector of strings, have to match colnames(exp.data), these samples will
-occur with higher quantites in the in-silicio mixtures.}
+\item{prob.each}{numeric vector with same length as 'included.in.X.' For each cell type in 'included.in.X'
+'prob.each' holds the average quantity in the mixtures.}
 
 \item{n.samples}{integer above 0, numbers of samples to be drawn (defaults to 1000)}
 
 \item{exp.data}{non-negative numeric matrix, with features as rows and samples as columns}
 
-\item{pheno}{named vector of strings, with pheno information ('pheno') for each sample ('name(pheno)') in exp.data}
+\item{pheno}{named vector of strings, with pheno information ('pheno') for each sample ('names(pheno)') in exp.data}
 
 \item{verbose}{logical, should the function print about progress to the terminal? (Defaults to FALSE)}
-
-\item{single.special}{logical, in a mixture, should all special names be used? (=> TRUE) Or, should a mixture only include one special sample? (=> FALSE)(Defaults to FALSE)}
 
 \item{add.jitter}{logical, should the mixtures be multiplied with a vector of normally distributed numbers? (JITTER)}
 
@@ -32,32 +32,25 @@ occur with higher quantites in the in-silicio mixtures.}
 \item{chosen.sd}{float, standard deviation of jitter (Default: 0.05)}
 
 \item{n.per.mixture}{integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)}
-
-\item{included.in.X}{vector of strings, indicating types that are in the reference matrix.
-Only those types, and sorted in that order, will be included in the quantity matrix.
-Notice, every profile of 'exp.data' might be included in the mixture.
-But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.}
-
-\item{min.major}{float, 0 <= 'min.major' <= 'max.major', minimal fraction of 'major.fraction.type' in each mixture}
-
-\item{max.major}{float, 'min.major' <= 'max.major' <= 1, maximal fraciton of 'major.fraction.type' in each mixture}
 }
 \value{
 list with two entries. "quantities" matrix (nrow = ncol(exp.data), ncol = nMixtures) and "mixture"
 matrix (nrow = nrow(exp.data), ncol = nMixtures)
 }
 \description{
-"mix_samples_with_jitter" takes pheno information ('minor.fraction.type', 'special.names')
-and a expression matrix ('exp.data').
+"mix_samples_with_jitter" takes 'pheno' information and a expression matrix ('exp.data').
 Its output is a list of two matrices. A matrix holding in-silicio 'mixtures' and a quantity matrix,
 holding the corresponding compositions.
-Each profile of the 'mixture' matrix is the result of a linear combination of input profiles ('exp.data'),
+Each profile of the 'mixture' matrix is the result of a linear combination of input expression,
 multiplied with a random jitter vector.
-"mix_samples_with_jitter" mixes samples in a way that they look similar to biological data.
-For example, in a tumor tissue there are several cells included, but we expect that
-most of them are tumor cells. Therefore, the mix_samples_with_jitter function expects a
-vector of samples which represent cells, that occur in minor fractions (e.g. immune cells) and a
-vector of special samples, which occur in major fractions.
+}
+\details{
+In the DTD package there are 2 ways to generate 'in-silicio' mixtures:
+ - take 'n.per.mixture' random profiles from the expression matrix, and average over them.
+ Here, the quantities (or probabilities) for each cell type is set by their relative
+ frequency in the expression matrix. (DTD::mix_samples)
+ - for each cell type, pick a random number, interpret this number as the cell types quantity.
+ Multiply the profile with its quantity, and average over the resulting mixture. (DTD::mix_samples_with_jitter)
 }
 \examples{
 library(DTD)
@@ -76,26 +69,17 @@ indicator.list <- gsub("^Cell[0-9]*\\\\.", "", colnames(random.data))
 names(indicator.list) <- colnames(random.data)
 
 # First, decide which cells should be deconvoluted.
-include.in.X <- c("Type2", "Type3", "Type4", "Type5")
-
-# here, I declare "Type1" as Tumor cells, and all other as immune cells
-major.fraction.type <- c("Type1")
-all.samples <- unique(indicator.list)
-minor.fraction.type <- all.samples[- which(all.samples \%in\% major.fraction.type)]
+included.in.X <- c("Type2", "Type3", "Type4", "Type5")
 
 training.data <- mix_samples_with_jitter(
-    minor.fraction.type = minor.fraction.type,
-    major.fraction.type = major.fraction.type,
-    included.in.X = include.in.X,
-    n.samples = 1e3,
-    exp.data = random.data,
-    pheno = indicator.list,
-    single.special = FALSE,
-    add.jitter = TRUE,
-    chosen.mean = 1,
-    chosen.sd = 0.05,
-    min.major = 0.5,
-    max.major = 0.5
+    included.in.X = included.in.X
+    , prob.each = c(2,1,1,1)
+    , n.samples = 1e3
+    , exp.data = random.data
+    , pheno = indicator.list
+    , add.jitter = TRUE
+    , chosen.mean = 1
+    , chosen.sd = 0.05
 )
 
 }

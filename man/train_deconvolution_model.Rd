@@ -5,7 +5,8 @@
 \title{Train a DTD model based on correlation loss function}
 \usage{
 train_deconvolution_model(tweak, X.matrix, train.data.list,
-  test.data.list = NULL, estimate.c.type, ...)
+  test.data.list = NULL, estimate.c.type, useImplementation = "cxx",
+  ...)
 }
 \arguments{
 \item{tweak}{numeric vector, starting point for the FISTA optimization.
@@ -29,6 +30,8 @@ expression profile of a training mixture. This data is used to train the deconvo
 \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
 (see \code{\link{estimate_c}}),
 if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
+
+\item{useImplementation}{string, either "R" or "cxx". chooses between the R reference implementation and the faster c++ implementation.}
 
 \item{...}{parameters passed to DTD_cv_lambda}
 }
