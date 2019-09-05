@@ -137,3 +137,25 @@ evaluate_model <- function(model) {
     PACKAGE = "DTD"
     ))
 }
+#' NNLS
+#'
+#' @param A
+#' @param b
+#'
+#' @return x
+#'
+#' @export
+#' @useDynLib DTD, .registration = TRUE
+#'
+cxx_nnls <- function(A, b) {
+  m = nrow(A)
+  n = ncol(A)
+  if( length(b) != m ) {
+    stop("b and A have incompatible sizes.")
+  }
+  result <- .Call("_nnls",
+                  as.matrix(A),
+                  as.vector(b)
+                  )
+  return(result)
+}

@@ -4,6 +4,7 @@
 #include <Rdefines.h>
 #include <array>
 #include <string>
+#include "nnls.hpp"
 
 // copied from https://github.com/rehbergT/dgemm/blob/master/dgemmR/src/wrapper.cpp
 SEXP getElementFromRList(SEXP list_r, const char* name) {
@@ -205,10 +206,27 @@ SEXP dtd_evaluate_model_goertler(SEXP model_) {
   }
   return R_NilValue;
 }
+SEXP dtd_nnls(SEXP mat, SEXP vec) {
+  try {
+    MatrixXd a = getMatrixFromR(mat);
+    MatrixXd b = getVectorFromR(vec);
+    auto c_res = nnls(a, b);
+    SEXP r_res = PROTECT(allocVector(REALSXP, c_res.size()));
+    for( int i = 0; i < c_res.size(); ++i) {
+      REAL(r_res)[i] = c_res(i);
+    }
+    UNPROTECT(1);
+    return r_res;
+  } catch (std::exception const & exc ){
+    error(exc.what());
+  }
+  return R_NilValue;
+}
 extern "C" {
   static const R_CallMethodDef callMethods[] = {
                                                 { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 9},
                                                 { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
+                                                { "_nnls", (DL_FUNC)&dtd_nnls, 2},
                                                 {NULL, NULL, 0}
   };
   void R_init_DTD(DllInfo* info) {
