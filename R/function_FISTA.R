@@ -192,7 +192,9 @@ descent_generalized_fista <- function(tweak.vec,
                                       save.all.tweaks=FALSE,
                                       use.restart=TRUE,
                                       verbose=TRUE,
-                                      NESTEROV.FUN = positive_subspace_pmax){
+                                      NESTEROV.FUN = positive_subspace_pmax,
+                                      stop.crit.threshhold = 1e-10
+                                      ){
 
   # safety check: F.GRAD.FUN
   # I am going to check if the function returns an error, if called with only 1 parameter
@@ -352,7 +354,6 @@ descent_generalized_fista <- function(tweak.vec,
   # sequence holds the different learning rates:
   sequence <- seq(from = 0, to = learning.rate, length.out = cycles)
 
-
   # Notice that the for loop starts at 2, due to the extrapolation/correction step of the FISTA algorithm
   for(iter in 2:maxit){
     # calculate gradient at the current position:
@@ -403,7 +404,7 @@ descent_generalized_fista <- function(tweak.vec,
     tweak_old <- tweak.vec
 
     # check if the last step was a descent step:
-    if(rev(converge_vec)[1] > eval){
+    if((rev(converge_vec)[1] - eval) > 0){
       # if it was a descent step, update tweak.vec
       tweak.vec <- u_vec
     }else{
@@ -415,8 +416,9 @@ descent_generalized_fista <- function(tweak.vec,
       }
     }
 
-    # add the last eval to the convergence_vec:
-    converge_vec <- c(converge_vec, eval)
+    # find stop criterion
+    change.last.iter.before.nesterov <- rev(converge_vec)[1] - eval
+    ###
 
     # and if set, update tweak.history
     if(save.all.tweaks){
@@ -440,10 +442,21 @@ descent_generalized_fista <- function(tweak.vec,
         # ... and reset the best.y if its a new winner
         y_vec <- y_vec.l
         best.y <- eval.y
-        nesterov.winner <- l.nesterov
+        nesterov.winner.pos <- which(nesterov.sequence == l.nesterov)
       }
     }
 
+    # add the last eval to the convergence_vec:
+    converge_vec <- c(converge_vec, best.y)
+
+    # find stop criterion
+    change.last.iter.after.nesterov <- rev(converge_vec)[1] - eval.y
+
+    change.last.iter <- max(change.last.iter.after.nesterov, change.last.iter.before.nesterov)
+    ###
+
+
+    ### end stop
     # if verbose = TRUE, print information to the screen
     if(verbose){
       cat("###############################################\n")
@@ -452,14 +465,30 @@ descent_generalized_fista <- function(tweak.vec,
       cat("learning.rate: ", learning.rate, "\n")
       cat("cycle winner pos:", winner.pos, "\n")
       cat("factor: ", factor, "\n")
-      cat("nesterov rate: ", nesterov.winner, "\n")
+      cat("nesterov rate: ", nesterov.winner.pos, "\n")
       # plot converge_vec:
       if(iter %% 100 == 0){
-        graphics::plot(1:iter, converge_vec)
+        graphics::plot(1:iter, log(-converge_vec))
       }
+      # stop crit output
+      cat("change.last.iter.before.nesterov: ", change.last.iter.before.nesterov, "\n")
+      cat("change.last.iter.after.nesterov: ", change.last.iter.after.nesterov, "\n")
+      cat("change.last.iter: ", change.last.iter, "\n")
     }
+
+
+    if(
+      change.last.iter <= stop.crit.threshhold && # converged
+      !change.last.iter == 0
+      # learning.rate <= stop.crit.threshhold
+      ){
+      break
+    }
+
   }
 
+
+  # stop criterion
   names(tweak.vec) <- tweak.names
   # build a list to return:
   ret <- list("Tweak"=NORM.FUN(tweak.vec),

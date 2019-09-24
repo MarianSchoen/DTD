@@ -107,8 +107,8 @@ model <- train_deconvolution_model(
   test.data.list = test.data,
   estimate.c.type = "non_negative",
   maxit = maxit,
-  n.folds = 5,
-  lambda.len = 20,
+  n.folds = 2,
+  lambda.len = 3,
   cv.verbose = TRUE,
   verbose = FALSE,
   useImplementation = "cpp"
