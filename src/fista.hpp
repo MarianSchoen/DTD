@@ -81,7 +81,7 @@ namespace dtd {
     };
 
     template<class Model>
-    void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double lambda, std::function<void(Model const &, vec const &)> callback) {
+    void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double epsilon, double lambda, std::function<void(Model const &, vec const &)> callback) {
       vec y_vec = model.getParams();
       vec g_new = y_vec;
       ftype fy = model.evaluate();
@@ -127,6 +127,8 @@ namespace dtd {
             m_nesterov_counter = 2;
         }
 
+        ftype delta_y_1 = fy_old - fy;
+
         callback(model, g_new);
         fy_old = fy;
 
@@ -139,8 +141,12 @@ namespace dtd {
           testmat.row(i) = model.subspace_constraint(g_new + alpha * nesterov_dir);
           testy(i) = model.evaluate(testmat.row(i));
         }
-        testy.minCoeff(&minindex);
+        fy = testy.minCoeff(&minindex);
+        ftype delta_y_2 = fy_old - fy;
         y_vec = testmat.row(minindex);
+
+        if( std::max(delta_y_1, delta_y_2) < epsilon && delta_y_1 != 0 && delta_y_2 != 0 )
+          break; // converged.
       }
       model.norm_constraint(g_new);
       model.setParams(g_new);

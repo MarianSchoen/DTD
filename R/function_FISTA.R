@@ -193,7 +193,7 @@ descent_generalized_fista <- function(tweak.vec,
                                       use.restart=TRUE,
                                       verbose=TRUE,
                                       NESTEROV.FUN = positive_subspace_pmax,
-                                      stop.crit.threshhold = 1e-5
+                                      stop.crit.threshold = 1e-5
                                       ){
 
   # safety check: F.GRAD.FUN
@@ -478,9 +478,9 @@ descent_generalized_fista <- function(tweak.vec,
 
 
     if(
-      change.last.iter <= stop.crit.threshhold && # converged
+      change.last.iter <= stop.crit.threshold && # converged
       !change.last.iter == 0
-      # learning.rate <= stop.crit.threshhold
+      # learning.rate <= stop.crit.threshold
       ){
       break
     }
@@ -501,21 +501,31 @@ descent_generalized_fista <- function(tweak.vec,
   }
   return(ret)
 }
-#' Title
+#' descent_generalized_fista_cxx
 #'
-#' @param model
-#' @param lambda
-#' @param maxiter
-#' @param save.all.tweaks
-#' @param ...
+#' use the cxx implementation of fista.
 #'
-#' @return
-#' @export
+#' @param model a model as constructed in interface_cxx.R
+#' @param lambda a lambda (regularization) parameter
+#' @param maxit maximum number of iterations
+#' @param stop.crit.threshold stopping criterion: if loss function changes by no more than this value, assume convergence.
+#' @param save.all.tweaks if set to TRUE, save all intermediate results (each iteration)
+#' @param learningrate initial learning rate. if set to NA, determined automatically determined
+#' @param linesearchspeed rate of learning rate adjustments
+#' @param cycles number of evaluations in each gradient and nesterov step.
+#' @param restarts if set to true, restart Nesterov approximation
+#'
+#' @return a list that contains the trained model and its History
 #'
 #' @examples
-descent_generalized_fista_cxx <- function(model, lambda, maxiter, save.all.tweaks = FALSE, ...) {
-  #TODO: checking (though mostly done within solve_fista_goertler), more options, change model params,...?
-  #TODO: model params should be part of the model!
-  # for now just:
-  return(solve_fista_goertler(model, lambda, maxiter, save.all.tweaks))
+descent_generalized_fista_cxx <- function(model,
+                                          lambda = 0.01,
+                                          maxit = 100,
+                                          stop.crit.threshold = 1e-5,
+                                          save.all.tweaks = FALSE,
+                                          learningrate = NA,
+                                          linesearchspeed = 2.0,
+                                          cycles = 5,
+                                          restarts = TRUE ) {
+  return(solve_fista_goertler(model, lambda, maxit, stop.crit.threshold, save.all.tweaks, learningrate, linesearchspeed, cycles, restarts)
 }

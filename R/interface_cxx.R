@@ -90,7 +90,7 @@ set_model_coeff_estimation <- function(model, coeffestimname) {
 #' @useDynLib DTD, .registration = TRUE
 #'
 #' @examples
-solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.tweaks = FALSE, learningrate = NA, linesearchspeed = 2.0, cycles = 5, restarts = TRUE) {
+solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, stop.crit.threshold = 1e-5, save.all.tweaks = FALSE, learningrate = NA, linesearchspeed = 2.0, cycles = 5, restarts = TRUE) {
   # check input params...
   check_model(model)
   if( ! (is.numeric(lambda) && lambda >= 0.0 )) {
@@ -105,6 +105,7 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, save.all.t
     as.list(model),
     as.double(lambda),
     as.integer(maxiter),
+    as.double(stop.crit.threshold ),
     as.logical(save.all.tweaks),
     learningrate,
     as.double(linesearchspeed),

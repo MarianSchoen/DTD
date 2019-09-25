@@ -94,9 +94,10 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   return dtd::models::GoertlerModel(x,y,c,g, intToNormFn(normid), intToThreshFn(threshfnid), intToSubspFn(subspfnid), intToCoeffEstim(estim_c));
 }
 
-SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate){
+SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _epsilon, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate){
   double lambda = REAL(_lambda)[0];
   int maxiter = INTEGER(_maxiter)[0];
+  double epsilon = REAL(_epsilon)[0];
   bool saveHistory = LOGICAL(_saveHistory)[0];
   bool haveLearningrate = LOGICAL(_haveLearningrate)[0];
   double learningrate = 0.0; // will always throw if left uninitialized
@@ -147,7 +148,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _sa
         iter++;
       };
 
-    solver.solve(model, maxiter, lambda, record_solve);
+    solver.solve(model, maxiter, epsilon, lambda, record_solve);
 
     std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda"};
     if( saveHistory )
