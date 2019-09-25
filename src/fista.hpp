@@ -76,8 +76,8 @@ namespace dtd {
       ftype feval(Model const & m) const {
         return m.evaluate();
       }
-      void solve(Model & m, std::size_t iter, double lambda, std::function<void(Model const & m, vec const &)> callback);
-      inline void solve(Model & m, std::size_t iter, double lambda) { solve(m, iter, lambda, [](Model const &, vec const &){}); }
+      void solve(Model & m, std::size_t iter, double epsilon, double lambda, std::function<void(Model const & m, vec const &)> callback);
+      inline void solve(Model & m, std::size_t iter, double epsilon, double lambda) { solve(m, iter, epsilon, lambda, [](Model const &, vec const &){}); }
     };
 
     template<class Model>
