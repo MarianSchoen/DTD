@@ -225,7 +225,7 @@ SEXP dtd_nnls(SEXP mat, SEXP vec) {
 }
 extern "C" {
   static const R_CallMethodDef callMethods[] = {
-                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 9},
+                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 10},
                                                 { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
                                                 { "_nnls", (DL_FUNC)&dtd_nnls, 2},
                                                 {NULL, NULL, 0}

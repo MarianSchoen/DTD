@@ -5,11 +5,12 @@
 \title{Train a DTD model based on correlation loss function}
 \usage{
 train_deconvolution_model(tweak, X.matrix, train.data.list,
-  test.data.list = NULL, estimate.c.type, useImplementation = "cxx",
+  test.data.list = NULL, estimate.c.type, use.implementation = "cxx",
   ...)
 }
 \arguments{
-\item{tweak}{numeric vector, starting point for the FISTA optimization.
+\item{tweak}{numeric vector, with same length as 'nrow(X.matrix)',
+starting point for the FISTA optimization.
 Notice, the names of the vector will be kept, and are of use later on.}
 
 \item{X.matrix}{numeric matrix, with features/genes as rows, and cell types as column.
@@ -26,36 +27,42 @@ expression profile of a training mixture. This data is used to train the deconvo
 'mixtures', numeric matrix with as many rows as rows in X.matrix. Each column of 'mixtures' is the
  expression profile of a test mixture. After learning, this data is used to validate the model}
 
-\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
-\eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
-(see \code{\link{estimate_c}}),
-if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
+\item{estimate.c.type}{string, either "non_negative", or "direct".
+Indicates how the algorithm finds the solution of \eqn{arg min_C ||diag(g)(Y - XC)||_2}.
+If 'estimate.c.type' is set to "direct" there is no regularization (see \code{\link{estimate_c}}),
+if 'estimate.c.type' is set to "non_negative" the estimates "C" must not be negative (non-negative least squares)
+(see (see \code{\link{estimate_nn_c}}))}
 
-\item{useImplementation}{string, either "R" or "cxx". chooses between the R reference implementation and the faster c++ implementation.}
+\item{use.implementation}{string, either "R" or "cxx". chooses between the R reference implementation #
+and the faster c++ implementation.
+Notice, if 'use.implementation' is set to "R" the cross validation function \code{\link{DTD_cv_lambda_R}} is used.}
 
-\item{...}{parameters passed to DTD_cv_lambda}
+\item{...}{parameters passed to \code{\link{DTD_cv_lambda_cxx}}}
 }
 \value{
-list, including 4 entries:
+list, including 5 entries:
 \itemize{
-    \item cv.obj' (see \code{\link{DTD_cv_lambda}})
-    \item 'best.model' (see \code{\link{DTD_cv_lambda}})
+    \item cv.obj' (see \code{\link{DTD_cv_lambda_cxx}})
+    \item 'best.model' (see \code{\link{DTD_cv_lambda_cxx}})
     \item 'reference.X'
+    \item 'estimate.c.type'
     \item 'pics' (see `browseVignettes("DTD")`)
 }
 }
 \description{
 Loss-function learning Digital Tissue Deconvolution (DTD) adjustes a deconvolution model to
-a biological context. 'train_deconvolution_model' is the main function of the DTD package.
+its biological context. 'train_deconvolution_model' is the main function of the DTD package.
 As input it takes the reference matrix X, a list of training data and a start vector 'tweak'.
 Then, it iteratively finds that vector 'g' that best deconvolutes based on the loss fucntion:
-\deqn{L(g) = - \sum cor(C_{j,.} \widehat(C_{j,.}(g))) + \lambda ||g||_1}
-The 'train_deconvolution_model' function calls the cross validation function \code{\link{DTD_cv_lambda}}
-to find the optimal lambda. Afterwards it optimizes a model on the complete dataset.
+\deqn{L(g) = - \sum cor(C_{j,.} \widehat C_{j,.}(g) ) + \lambda ||g||_1}
+The 'train_deconvolution_model' function calls the cross validation function
+\code{\link{DTD_cv_lambda_cxx}}
+to find the optimal lambda. After the cross validation,
+it optimizes a model on the complete dataset with the optimal \eqn{\lambda}.
 }
 \details{
 This function works as a wrapper for the correlation loss function and its gradient.
-It provides a workaround for digital tissue deconvolution, such that the user only
+It provides a workaround for Digital Tissue Deconvolution, such that the user only
 has to provide a starting vector (in literature "g", in code 'tweak'), a reference matrix X,
 and a training list, including the training mixtures, and their cell type quantities.
 

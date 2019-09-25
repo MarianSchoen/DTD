@@ -10,7 +10,7 @@ descent_generalized_fista(tweak.vec, lambda = 0, maxit = 100,
   FACTOR.FUN = nesterov_faktor, EVAL.FUN, NORM.FUN = identity,
   line.search.speed = 2, cycles = 5, save.all.tweaks = FALSE,
   use.restart = TRUE, verbose = TRUE,
-  NESTEROV.FUN = positive_subspace_pmax)
+  NESTEROV.FUN = positive_subspace_pmax, stop.crit.threshold = 1e-05)
 }
 \arguments{
 \item{tweak.vec}{numeric vector, with which the minimization algorithm starts}
@@ -58,6 +58,9 @@ Defaults to 5}
 
 \item{NESTEROV.FUN}{function, applied to the nesterov extrapolation.
 In DTD all g must be positive. Therefore we set default to a positive_subspace_pmax wrapper function}
+
+\item{stop.crit.threshold}{numeric value. The change in either the gradient
+or nesterov step has to be at least 'stop.crit.threshold'.}
 }
 \value{
 list, including
@@ -96,6 +99,8 @@ for k = 2,..., maxit:\cr
         \item eval = EVAL.FUN(y_vec)
     }
     \item # only keep y_vec with minimal eval
+    \item stop criterion: if the descent in either the gradient
+    or the nesterov step was below a critical value, then stop.
 }
 }
 \details{
