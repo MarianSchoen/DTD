@@ -28,6 +28,8 @@
 #'         \item eval = EVAL.FUN(y_vec)
 #'     }
 #'     \item # only keep y_vec with minimal eval
+#'     \item stop criterion: if the descent in either the gradient
+#'     or the nesterov step was below a critical value, then stop.
 #'}
 #'
 #' The gradient and evaluation function both take only one argument, the soft thresholding function two.
@@ -65,6 +67,8 @@
 #' @param verbose boolean, should information be printed to console. Defaults to TRUE
 #' @param NESTEROV.FUN function, applied to the nesterov extrapolation.
 #' In DTD all g must be positive. Therefore we set default to a positive_subspace_pmax wrapper function
+#' @param stop.crit.threshold numeric value. The change in either the gradient
+#' or nesterov step has to be at least 'stop.crit.threshold'.
 #'
 #' @export
 #'
@@ -177,7 +181,6 @@
 #'     estimate.c.type = "direct"
 #'     )/ncol(X.matrix)
 #' cat("Correlation on test data: ", cor.test, "\n")
-#TODO: rename this to descent_generalized_fista_R, write a common interface for it.
 descent_generalized_fista <- function(tweak.vec,
                                       lambda=0,
                                       maxit=1e2,
@@ -259,6 +262,14 @@ descent_generalized_fista <- function(tweak.vec,
   test <- test_tweak_vec(tweak.vec = tweak.vec,
                          output.info = c("descent_generalized_fista", "tweak.vec"))
   # end -> tweak
+
+
+  # safety check: stop.crit.threshold
+  test <- test_numeric(test.value = stop.crit.threshold,
+                       output.info = c("descent_generalized_fista", "stop.crit.threshold"),
+                       min = -Inf,
+                       max = Inf)
+  # end -> stop.crit.threshold
 
   # safety check: lambda
   test <- test_numeric(test.value = lambda,
