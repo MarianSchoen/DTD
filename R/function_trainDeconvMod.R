@@ -1,11 +1,12 @@
 #' Train a DTD model based on correlation loss function
 #'
 #' Loss-function learning Digital Tissue Deconvolution (DTD) adjustes a deconvolution model to
-#' a biological context. 'train_deconvolution_model' is the main function of the DTD package.
+#' its biological context. 'train_deconvolution_model' is the main function of the DTD package.
 #' As input it takes the reference matrix X, a list of training data and a start vector 'tweak'.
 #' Then, it iteratively finds that vector 'g' that best deconvolutes based on the loss fucntion:
 #' \deqn{L(g) = - \sum cor(C_{j,.} \widehat(C_{j,.}(g))) + \lambda ||g||_1}
-#' The 'train_deconvolution_model' function calls the cross validation function \code{\link{DTD_cv_lambda}}
+#' The 'train_deconvolution_model' function calls the cross validation function
+#' \code{\link{DTD_cv_lambda}}
 #' to find the optimal lambda. Afterwards it optimizes a model on the complete dataset.
 #'
 #' This function works as a wrapper for the correlation loss function and its gradient.
@@ -33,23 +34,27 @@
 #' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
 #' (see \code{\link{estimate_c}}),
 #' if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
-#' @param useImplementation string, either "R" or "cxx". chooses between the R reference implementation and the faster c++ implementation.
+#' @param use.implementation string, either "R" or "cxx". chooses between the R reference implementation #
+#' and the faster c++ implementation.
 #'
 #' @return list, including 4 entries:
 #' \itemize{
 #'     \item cv.obj' (see \code{\link{DTD_cv_lambda}})
 #'     \item 'best.model' (see \code{\link{DTD_cv_lambda}})
 #'     \item 'reference.X'
+#'     \item 'estimate.c.type'
 #'     \item 'pics' (see `browseVignettes("DTD")`)
 #' }
 #' @export
-train_deconvolution_model <- function(tweak,
-                                    X.matrix,
-                                    train.data.list,
-                                    test.data.list = NULL,
-                                    estimate.c.type,
-                                    useImplementation = "cxx",
-                                    ...){
+train_deconvolution_model <- function(
+  tweak,
+  X.matrix,
+  train.data.list,
+  test.data.list = NULL,
+  estimate.c.type,
+  use.implementation = "cxx",
+  ...
+  ){
 
   if(length(tweak) != nrow(X.matrix)){
     stop("In train_deconvolution_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'")
@@ -159,15 +164,15 @@ train_deconvolution_model <- function(tweak,
   ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
                                 output.info = c("train_deconvolution_model", "estimate.c.type"))
 
-  catch <- list()
-
-  if( useImplementation == "R" ) {
+  if( use.implementation == "R" ) {
 
     # define wrapper functions for gradient and correlation evaluation
-    DTD.grad.wrapper <- function(tweak,
-                                X = X.matrix,
-                                train.list = train.data.list,
-                                esti.c.type = estimate.c.type) {
+    DTD.grad.wrapper <- function(
+      tweak,
+      X = X.matrix,
+      train.list = train.data.list,
+      esti.c.type = estimate.c.type
+      ) {
       Y <- train.list$mixtures
       C <- train.list$quantities
       grad <- gradient_cor_trace(
@@ -202,7 +207,7 @@ train_deconvolution_model <- function(tweak,
       EVAL.FUN = DTD.evCor.wrapper,
       ...
     )
-  } else if( useImplementation == "cxx" || useImplementation == "cpp" ) {
+  } else if( use.implementation == "cxx" || use.implementation == "cpp" ) {
     cat("using cxx implementation!")
     catch <- DTD_cv_lambda_cxx(
       tweak.start = tweak,
@@ -212,9 +217,10 @@ train_deconvolution_model <- function(tweak,
       ...
     )
   } else {
-    stop(paste("cannot use implementation \"", useImplementation, "\": not implemented."))
+    stop(paste("cannot use implementation \"", use.implementation, "\": not implemented."))
   }
   catch$reference.X <- X.matrix
+  catch$estimate.c.type <- estimate.c.type
 
   pics <- vector(mode = "list")
   pics$cv <- DTD::ggplot_cv(DTD.model = catch)

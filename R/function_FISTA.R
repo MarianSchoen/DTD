@@ -193,7 +193,7 @@ descent_generalized_fista <- function(tweak.vec,
                                       use.restart=TRUE,
                                       verbose=TRUE,
                                       NESTEROV.FUN = positive_subspace_pmax,
-                                      stop.crit.threshhold = 1e-10
+                                      stop.crit.threshhold = 1e-5
                                       ){
 
   # safety check: F.GRAD.FUN
@@ -450,7 +450,7 @@ descent_generalized_fista <- function(tweak.vec,
     converge_vec <- c(converge_vec, best.y)
 
     # find stop criterion
-    change.last.iter.after.nesterov <- rev(converge_vec)[1] - eval.y
+    change.last.iter.after.nesterov <- eval - best.y
 
     change.last.iter <- max(change.last.iter.after.nesterov, change.last.iter.before.nesterov)
     ###
