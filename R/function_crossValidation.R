@@ -1,19 +1,23 @@
 #' Cross-validation for digital tissue deconvolution
 #'
-#' Our descent generalized FISTA implementation includes a l1 regularization term (see \code{\link{train_deconvolution_model}}.
-#' This function performs a k-fold cross validation to find the best fitting regularization parameter.
+#' Our descent generalized FISTA implementation includes a l1 regularization term
+#' (see \code{\link{train_deconvolution_model}}.
+#' This function performs a k-fold cross validation to find the
+#' best fitting regularization parameter.
 #' For an example see `browseVignettes("DTD")`
 #'
 #' @param lambda.seq numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
-#' If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
+#' If 'lambda.seq' is set to NULL, a generic series of lambdas - depending on the dimensions
 #' of the training set -  will be generated. Default: NULL
 #' @param tweak.start numeric vector, starting vector for the DTD algorithm.
 #' @param n.folds integer, number of buckets in the cross validation. Defaults to 10
-#' @param lambda.length integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 10
+#' @param lambda.length integer, how many lambdas will be generated
+#' (only used if lambda.seq is NULL). Defaults to 10
 #' @param train.data.list list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
 #' Within this list the train/test cross validation will be done.
-#' Notice, that the train.data.list must have an entry named "mixtues". In this entry, the matrix containing the
-#' training samples (as columns) and all features (as rows) must be present. (see Vignette for details)
+#' Notice, that the train.data.list must have an entry named "mixtues".
+#' In this entry, the matrix containing the training samples (as columns)
+#' and all features (as rows) must be present. (see Vignette for details)
 #' @param F.GRAD.FUN gradient function, see \code{\link{descent_generalized_fista}}
 #' @param EVAL.FUN evaluation function, see \code{\link{descent_generalized_fista}}
 #' @param cv.verbose logical, should information about the cv process be printed to the screen? (Defaults to TRUE)
@@ -31,18 +35,28 @@
 #' retrained on the complete dataset as "best.model
 #' @export
 #'
-DTD_cv_lambda_R <- function(lambda.seq = NULL,
-                            tweak.start,
-                            n.folds = 5,
-                            lambda.length = 10,
-                            train.data.list,
-                            F.GRAD.FUN,
-                            EVAL.FUN,
-                            cv.verbose = TRUE,
-                            warm.start = FALSE,
-                            ...) {
+DTD_cv_lambda_R <- function(
+  lambda.seq = NULL,
+  tweak.start,
+  n.folds = 5,
+  lambda.length = 10,
+  train.data.list,
+  F.GRAD.FUN,
+  EVAL.FUN,
+  cv.verbose = TRUE,
+  warm.start = FALSE,
+  ...
+  ) {
 
-  DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)
+  DTD_cv_lambda_test_input_generic(
+    lambda.seq = lambda.seq
+    , tweak.start = tweak.start
+    , n.folds = n.folds
+    , lambda.length = lambda.length
+    , train.data.list = train.data.list
+    , cv.verbose = cv.verbose
+    , warm.start = warm.start
+    )
 
   # First, all possible training samples get assigned to a bucket:
   # extract Y:
@@ -158,175 +172,9 @@ DTD_cv_lambda_R <- function(lambda.seq = NULL,
   return(ret)
 }
 
-#' input tests for cross validation
-#'
-#' tests common input parameters to the cxx and R implementation of DTD_cv_lambda.
-#'
-#'
-#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
-#' If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
-#' of the training set -  will be generated. Default: NULL
-#' @param tweak.start numeric vector, starting vector for the DTD algorithm.
-#' @param n.folds integer, number of buckets in the cross validation.
-#' @param lambda.length integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 10
-#' @param train.data.list list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
-#' Within this list the train/test cross validation will be done.
-#' Notice, that the train.data.list must have an entry named "mixtues". In this entry, the matrix containing the
-#' training samples (as columns) and all features (as rows) must be present. (see Vignette for details)
-#' @param cv.verbose logical, should information about the cv process be printed to the screen? (Defaults to TRUE)
-#' @param warm.start logical, should the solution of a previous model of the cross validation be used as a start
-#'  in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.
-#'
-#' @export
-DTD_cv_lambda_test_input_generic <- function(lambda.seq,
-                                 tweak.start,
-                                 n.folds,
-                                 lambda.length,
-                                 train.data.list,
-                                 cv.verbose,
-                                 warm.start) {
 
-  # safety check: tweak.start
-  test <- test_tweak_vec(tweak.vec = tweak.start,
-                         output.info = c("DTD_cv_lambda", "tweak.start"))
-  # end -> tweak
 
-  # safety check: n.folds
-  test <- test_integer(test.value = n.folds,
-                       output.info = c("DTD_cv_lambda", "n.folds"),
-                       min = 2,
-                       max = Inf
-                       )
-  # end -> n.folds
 
-  # safety check: lambda.length
-  test <- test_integer(test.value = lambda.length,
-                       output.info = c("DTD_cv_lambda", "lambda.length"),
-                       min = 1,
-                       max = Inf
-  )
-  # end -> lambda.length
-
-  # safety check for train.data.list:
-  if(is.list(train.data.list) && length(train.data.list) == 2){
-    if(!all(c("quantities", "mixtures") %in%  names(train.data.list))){
-      stop("In DTD_cv_lambda: entries of train.data.list must be named 'quantities' and 'mixtures'")
-    }else{
-      if(!is.matrix(train.data.list$mixtures)){
-        stop("In DTD_cv_lambda: 'train.data.list$mixtures' is not a matrix")
-      }
-      if(!is.matrix(train.data.list$quantities)){
-        stop("In DTD_cv_lambda: 'train.data.list$quantities' is not a matrix")
-      }
-    }
-  }else{
-    stop("In DTD_cv_lambda: train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'")
-  }
-  # end -> train.data.list
-
-  # safety check => tweak.start and train.data.list
-  if(nrow(train.data.list$mixtures) != length(tweak.start)){
-    stop("In DTD_cv_lambda: 'nrow(train.data.list$mixtures)' does not match 'length(tweak.start)'")
-  }
-  if(!is.null(names(tweak.start))){
-    if(all(rownames(train.data.list$mixtures) %in% names(tweak.start))){
-      tweak.start <- tweak.start[rownames(train.data.list$mixtures)]
-    }else{
-      stop("In DTD_cv_lambda: there are features in 'train.data.list$mixtures' that don't match with 'names(tweak.start)'")
-    }
-  }
-  # end -> tweak and train.data.list
-
-  # safety check: cv.verbose
-  test <- test_logical(test.value = cv.verbose,
-                       output.info = c("DTD_cv_lambda", "cv.verbose"))
-  # end -> cv.verbose
-
-  # safety check: warm.start
-  test <- test_logical(test.value = warm.start,
-                       output.info = c("DTD_cv_lambda", "warm.start"))
-  # end -> warm.start
-  ####################### end safety check
-}
-
-#' map every sample to a bucket
-#'
-#' takes training data and sorts it into buckets, one for each fold.
-#'
-#' @param train.Y training data
-#' @param folds number of buckets to build.
-#'
-#' @return list of lists of same structure as train.Y, but with names indicating the bucket.
-#'
-make_buckets <- function(train.Y, folds) {
-  bucket.indicator <- sample(rep(1:folds,
-                             each = ceiling(ncol(train.Y) / folds)
-                             ))[1:ncol(train.Y)]
-  names(bucket.indicator) <- colnames(train.Y)
-  return(bucket.indicator)
-}
-
-#' generates a sequence of lambdas
-#'
-#' depending on the input, generates a sequence of lambdas or makes it usable (sorts it)
-#'
-#' @param lambda.seq sequence of lambdas. may be null.
-#' @param lambda.length number of lambdas to generate
-#' @param train.Y training data, used for heuristics involving the dimensionality of the problem
-#'
-#' @return sequence of lambdas
-#'
-lambda_sequence <- function(lambda.seq, lambda.length, train.Y) {
-  # if necessary, generate a generic sequence,
-  # based on "p" and "n" of the mixture matrix:
-  if (is.null(lambda.seq) || is.na(lambda.seq) || !is.numeric(lambda.seq)) {
-    p <- nrow(train.Y)
-    n <- ncol(train.Y)
-    lambda.0 <- sqrt(log(p) / n)
-    lambda.seq <- lambda.0 * 2^seq(2, -20, length.out = lambda.length)
-  }
-  # cross validation can be called with warm.start.
-  # these warm starts should start with the most unregularized scenario:
-  if(min(lambda.seq) != lambda.seq[1]){
-    lambda.seq <- sort(lambda.seq, decreasing = FALSE)
-  }
-  return(lambda.seq)
-}
-#' selects a specific sample from a list of entries
-#'
-#' @param list.entry list of entries (matrix or list)
-#' @param samples samples, serving as an index to list.entry.
-#'
-#' @return specific entry of list.entry
-#'
-select.fun <- function(list.entry, samples) {
-  # internal training samples selection function:
-  if (is.matrix(list.entry)) {
-    return(list.entry[, samples])
-  }
-  if (!is.null(names(list.entry))) {
-    return(list.entry[samples])
-  }
-  return(list.entry)
-}
-
-#' returns mean of the individual test results, setting unconverged or unavailable results to Inf.
-#'
-#' @param lambda.list
-#'
-#' @return list of means.
-#'
-pick.mean.test.results.function <- function(lambda.list){
-  tmp <- lapply(lambda.list, function(each.fold){
-    if("cor.test" %in% names(each.fold)){
-      return(each.fold$cor.test)
-    }else{
-      return(Inf)
-    }
-  })
-  test.vec <- mean(unlist(tmp, use.names = FALSE), na.rm = TRUE)
-  return(test.vec)
-}
 
 #' Cross-validation for digital tissue deconvolution
 #'
@@ -351,6 +199,11 @@ pick.mean.test.results.function <- function(lambda.list){
 #' E.g. maxiter, tweak_vec etc ...
 #' @param warm.start logical, should the solution of a previous model of the cross validation be used as a start
 #'  in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.
+#' @param estimate.c.type string, either "non_negative", or "direct".
+#' Indicates how the algorithm finds the solution of \eqn{arg min_C ||diag(g)(Y - XC)||_2}.
+#' If 'estimate.c.type' is set to "direct" there is no regularization (see \code{\link{estimate_c}}),
+#' if 'estimate.c.type' is set to "non_negative" the estimates "C" must not be negative (non-negative least squares)
+#' (see (see \code{\link{estimate_nn_c}}))
 #'
 #' @return list of length 2.
 #' \itemize{
@@ -361,16 +214,19 @@ pick.mean.test.results.function <- function(lambda.list){
 #' retrained on the complete dataset as "best.model
 #' @export
 #'
-DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
-                              tweak.start,
-                              X.matrix,
-                              n.folds = 5,
-                              lambda.length = 10,
-                              train.data.list,
-                              cv.verbose = TRUE,
-                              warm.start = FALSE,
-                              estimate.c.type = "direct",
-                              ...) {
+DTD_cv_lambda_cxx <- function(
+  lambda.seq = NULL,
+  tweak.start,
+  X.matrix,
+  n.folds = 5,
+  lambda.length = 10,
+  train.data.list,
+  cv.verbose = TRUE,
+  warm.start = FALSE,
+  estimate.c.type = "direct",
+  ...
+  ) {
+
   DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)
   if( ! is.numeric(X.matrix) ||
       ! is.matrix(X.matrix) ||
@@ -431,7 +287,7 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
       # Now, try to train a model on the reduced training set:
       model$Y <- tmp.train.list$mixtures
       model$C <- tmp.train.list$quantities
-      model$tweak = tweak.start
+      model$tweak <- tweak.start
 
       ## This is a useful debug option
       ## options(try.outFile=stdout())
@@ -506,32 +362,5 @@ DTD_cv_lambda_cxx <- function(lambda.seq = NULL,
   ret <- list(cv.obj = cv.object, best.model = bestModel)
   return(ret)
 }
-#' Cross-validation for digital tissue deconvolution
-#'
-#' Our descent generalized FISTA implementation includes a l1 regularization term (see \code{\link{train_deconvolution_model}}.
-#' This function performs a k-fold cross validation to find the best fitting regularization parameter.
-#' For an example see `browseVignettes("DTD")`
-#' This function chooses at runtime either the cxx or the R implementation of cross validation, based on the useImplementation parameter
-#'
-#' @param useImplementation if set to "R" calls DTD_cv_lambda_R, if set to "cxx" calls DTD_cv_lambda_cxx, passing on all arguments. See the respective implementations of these functions.
-#'
-#' @return list of length 2.
-#' \itemize{
-#'    \item 'cv.obj', list of lists. DTD model for each lambda, and every folds.
-#'    \item 'best.model', list. DTD model optimized on the complete data set with the best lambda from the cross validation.
-#' }
-#' A cross validation matrix as entry "cv.obj", and the model with minimal loss function
-#' retrained on the complete dataset as "best.model
-#' @export
-#'
-DTD_cv_lambda <- function(useImplementation = "R",
-                          ...) {
-  if( useImplementation == "R" ) {
-    return(DTD_cv_lambda_R(...))
-  } else if ( useImplementation == "cxx" || useImplementation == "cpp" ) {
-    return(DTD_cv_lambda_cxx(...))
-  } else {
-    stop(paste("unknown implementation: ", useImplementation))
-  }
-}
+
 
