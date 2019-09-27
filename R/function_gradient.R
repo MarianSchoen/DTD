@@ -40,21 +40,12 @@ gradient_cor_trace <- function(X, Y, C, tweak, estimate.c.type) {
   }
   # end --> Y
 
-  if(estimate.c.type %in% c("non_negative", "direct")){
-    if(estimate.c.type == "non_negative"){
-      ESTIMATE.C.FUN <- estimate_nn_c
-    }else{
-      ESTIMATE.C.FUN <- estimate_c
-    }
-  }else{
-    stop("In train_correlation_model: estimate.c.type does not match 'non_negative' or 'direct.")
-  }
-
   Gamma <- Matrix::Matrix(diag(tweak))
-  estimates.cs <- ESTIMATE.C.FUN(
-    X.matrix = X,
-    new.data = Y,
-    DTD.model = tweak
+  estimates.cs <- estimate_c(
+    X.matrix = X
+    , new.data =Y
+    , DTD.model = tweak
+    , estimate.c.type = estimate.c.type
   )
   hat.sigmas <- matrixStats::rowSds(estimates.cs, na.rm = T)
   sigmas <- matrixStats::rowSds(C, na.rm = T)

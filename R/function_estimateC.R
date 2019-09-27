@@ -45,10 +45,12 @@
 #'
 #' # visualize that the estimated c are close to the true c
 #' plot(true.c, estimated.c)
-estimate_c <- function(X.matrix = NA,
-                       new.data,
-                       DTD.model) {
-
+estimate_c <- function(
+  X.matrix = NA,
+  new.data,
+  DTD.model,
+  estimate.c.type = "decide.on.model"
+  ) {
   # the reference matrix can either be included in the DTD.model, or has to be past
   # via the X.matrix argument:
   if (any(is.na(X.matrix)) && is.list(DTD.model) && "reference.X" %in% names(DTD.model)) {
@@ -69,19 +71,73 @@ estimate_c <- function(X.matrix = NA,
         gamma.vec <- DTD.model$Tweak
       }
     }
+    if ("estimate.c.type" %in% names(DTD.model)){
+        model.esti.type <- DTD.model$estimate.c.type
+    }
   }
   else {
     gamma.vec <- DTD.model
+    model.esti.type <- estimate.c.type
   }
-  Y <- new.data
+
+  if(is.list(new.data) && length(new.data) == 2){
+    if(!"mixtures" %in%  names(new.data)){
+      stop("In estimate.c.type: entry of 'new.data' must be named 'mixtures'.")
+    }else{
+      if(!is.matrix(new.data$mixtures)){
+        stop("In estimate.c.type: 'new.data$mixtures' is not a matrix.")
+      }
+    }
+    Y <- new.data$mixtures
+  }else{
+    if(!is.matrix(new.data)){
+      stop("In estimate.c.type: 'new.data' is not a matrix.")
+    }
+    Y <- new.data
+  }
+
   if (length(gamma.vec) != nrow(X) || nrow(X) != nrow(Y)) {
     stop("estimate_c: dimension of provided input (X, Y, g) does not match")
   }
 
+  # check if the estimate.c.type of the model, fits the user input:
+  # ('direct' model must not be deconvoluting with 'non-negative')
+  if(model.esti.type != estimate.c.type){
+    # default is 'decide.on.model' => no useless message
+    if(estimate.c.type != "decide.on.model"){
+      message(
+        "in estimate_c:
+        parameter 'estimate.c.type' not consistent with 'DTD.model$estimate.c.type'.
+        Using 'DTD.model$estimate.c.type'"
+        )
+    }
+  }
   # transform gamma.vec into a diagonal matrix (everything but diagonal is zero)
-  Gamma <- diag(gamma.vec)
-  # anallytical solution from formula in description:
-  sol <- solve(t(X) %*% Gamma %*% X) %*% t(X) %*% Gamma %*% Y
+  Gamma <- diag(as.vector(gamma.vec))
+
+  if(model.esti.type == "direct"){
+    sol <- estimate_direct_c(
+      X.matrix = X
+      , Gamma = Gamma
+      , new.data = Y
+    )
+  } else if (model.esti.type == "non_negative" ||
+           model.esti.type == "non-negative" ){
+    sol <- estimate_nn_c(
+      X.matrix = X
+      , new.data = Y
+      , Gamma = Gamma
+    )
+  } else {
+    stop(
+      paste0(
+        "In estimate_c: for estimate.c.type: ",
+        model.esti.type,
+        " the is no estimate_..._c() function"
+        )
+    )
+  }
   return(sol)
 }
+
 

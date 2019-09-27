@@ -165,8 +165,12 @@ train_deconvolution_model <- function(
   }
   # end => compatible test
 
-  ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
-                                output.info = c("train_deconvolution_model", "estimate.c.type"))
+  # safety check: estimate.c.type
+  test <- test_c_type(
+    test.value = estimate.c.type,
+    output.info = c("train_deconvolution_model", "estimate.c.type")
+    )
+  # end estimte.c.type
 
   if( use.implementation == "R" ) {
 
@@ -188,10 +192,11 @@ train_deconvolution_model <- function(
       return(grad)
     }
 
-    DTD.evCor.wrapper <- function(tweak,
-                                  X = X.matrix,
-                                  train.list = train.data.list,
-                                  esti.c.type = estimate.c.type) {
+    DTD.evCor.wrapper <- function(
+      tweak,
+      X = X.matrix,
+      train.list = train.data.list,
+      esti.c.type = estimate.c.type) {
       Y <- train.list$mixtures
       C <- train.list$quantities
       loss <- evaluate_cor(
@@ -229,17 +234,19 @@ train_deconvolution_model <- function(
   pics <- vector(mode = "list")
   pics$cv <- DTD::ggplot_cv(DTD.model = catch)
   if(is.null(test.data.list)){
-    pics$convergence <- DTD::ggplot_convergence(estimate.c.type = estimate.c.type,
-                                                DTD.model = catch,
-                                                X.matrix = X.matrix,
-                                                test.data = NA
-                                                )
+    pics$convergence <- DTD::ggplot_convergence(
+      estimate.c.type = estimate.c.type
+      , DTD.model = catch
+      , X.matrix = X.matrix
+      , test.data = NA
+      )
   }else{
-    pics$convergence <- DTD::ggplot_convergence(estimate.c.type = estimate.c.type,
-                                                DTD.model = catch,
-                                                X.matrix = X.matrix,
-                                                test.data = test.data.list
-    )
+    pics$convergence <- DTD::ggplot_convergence(
+      estimate.c.type = estimate.c.type
+      , DTD.model = catch
+      , X.matrix = X.matrix
+      , test.data = test.data.list
+      )
   }
 
   pics$path <- DTD::ggplot_gpath(catch)$gPath
@@ -250,12 +257,11 @@ train_deconvolution_model <- function(
                                   X.matrix = X.matrix)
 
   if(!is.null(test.data.list)){
-    estimates <- ESTIMATE.C.FUN(new.data = test.data.list$mixtures,
-                                DTD.model = catch)
-    pics$true_vs_esti <- DTD::ggplot_true_vs_esti(DTD.model = catch,
-                                                  test.data = test.data.list,
-                                                  estimate.c.type = estimate.c.type,
-                                                  X.matrix = X.matrix)
+    pics$true_vs_esti <- DTD::ggplot_true_vs_esti(
+      DTD.model = catch
+      , test.data = test.data.list
+      , estimate.c.type = estimate.c.type
+      , X.matrix = X.matrix)
   }
   catch$pics <- pics
   return(catch)

@@ -76,12 +76,6 @@ evaluate_cor <- function(X.matrix = NA,
                          DTD.model,
                          estimate.c.type){
 
-
-  # safety check: estimate.c.type
-  ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
-                      output.info = c("evaluate_cor", "estimate.c.type"))
-  # end -> estimate.c.type
-
   # the reference matrix can either be included in the DTD.model, or has to be passed
   # via the X.matrix argument:
   if(is.matrix(X.matrix) && !any(is.na(X.matrix))){
@@ -163,7 +157,12 @@ evaluate_cor <- function(X.matrix = NA,
   Y <- new.data
   C <- true.compositions
   # estimate C using reference matrix, bulks and the tweak vector:
-  esti.cs <- ESTIMATE.C.FUN(X, Y, gamma.vec)
+  esti.cs <- estimate_c(
+    X.matrix = X
+    , new.data = Y
+    , DTD.model = gamma.vec
+    , estimate.c.type = estimate.c.type
+    )
 
   if(any(dim(esti.cs) != dim(C))){
     stop("evaluate_cor: dimension of estimated C do not fit")

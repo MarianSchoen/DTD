@@ -117,20 +117,15 @@ test_c_type <- function(test.value,
                         output.info){
   error.message <- paste0("In ", output.info[1], ": ", "'", output.info[2], "'")
   if(length(test.value) != 1){
-    error.message <- paste0(error.message, " provide a single string to estimate.c.type")
+    error.message <- paste0(error.message, " provide a single string to 'estimate.c.type'")
     stop(error.message, call. = FALSE)
   }
 
-  if(test.value %in% c("non_negative", "direct")){
-    if(test.value == "non_negative"){
-      return(estimate_nn_c)
-    }else{
-      return(estimate_c)
-    }
-  }else{
+  if(!test.value %in% c("non_negative", "direct")){
     error.message <- paste0(error.message, " does not match 'non_negative' or 'direct.")
     stop(error.message, call. = FALSE)
   }
+  return(NULL)
 }
 
 #' test_string

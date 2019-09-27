@@ -110,7 +110,7 @@ ggplot_true_vs_esti <- function(DTD.model,
   # end -> norm.mixturewise
 
   # safety check: estimate.c.tye
-  ESTIMATE_C_FUN <- test_c_type(test.value = estimate.c.type,
+  test <- test_c_type(test.value = estimate.c.type,
                                 output.info = c("ggplot_true_vs_esti", "estimate.c.type"))
   # end -> estimate.c.type
   # safety check: title
@@ -118,9 +118,11 @@ ggplot_true_vs_esti <- function(DTD.model,
                        output.info = c("ggplot_true_vs_esti", "title"))
   # end -> title
 
-  estimated.c <- ESTIMATE_C_FUN(X.matrix = X.matrix,
-                                new.data = test.data$mixtures,
-                                DTD.model = tweak)
+  estimated.c <- estimate_c(
+    X.matrix = X.matrix
+    , new.data = test.data$mixtures
+    , DTD.model = tweak
+    , estimate.c.type = estimate.c.type)
 
   true.c <- test.data$quantities
 

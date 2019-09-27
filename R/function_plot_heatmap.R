@@ -95,10 +95,11 @@ ggplot_heatmap <- function(DTD.model,
       features.set <- TRUE
     }
   }else{
-    test <- test_numeric(feature.subset,
-                         output.info = c("ggplot_heatmap", "feature.subset"),
-                         min = 0,
-                         max = Inf)
+    test <- test_numeric(
+      feature.subset
+      , output.info = c("ggplot_heatmap", "feature.subset")
+      , min = 0
+      , max = Inf)
     if(feature.subset <= 1){ # fraction is provided
       feature.subset <- round(nrow(X.matrix) * feature.subset)
     }

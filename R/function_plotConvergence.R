@@ -101,20 +101,24 @@ ggplot_convergence <- function(DTD.model,
   }
 
   # safety check: title
-  title <- test_string(title,
-                      output.info = c("ggplot_convergence", "title"))
+  title <- test_string(
+    test.value = title
+    , output.info = c("ggplot_convergence", "title"))
   # end -> title
 
 
   # safety check for estimate.c.type:
-  ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
-                                output.info = c("ggplot_convergence", "estimate.c.type"))
+  test <- test_c_type(
+    test.value = estimate.c.type
+    , output.info = c("ggplot_convergence", "estimate.c.type"))
   # end -> estimate.c.type
 
-  DTD.evCor.wrapper <- function(tweak,
-                                X = X.matrix,
-                                data.list = test.data,
-                                esti.c.type = estimate.c.type) {
+  DTD.evCor.wrapper <- function(
+    tweak,
+    X = X.matrix,
+    data.list = test.data,
+    esti.c.type = estimate.c.type
+    ) {
     Y <- data.list$mixtures
     C <- data.list$quantities
     loss <- evaluate_cor(
@@ -138,6 +142,7 @@ ggplot_convergence <- function(DTD.model,
       test.data <- NULL
     }
   }
+
   # If there is a History, then test can be evaluated:
   if (!is.null(fista.output$History) &&
       !(is.null(test.data) || is.na(test.data))) {
@@ -147,7 +152,9 @@ ggplot_convergence <- function(DTD.model,
     for (l.iteration in 1:length(fista.output$Convergence)) {
       cor.in.test <- c(
         cor.in.test,
-        DTD.evCor.wrapper(tweak = fista.output$History[, l.iteration])
+        DTD.evCor.wrapper(
+          tweak = fista.output$History[, l.iteration, drop = FALSE]
+          )
       )
     }
     # build a data.frame holding training, test and iter
@@ -164,6 +171,7 @@ ggplot_convergence <- function(DTD.model,
       "iter" = 1:length(fista.output$Convergence)
     )
   }
+
   # melt convergence:
   convergence.melt <- reshape2::melt(convergence, id.var = "iter")
   # set title:
