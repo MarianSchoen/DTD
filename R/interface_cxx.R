@@ -2,7 +2,7 @@
 #'
 #' @param model list to be checked if it conforms with the model needed in solve_fista_goertler
 #'
-#' @return nothing is everything is okay
+#' @return nothing if everything is okay
 #'
 check_model <- function(model) {
   if( ! is.list(model) ) {
@@ -84,6 +84,11 @@ set_model_coeff_estimation <- function(model, coeffestimname) {
 #' @param lambda
 #' @param maxiter
 #' @param save.all.tweaks
+#' @param stop.crit.threshold
+#' @param learningrate
+#' @param linesearchspeed
+#' @param cycles
+#' @param restarts
 #'
 #' @return
 #' @export
