@@ -76,7 +76,6 @@
 #'    \item "Lambda", numeric value, used \eqn{\lambda}
 #'    \item depending on "save.all.tweaks": "History", numeric matrix, "Tweak" vector of every step
 #' }
-#'
 descent_generalized_fista <- function(tweak.vec,
                                       lambda=0,
                                       maxit=1e2,
@@ -423,8 +422,6 @@ descent_generalized_fista <- function(tweak.vec,
 #' @param restarts if set to true, restart Nesterov approximation
 #'
 #' @return a list that contains the trained model and its History
-#'
-#' @examples
 descent_generalized_fista_cxx <- function(model,
                                           lambda = 0.01,
                                           maxit = 100,
