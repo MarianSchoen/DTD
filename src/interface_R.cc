@@ -195,6 +195,21 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
   }
   return R_NilValue;
 }
+SEXP dtd_estimate_c(SEXP model_) {
+  try {
+    auto model = make_model(model_);
+    auto c_res = model.estimate_c(model.getParams());
+    SEXP res = PROTECT(allocVector(REALSXP, c_res.size()));
+    for( int i = 0; i < c_res.size(); ++i ){
+      REAL(res)[i] = c_res(i);
+    }
+    UNPROTECT(1);
+    return res;
+  } catch( std::exception const & exc ){
+    error(exc.what());
+  }
+  return R_NilValue;
+}
 SEXP dtd_evaluate_model_goertler(SEXP model_) {
   try {
     auto model = make_model(model_);
@@ -227,6 +242,7 @@ extern "C" {
   static const R_CallMethodDef callMethods[] = {
                                                 { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 10},
                                                 { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
+                                                { "_dtd_estimate_c", (DL_FUNC)&dtd_estimate_c, 1},
                                                 { "_nnls", (DL_FUNC)&dtd_nnls, 2},
                                                 {NULL, NULL, 0}
   };
