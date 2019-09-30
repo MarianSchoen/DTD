@@ -122,7 +122,8 @@ ggplot_true_vs_esti <- function(DTD.model,
     X.matrix = X.matrix
     , new.data = test.data$mixtures
     , DTD.model = tweak
-    , estimate.c.type = estimate.c.type)
+    , estimate.c.type = estimate.c.type
+    )
 
   true.c <- test.data$quantities
 
