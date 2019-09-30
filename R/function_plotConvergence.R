@@ -3,8 +3,8 @@
 #' The "ggplot_convergence" function uses ggplot2 and reshape2 to visualize the decrease of the loss-function after
 #' a model has been trained.
 #'
-#' As input parameter it needs the output of \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
-#' or \code{\link{descent_generalized_fista}}.
+#' As input parameter it needs the output of \code{\link{train_deconvolution_model}}, an DTD cross validation object,
+#' or the output of an FISTA optimization run.
 #' If the `DTD.model` includes a 'History' entry, and a `test.data` is available
 #' the loss function can be evaluated for each intermediate steps of the optimization.
 #' Then, the resulting picture includes two convergence paths, one for the training data,
@@ -32,11 +32,12 @@
 #' @import ggplot2
 #' @import reshape2
 #'
-ggplot_convergence <- function(DTD.model,
-                               X.matrix = NA,
-                               test.data = NULL,
-                               estimate.c.type,
-                               title = "") {
+ggplot_convergence <- function(
+  DTD.model,
+  X.matrix = NA,
+  test.data = NULL,
+  estimate.c.type,
+  title = "") {
   # convergence can be plotted for training AND test set, if:
   #   - the complete model of 'DTD.model' has the "History" entry
   #   - if test.data and reference matrix are provided
