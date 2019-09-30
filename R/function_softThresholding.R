@@ -6,7 +6,6 @@
 #' @param x vector of numerics, x = g - step.size * gradient(g)
 #' @param lambda float or list of floats, regularization parameter
 #'
-#' @export
 #' @return vector of numerics, same length as x
 #' @examples
 #' set.seed(1)

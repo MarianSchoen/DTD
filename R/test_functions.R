@@ -7,7 +7,6 @@
 #' @param max max is tested '>'
 #'
 #' @return TRUE, if no error is detected, stops with error otherwise
-#' @export
 test_integer <- function(test.value,
                          output.info,
                          min,
@@ -41,7 +40,6 @@ test_integer <- function(test.value,
 #' @param output.info [1] function that calls, [2] name of value to test
 #'
 #' @return TRUE, if no error has occured, stops with error otherwise
-#' @export
 test_tweak_vec <- function(tweak.vec,
                            output.info){
   error.message <- paste0("In ", output.info[1], ": ", "'", output.info[2], "'")
@@ -64,7 +62,6 @@ test_tweak_vec <- function(tweak.vec,
 #' @param max max is tested '>'
 #'
 #' @return TRUE, if no error has occured, stops with error otherwise
-#' @export
 test_numeric <- function(test.value,
                          output.info,
                          min,
@@ -93,7 +90,6 @@ test_numeric <- function(test.value,
 #' @param output.info [1] function that calls, [2] name of value to test
 #'
 #' @return TRUE, or it throws an error
-#' @export
 test_logical <- function(test.value,
                          output.info){
   error.message <- paste0("In ", output.info[1], ": ", "'", output.info[2], "'")
@@ -112,7 +108,6 @@ test_logical <- function(test.value,
 #' @param output.info [1] function that calls, [2] name of value to test
 #'
 #' @return a estimate_c function, or stops with an error
-#' @export
 test_c_type <- function(test.value,
                         output.info){
   error.message <- paste0("In ", output.info[1], ": ", "'", output.info[2], "'")
@@ -134,7 +129,6 @@ test_c_type <- function(test.value,
 #' @param output.info [1] function that calls, [2] name of value to test
 #'
 #' @return string
-#' @export
 test_string <- function(test.value,
                         output.info){
   useable <- try(as.character(test.value), silent = TRUE)

@@ -7,8 +7,6 @@
 #'
 #' @return integer
 #'
-#' @export
-#'
 #' @examples
 #' nesterov_faktor(2)
 nesterov_faktor <- function(k) {
@@ -26,7 +24,6 @@ nesterov_faktor <- function(k) {
 #' @param x numeric vector
 #'
 #' @return pmax(x,0), numeric vector with same length as x, but without any negative entries
-#' @export
 #'
 #' @examples
 #' set.seed(2202)

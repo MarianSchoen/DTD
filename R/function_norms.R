@@ -3,7 +3,6 @@
 #' @param x, any R object
 #'
 #' @return x
-#' @export
 #'
 #' @examples
 #' DTD::identity(1:10)
@@ -16,7 +15,6 @@ identity <- function(x) {
 #' @param x numeric vector
 #'
 #' @return numeric vector with same length as x
-#' @export
 #'
 #' @examples
 #' set.seed(1)
@@ -35,7 +33,6 @@ n2normed <- function(x) {
 #' @param x numeric vector
 #'
 #' @return numeric vector with same length as x
-#' @export
 #'
 #' @examples
 #' set.seed(1)
