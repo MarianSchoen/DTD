@@ -37,11 +37,13 @@ Using the information stored in pheno, it can get the quantities per cell in eac
 }
 \examples{
 library(DTD)
-random.data <- generate_random_data(n.types = 10,
-                                    n.samples.per.type = 150,
-                                    n.features = 250,
-                                    sample.type = "Cell",
-                                    feature.type = "gene")
+random.data <- generate_random_data(
+      n.types = 10,
+      n.samples.per.type = 150,
+      n.features = 250,
+      sample.type = "Cell",
+      feature.type = "gene"
+      )
 
 # normalize all samples to the same amount of counts:
 normalized.data <- normalize_to_count(random.data)
@@ -57,37 +59,45 @@ names(indicator.list) <- colnames(random.data)
 include.in.X <- paste0("Type", 2:7)
 
 percentage.of.all.cells <- 0.2
-sample.X <- sample_random_X(included.in.X = include.in.X,
-                            pheno = indicator.list,
-                            exp.data = normalized.data,
-                            percentage.of.all.cells = percentage.of.all.cells)
+sample.X <- sample_random_X(
+      included.in.X = include.in.X,
+      pheno = indicator.list,
+      exp.data = normalized.data,
+      percentage.of.all.cells = percentage.of.all.cells
+      )
 X.matrix <- sample.X$X.matrix
 samples.to.remove <- sample.X$samples.to.remove
 
 # all samples that have been used in the reference matrix, must not be included in
 # the test/training set
 remaining.mat <- random.data[, -which(colnames(random.data) \%in\% samples.to.remove)]
-train.samples <- sample(x = colnames(remaining.mat),
-                       size = ceiling(ncol(remaining.mat)/2),
-                       replace = FALSE)
+train.samples <- sample(
+      x = colnames(remaining.mat),
+      size = ceiling(ncol(remaining.mat)/2),
+      replace = FALSE
+      )
 test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) \%in\% train.samples)]
 
 train.mat <- remaining.mat[, train.samples]
 test.mat <- remaining.mat[, test.samples]
 
 indicator.train <- indicator.list[names(indicator.list) \%in\% colnames(train.mat)]
-training.data <- mix_samples(exp.data = train.mat,
-                             pheno = indicator.train,
-                             included.in.X = include.in.X,
-                             n.samples = 500,
-                             n.per.mixture = 100,
-                             verbose = FALSE)
+training.data <- mix_samples(
+      exp.data = train.mat,
+      pheno = indicator.train,
+      included.in.X = include.in.X,
+      n.samples = 500,
+      n.per.mixture = 100,
+      verbose = FALSE
+      )
 
 indicator.test <- indicator.list[names(indicator.list) \%in\% colnames(test.mat)]
-test.data <-  mix_samples(exp.data = test.mat,
-                          pheno = indicator.test,
-                          included.in.X = include.in.X,
-                          n.samples = 500,
-                          n.per.mixture = 100,
-                          verbose = FALSE)
+test.data <-  mix_samples(
+      exp.data = test.mat,
+      pheno = indicator.test,
+      included.in.X = include.in.X,
+      n.samples = 500,
+      n.per.mixture = 100,
+      verbose = FALSE
+      )
 }

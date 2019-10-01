@@ -34,8 +34,8 @@ But the quantity matrix only reports quantity information for the cell types in 
 \item{n.per.mixture}{integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)}
 }
 \value{
-list with two entries. "quantities" matrix (nrow = ncol(exp.data), ncol = nMixtures) and "mixture"
-matrix (nrow = nrow(exp.data), ncol = nMixtures)
+list with two entries. "quantities": matrix (nrow = ncol(exp.data), ncol = n.samples)
+and "mixtures": matrix (nrow = nrow(exp.data), ncol = n.samples)
 }
 \description{
 "mix_samples_with_jitter" takes 'pheno' information and a expression matrix ('exp.data').
@@ -48,17 +48,21 @@ multiplied with a random jitter vector.
 In the DTD package there are 2 ways to generate 'in-silicio' mixtures:
  - take 'n.per.mixture' random profiles from the expression matrix, and average over them.
  Here, the quantities (or probabilities) for each cell type is set by their relative
- frequency in the expression matrix. (DTD::mix_samples)
+ frequency in the expression matrix.
+ (DTD::mix_samples)
  - for each cell type, pick a random number, interpret this number as the cell types quantity.
- Multiply the profile with its quantity, and average over the resulting mixture. (DTD::mix_samples_with_jitter)
+ Multiply the profile with its quantity, and average over the resulting mixture.
+ (DTD::mix_samples_with_jitter)
 }
 \examples{
 library(DTD)
-random.data <- generate_random_data(n.types = 10,
-                                    n.samples.per.type = 10,
-                                    n.features = 500,
-                                    sample.type = "Cell",
-                                    feature.type = "gene")
+random.data <- generate_random_data(
+      n.types = 10,
+      n.samples.per.type = 10,
+      n.features = 500,
+      sample.type = "Cell",
+      feature.type = "gene"
+      )
 
 # normalize all samples to the same amount of counts:
 random.data <- normalize_to_count(random.data)

@@ -4,7 +4,8 @@
 \alias{estimate_c}
 \title{Estimating C}
 \usage{
-estimate_c(X.matrix = NA, new.data, DTD.model)
+estimate_c(X.matrix = NA, new.data, DTD.model,
+  estimate.c.type = "decide.on.model")
 }
 \arguments{
 \item{X.matrix}{numeric matrix with cells as columns, and features as rows.
