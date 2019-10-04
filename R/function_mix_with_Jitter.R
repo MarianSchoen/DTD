@@ -29,6 +29,7 @@
 #' Notice, every profile of 'exp.data' might be included in the mixture.
 #' But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.
 #' @param n.per.mixture integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)
+#' @param normalize.to.count logical, normalize each mixture? Defaults to TRUE
 #'
 #' @return list with two entries. "quantities": matrix (nrow = ncol(exp.data), ncol = n.samples)
 #' and "mixtures": matrix (nrow = nrow(exp.data), ncol = n.samples)
@@ -77,7 +78,8 @@ mix_samples_with_jitter <- function(
   add.jitter = FALSE, # tested
   chosen.mean = 1, # tested
   chosen.sd = 0.05, # tested
-  n.per.mixture = 1 # tested
+  n.per.mixture = 1, # tested
+  normalize.to.count = TRUE
 ){
   # Safety check: pheno, exp.data
   if(!is.vector(included.in.X)){
@@ -98,6 +100,10 @@ mix_samples_with_jitter <- function(
     stop("in mix_samples_with_jitter: 'names(pheno)' do not fit 'colnames(exp.data)'.
          For every entry of 'colnames(exp.data)' there has to be a entry in 'pheno'")
   }
+  test <- test_logical(
+    test.value = normalize.to.count,
+    output.info = c("mix_samples_with_jitter", "normalize.to.count")
+  )
   # end -> pheno, exp.data
 
   if(any(is.na(prob.each))){
@@ -213,6 +219,10 @@ mix_samples_with_jitter <- function(
   # only keep the quantity information of cells that are included in X
   if(!any(is.na(included.in.X))){
     quant.matrix <- quant.matrix[included.in.X, ]
+  }
+
+  if(normalize.to.count){
+    mix.matrix <- normalize_to_count(mix.matrix)
   }
   # build a return list, and add both matrices:
   rets <- vector(mode="list")

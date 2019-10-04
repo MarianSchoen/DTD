@@ -17,6 +17,7 @@
 #' Notice, every profile of 'exp.data' might be included in the mixture.
 #' But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.
 #' @param verbose logical, should information be printed? (Default: FALSE)
+#' @param normalize.to.count logical, normalize each mixture? Defaults to TRUE
 #'
 #' @return list with two entries: 'mixtures' and 'quantities'.
 #'
@@ -92,7 +93,8 @@ mix_samples <- function(exp.data,
                        included.in.X,
                        n.samples = 1e3,
                        n.per.mixture = 100,
-                       verbose = FALSE){
+                       verbose = FALSE,
+                       normalize.to.count = TRUE){
 
   # Safety checks
   if(!is.vector(included.in.X)){
@@ -113,6 +115,12 @@ mix_samples <- function(exp.data,
     stop("in mix_samples: 'names(pheno)' do not fit 'colnames(exp.data)'.
          For every entry of 'colnames(exp.data)' there has to be a entry in 'pheno'")
   }
+  # test: normalize.to.count:
+  test <- test_logical(
+    test.value = normalize.to.count,
+    output.info = c("mix_samples", "normalize.to.count")
+  )
+  # end -> normalize.to.count
 
   # safety checks: n.samples
   test <- test_integer(test.value = n.samples,
@@ -188,7 +196,9 @@ mix_samples <- function(exp.data,
   quantities <- quantities[included.in.X, ]
 
   # normalize the expression matrix
-  geneExpression <- normalize_to_count(geneExpression)
+  if(normalize.to.count){
+    geneExpression <- normalize_to_count(geneExpression)
+  }
   # and return both matrices as a list:
   ret <- list("mixtures"= geneExpression, "quantities" = quantities)
   return(ret)
