@@ -318,7 +318,7 @@ DTD_cv_lambda_cxx <- function(
         thismodel$C <- tmp.list$quantities
         thismodel$X <- X.matrix
         thismodel$tweak <- tmp.tweak
-        thisloss <- try(evaluate_model(thismodel), silent=TRUE)
+        thisloss <- try(cxx_evaluate_model(thismodel), silent=TRUE)
         if (any(grepl(pattern = "Error", thisloss))) {
           print(thisloss)
           return(NA)
