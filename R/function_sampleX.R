@@ -19,7 +19,7 @@
 #' @param exp.data numeric matrix with features as rows, and samples as columns
 #' @param percentage.of.all.cells 0 < float < 1, which percentage of all possible cells should
 #'  be use to generate a cell type profile? Defaults to 0.1
-#' @param normalize_profiles logical, normalize the reference profiles? Defaults to TRUE
+#' @param normalize.to.count logical, normalize the reference profiles? Defaults to TRUE
 #'
 #' @return list with two entries: (1) X.matrix: numeric matrix with as many rows as exp.data,
 #' and as many columns as length(included.in.X)
@@ -29,7 +29,7 @@ sample_random_X <- function(included.in.X,
                             pheno,
                             exp.data,
                             percentage.of.all.cells = 0.1,
-                            normalize_profiles = TRUE) {
+                            normalize.to.count = TRUE) {
 
   # Safety checks:
   if(any(is.numeric(percentage.of.all.cells)) && length(percentage.of.all.cells) == 1){
@@ -52,12 +52,12 @@ sample_random_X <- function(included.in.X,
     stop("in sample_random_X: 'exp.data' is no matrix")
   }
 
-  # test: normalize_profiles:
+  # test: normalize.to.count:
   test <- test_logical(
-    test.value = normalize_profiles,
-    output.info = c("sample_random_X", "normalize_profiles")
+    test.value = normalize.to.count,
+    output.info = c("sample_random_X", "normalize.to.count")
                )
-  # end -> normalize_profiles
+  # end -> normalize.to.count
   ############################
   # initialise empty matrix:
   X.mat <- matrix(NA,
@@ -89,7 +89,7 @@ sample_random_X <- function(included.in.X,
     X.mat[, l.type] <- average
   }
   # normalize to common number of counts:
-  if(normalize_profiles){
+  if(normalize.to.count){
     X.mat <- normalize_to_count(X.mat)
   }
   # list X.matrix and samples to remove
