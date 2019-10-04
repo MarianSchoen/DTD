@@ -22,7 +22,7 @@
 #'
 ggplot_ghistogram <- function(DTD.model,
                               n.bins = NA,
-                              TRANSFORM.FUN = DTD::identity,
+                              TRANSFORM.FUN = identity,
                               title = "",
                               x.lab = "g-vec") {
 
