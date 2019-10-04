@@ -4,9 +4,9 @@
 \alias{ggplot_gpath}
 \title{Visualize the path of each \eqn{g_i} over all iterations}
 \usage{
-ggplot_gpath(DTD.model, number.pics = 3,
-  G.TRANSFORM.FUN = DTD::identity, ITER.TRANSFORM.FUN = log10,
-  y.lab = "g", x.lab = "log10(iteration)", subset = NA, title = "",
+ggplot_gpath(DTD.model, number.pics = 3, G.TRANSFORM.FUN = identity,
+  ITER.TRANSFORM.FUN = log10, y.lab = "g",
+  x.lab = "log10(iteration)", subset = NA, title = "",
   show.legend = FALSE)
 }
 \arguments{

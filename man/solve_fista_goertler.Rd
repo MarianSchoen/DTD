@@ -2,7 +2,7 @@
 % Please edit documentation in R/interface_cxx.R
 \name{solve_fista_goertler}
 \alias{solve_fista_goertler}
-\title{Title}
+\title{solve_fista_goertler}
 \usage{
 solve_fista_goertler(model, lambda = 0.01, maxiter = 100,
   stop.crit.threshold = 1e-05, save.all.tweaks = FALSE,
@@ -10,8 +10,27 @@ solve_fista_goertler(model, lambda = 0.01, maxiter = 100,
   restarts = TRUE)
 }
 \arguments{
-\item{restarts}{}
+\item{model}{input model, as constructed by, e.g., empty_model()}
+
+\item{lambda}{regularization parameter lambda}
+
+\item{maxiter}{maximum number of iterations}
+
+\item{stop.crit.threshold}{stopping criterion: if loss functions falls by less than this value, stop optimization.}
+
+\item{save.all.tweaks}{if set to true, keep results after every iteration}
+
+\item{learningrate}{initial learning rate (if set to NA, learning rate is determined automatically)}
+
+\item{linesearchspeed}{rate of in- or decrease of learning rate}
+
+\item{cycles}{number of function evaluations per step.}
+
+\item{restarts}{if set to true, restart nesterov step width if loss fn is increased.}
+}
+\value{
+list, containing an element "Tweak" with the result vector and, if save.all.tweaks is set to TRUE, "History", containing tweaks at every step.
 }
 \description{
-Title
+solve_fista_goertler
 }

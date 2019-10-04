@@ -5,7 +5,7 @@
 \title{Sample random X}
 \usage{
 sample_random_X(included.in.X, pheno, exp.data,
-  percentage.of.all.cells = 0.1, normalize_profiles = TRUE)
+  percentage.of.all.cells = 0.1, normalize.to.count = TRUE)
 }
 \arguments{
 \item{included.in.X}{vector of strings, which cell types should be included in X?}
@@ -18,7 +18,7 @@ Information about the cell type (values of vector) for each sample (names of vec
 \item{percentage.of.all.cells}{0 < float < 1, which percentage of all possible cells should
 be use to generate a cell type profile? Defaults to 0.1}
 
-\item{normalize_profiles}{logical, normalize the reference profiles? Defaults to TRUE}
+\item{normalize.to.count}{logical, normalize the reference profiles? Defaults to TRUE}
 }
 \value{
 list with two entries: (1) X.matrix: numeric matrix with as many rows as exp.data,

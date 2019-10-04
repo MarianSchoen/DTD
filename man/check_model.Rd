@@ -2,7 +2,7 @@
 % Please edit documentation in R/interface_cxx.R
 \name{check_model}
 \alias{check_model}
-\title{Title}
+\title{check_model}
 \usage{
 check_model(model)
 }
@@ -13,5 +13,5 @@ check_model(model)
 nothing if everything is okay
 }
 \description{
-Title
+check_model
 }

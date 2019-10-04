@@ -6,7 +6,8 @@
 \usage{
 mix_samples_with_jitter(included.in.X, prob.each = NA, n.samples,
   exp.data, pheno, verbose = FALSE, add.jitter = FALSE,
-  chosen.mean = 1, chosen.sd = 0.05, n.per.mixture = 1)
+  chosen.mean = 1, chosen.sd = 0.05, n.per.mixture = 1,
+  normalize.to.count = TRUE)
 }
 \arguments{
 \item{included.in.X}{vector of strings, indicating types that are in the reference matrix.
@@ -32,6 +33,8 @@ But the quantity matrix only reports quantity information for the cell types in 
 \item{chosen.sd}{float, standard deviation of jitter (Default: 0.05)}
 
 \item{n.per.mixture}{integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)}
+
+\item{normalize.to.count}{logical, normalize each mixture? Defaults to TRUE}
 }
 \value{
 list with two entries. "quantities": matrix (nrow = ncol(exp.data), ncol = n.samples)

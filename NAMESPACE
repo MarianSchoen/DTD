@@ -2,10 +2,11 @@
 
 export(DTD_cv_lambda_R)
 export(DTD_cv_lambda_cxx)
+export(cxx_estimate_c)
+export(cxx_evaluate_model)
 export(cxx_nnls)
 export(estimate_c)
 export(evaluate_cor)
-export(evaluate_model)
 export(generate_random_data)
 export(ggplot_convergence)
 export(ggplot_cv)

@@ -4,8 +4,8 @@
 \alias{ggplot_ghistogram}
 \title{Histogram of the g/tweak vector}
 \usage{
-ggplot_ghistogram(DTD.model, n.bins = NA,
-  TRANSFORM.FUN = DTD::identity, title = "", x.lab = "g-vec")
+ggplot_ghistogram(DTD.model, n.bins = NA, TRANSFORM.FUN = identity,
+  title = "", x.lab = "g-vec")
 }
 \arguments{
 \item{DTD.model}{either a numeric vector ,

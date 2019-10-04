@@ -5,7 +5,7 @@
 \title{Mix samples for loss-function learning DTD}
 \usage{
 mix_samples(exp.data, pheno, included.in.X, n.samples = 1000,
-  n.per.mixture = 100, verbose = FALSE)
+  n.per.mixture = 100, verbose = FALSE, normalize.to.count = TRUE)
 }
 \arguments{
 \item{exp.data}{numeric matrix, with features as rows and samples as columns}
@@ -23,6 +23,8 @@ But the quantity matrix only reports quantity information for the cell types in 
 how many samples should be included per mixutre. (Default: 100)}
 
 \item{verbose}{logical, should information be printed? (Default: FALSE)}
+
+\item{normalize.to.count}{logical, normalize each mixture? Defaults to TRUE}
 }
 \value{
 list with two entries: 'mixtures' and 'quantities'.
