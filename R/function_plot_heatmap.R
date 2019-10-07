@@ -36,7 +36,6 @@
 #' @export
 #'
 #' @import ggplot2
-#'
 ggplot_heatmap <- function(DTD.model,
                            X.matrix = NA,
                            test.data=NULL,
