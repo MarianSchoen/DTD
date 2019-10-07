@@ -217,7 +217,6 @@ train_deconvolution_model <- function(
       ...
     )
   } else if( use.implementation == "cxx" || use.implementation == "cpp" ) {
-    cat("using cxx implementation!")
     catch <- DTD_cv_lambda_cxx(
       tweak.start = tweak,
       train.data.list = train.data.list,
