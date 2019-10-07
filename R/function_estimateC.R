@@ -131,9 +131,9 @@ estimate_c <- function(
   } else {
     stop(
       paste0(
-        "In estimate_c: for estimate.c.type: ",
+        "In estimate_c: for 'estimate.c.type': ",
         model.esti.type,
-        " the is no estimate_..._c() function"
+        " there is no estimate_..._c() function"
         )
     )
   }
