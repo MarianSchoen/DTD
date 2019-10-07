@@ -476,9 +476,9 @@ print(multPic$gPath)
 ```
 By default, the `ggplot_gpath` function does not plot a legend. There is the boolean argument `plot.legend`. If it is set `TRUE`, a TableGrob object will be stored in the `legend` entry, holding the legend-plot. 
 
-### Scaled heat maps  
+### Reference matrix as heatmap  
 The effect of the g-vector on deconvolution can be visualized when plotting the reference matrix `X`, multiplied with `g`, as a heatmap. 
-The function `ggplot_heatmap` takes as input a `DTD.model` (either the output of `train_deconvolution_model`, `DTD_cv_lambda`, `descent_generalized_fista` or a numeric vector, which will be interpreted as a `g` vector). Rows and columns are clustered hierarchically.  
+The function `ggplot_heatmap` takes as input a `DTD.model` (e.g. the output of `train_deconvolution_model`). Rows and columns are clustered hierarchically.  
 The heatmap becomes more informative, if only a subset of features is included. 
 Here, we implemented two subsetting methods:  
 
