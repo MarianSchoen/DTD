@@ -94,7 +94,6 @@ namespace dtd {
       for( std::size_t iter = 2; iter <= maxiter; ++iter ){
         ftype rate = m_learning_rate / static_cast<double>(m_cyclelength - 1);
         model.grad(m_grad, y_vec);
-        // TODO if memory is an issue, rethink this:
         for(int i = 0; i < m_cyclelength; ++i) {
           ftype alpha = rate * static_cast<ftype>(i);
           testmat.row(i) = model.threshold(y_vec - alpha * m_grad, alpha * lambda);
@@ -114,7 +113,6 @@ namespace dtd {
 
         if( fy_old > fy ) {
           // descent
-          // TODO: swap instead?! (here and below)
           y_vec = g_new;
           g_new = testmat.row(minindex);
           model.norm_constraint(g_new);
