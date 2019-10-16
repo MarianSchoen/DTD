@@ -403,7 +403,7 @@ descent_generalized_fista <- function(tweak.vec,
 
   # if save.all.tweaks is TRUE add the tweak.history
   if(save.all.tweaks){
-    ret$History <- tweak.history
+    ret$History <- tweak.history[, 1:iter]
   }
   return(ret)
 }
