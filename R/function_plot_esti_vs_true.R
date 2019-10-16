@@ -45,7 +45,6 @@ ggplot_true_vs_esti <- function(DTD.model,
                                 title = "",
                                 shape.indi = NA,
                                 show.legend = FALSE) {
-
   if (is.list(DTD.model)) {
     if ("best.model" %in% names(DTD.model)) {
       tweak <- DTD.model$best.model$Tweak
@@ -111,7 +110,7 @@ ggplot_true_vs_esti <- function(DTD.model,
 
   # safety check: estimate.c.tye
   test <- test_c_type(test.value = estimate.c.type,
-                                output.info = c("ggplot_true_vs_esti", "estimate.c.type"))
+                      output.info = c("ggplot_true_vs_esti", "estimate.c.type"))
   # end -> estimate.c.type
   # safety check: title
   title <- test_string(test.value = title,
@@ -123,7 +122,7 @@ ggplot_true_vs_esti <- function(DTD.model,
     , new.data = test.data$mixtures
     , DTD.model = tweak
     , estimate.c.type = estimate.c.type
-    )
+  )
 
   true.c <- test.data$quantities
 
@@ -240,7 +239,9 @@ ggplot_true_vs_esti <- function(DTD.model,
     pic <- pic + ggplot2::geom_point(aes_string(shape = "shapeIndi"))
   }
 
-  if(requireNamespace("ggforce", quietly = TRUE)){
+  if(
+    requireNamespace("ggforce", quietly = TRUE)
+  ){
     pic.list <- list()
 
     for(l.type in 1:ncol(X.matrix)){
@@ -250,15 +251,11 @@ ggplot_true_vs_esti <- function(DTD.model,
         , nrow = 1
         , ncol = 1
         , scales = "free") +
-        theme(legend.position = "none")
+        theme(legend.position = "none") + ggtitle(title)
     }
-    pic <- list(
-      pic,
-      cowplot::plot_grid(
-      plotlist = pic.list
-      , ncol =  4
-      )
-    )
+
+    pic.list[[ncol(X.matrix) + 1]] <- pic
+    pic <- rev(pic.list)
   }
 
   return(pic)
