@@ -148,7 +148,11 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
         iter++;
       };
 
-    solver.solve(model, maxiter, epsilon, lambda, record_solve);
+    int actual_iterations = solver.solve(model, maxiter, epsilon, lambda, record_solve);
+    assert(actual_iterations == iter);
+
+    history.conservativeResize(iter, Eigen::NoChange_t());
+    conv_vec.conservativeResize(iter);
 
     std::vector<std::string> listnames = {"Tweak", "Convergence", "Lambda"};
     if( saveHistory )

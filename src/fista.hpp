@@ -76,12 +76,12 @@ namespace dtd {
       ftype feval(Model const & m) const {
         return m.evaluate();
       }
-      void solve(Model & m, std::size_t iter, double epsilon, double lambda, std::function<void(Model const & m, vec const &)> callback);
-      inline void solve(Model & m, std::size_t iter, double epsilon, double lambda) { solve(m, iter, epsilon, lambda, [](Model const &, vec const &){}); }
+      int solve(Model & m, std::size_t iter, double epsilon, double lambda, std::function<void(Model const & m, vec const &)> callback);
+      inline int solve(Model & m, std::size_t iter, double epsilon, double lambda) { return solve(m, iter, epsilon, lambda, [](Model const &, vec const &){}); }
     };
 
     template<class Model>
-    void FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double epsilon, double lambda, std::function<void(Model const &, vec const &)> callback) {
+    int FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double epsilon, double lambda, std::function<void(Model const &, vec const &)> callback) {
       vec y_vec = model.getParams();
       vec g_new = y_vec;
       ftype fy = model.evaluate();
@@ -91,7 +91,8 @@ namespace dtd {
       vec testy   = vec(m_cyclelength);
       vec nesterov_dir = vec(model.dim());
 
-      for( std::size_t iter = 2; iter <= maxiter; ++iter ){
+      int iter = 2;
+      for( ; iter <= maxiter; ++iter ){
         ftype rate = m_learning_rate / static_cast<double>(m_cyclelength - 1);
         model.grad(m_grad, y_vec);
         for(int i = 0; i < m_cyclelength; ++i) {
@@ -148,6 +149,7 @@ namespace dtd {
       }
       model.norm_constraint(g_new);
       model.setParams(g_new);
+      return iter;
     }
   }
 }
