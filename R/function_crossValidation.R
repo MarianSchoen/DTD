@@ -224,6 +224,9 @@ DTD_cv_lambda_cxx <- function(
   cv.verbose = TRUE,
   warm.start = FALSE,
   estimate.c.type = "direct",
+  NORM.FUN = "identity",
+  NESTEROV.FUN = "positive",
+  ST.FUN = "softmax",
   ...
   ) {
 
@@ -236,6 +239,15 @@ DTD_cv_lambda_cxx <- function(
     cat("train.data.list$mixtures: ", nrow(train.data.list$mixtures), " x ", ncol(train.data.list$mixtures))
     cat("train.data.list$quantities: ", nrow(train.data.list$quantities), " x ", ncol(train.data.list$quantities))
     stop("X has wrong type or size (should be a numeric ngenes x ncells matrix.")
+  }
+  if( ! is.character(NORM.FUN) ) {
+    stop("NORM.FUN must be a character string when using the cxx implementation (use the R impl to use user defined functions).")
+  }
+  if( ! is.character(NESTEROV.FUN) ) {
+    stop("NESTEROV.FUN must be a character string when using the cxx implementation (use the R impl to use user defined functions).")
+  }
+  if( ! is.character(ST.FUN) ) {
+    stop("ST.FUN must be a character string when using the cxx implementation (use the R impl to use user defined functions).")
   }
   # short hand:
   train.Y <- train.data.list$mixtures
@@ -262,6 +274,9 @@ DTD_cv_lambda_cxx <- function(
   model <- empty_model()
   model$X <- X.matrix
   model <- set_model_coeff_estimation(model, estimate.c.type)
+  model <- set_model_normfunction(model, NORM.FUN)
+  model <- set_model_subspacefunction(model, NESTEROV.FUN)
+  model <- set_model_threshfunction(model, ST.FUN)
   # Start of cross validation:
   for (lambda in lambda.seq) {
     if (cv.verbose) {
@@ -362,5 +377,3 @@ DTD_cv_lambda_cxx <- function(
   ret <- list(cv.obj = cv.object, best.model = bestModel)
   return(ret)
 }
-
-

@@ -43,6 +43,8 @@ dtd::models::NormFunctions intToNormFn(int id){
     return dtd::models::NormFunctions::IDENTITY;
   } else if( id == 1 ) {
     return dtd::models::NormFunctions::NORM2;
+  } else if( id == 2 ) {
+    return dtd::models::NormFunctions::NORM1;
   } else {
     throw std::runtime_error("no such norm function.");
   }

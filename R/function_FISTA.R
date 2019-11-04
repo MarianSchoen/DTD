@@ -81,8 +81,8 @@ descent_generalized_fista <- function(tweak.vec,
                                       maxit=1e2,
                                       learning.rate = NA,
                                       F.GRAD.FUN,
-                                      ST.FUN = soft_thresholding,
-                                      FACTOR.FUN = nesterov_faktor,
+                                      ST.FUN = "softmax",
+                                      FACTOR.FUN = "nesterov_factor",
                                       EVAL.FUN,
                                       NORM.FUN = identity,
                                       line.search.speed = 2,
@@ -90,7 +90,7 @@ descent_generalized_fista <- function(tweak.vec,
                                       save.all.tweaks=FALSE,
                                       use.restart=TRUE,
                                       verbose=TRUE,
-                                      NESTEROV.FUN = positive_subspace_pmax,
+                                      NESTEROV.FUN = "positive",
                                       stop.crit.threshold = 1e-5
                                       ){
 
@@ -112,6 +112,11 @@ descent_generalized_fista <- function(tweak.vec,
   # end -> EVAL.FUN
 
   # safety check: ST.FUN
+  if( is.character(ST.FUN) && ST.FUN == "softmax" ) {
+    ST.FUN = soft_thresholding
+  } else if (is.character(ST.FUN)) {
+    stop("unknown thresholding function. may currently be just \"softmax\" or some user defined function.")
+  }
   # I am going to check if the function returns an error, if called with only 1 parameter
   tmp <- try(ST.FUN(x = tweak.vec,
                     lambda = lambda), silent = TRUE)
@@ -121,6 +126,11 @@ descent_generalized_fista <- function(tweak.vec,
   # end -> ST.FUN
 
   # safety check: FACTOR.FUN
+  if( is.character(FACTOR.FUN) && FACTOR.FUN == "nesterov_factor" ) {
+    FACTOR.FUN = nesterov_factor
+  } else if (is.character(FACTOR.FUN)) {
+    stop("unknown factor function. may currently be just \"nesterov_factor\" or some user defined function.")
+  }
   # I am going to check if the function returns an error, if called with only 1 parameter
   tmp <- try(FACTOR.FUN(maxit), silent = TRUE)
   if(any(grepl(pattern = "Error ", x = tmp))){
@@ -129,14 +139,15 @@ descent_generalized_fista <- function(tweak.vec,
   # end -> FACTOR.FUN
 
   # safety check: NORM.FUN
-  # I am going to check if the function returns an error, if called with only 1 parameter
-  tmp <- try(NORM.FUN(tweak.vec), silent = TRUE)
-  if(any(grepl(pattern = "Error ", x = tmp))){
-    stop("In descent_generalized_fista: 'NORM.FUN' produces an error, if called with 'tweak.vec' as first, and only argument")
+  if( is.character(NORM.FUN) && NORM.FUN == "identity" ) {
+    NORM.FUN = identity
+  } else if( is.character(NORM.FUN) && NORM.FUN == "norm1") {
+    NORM.FUN = n1normed
+  } else if( is.character(NORM.FUN) && NORM.FUN == "norm2") {
+    NORM.FUN = n2normed
+  } else if (is.character(NORM.FUN)) {
+    stop("unknown norm function. may currently be \"identity\", \"norm1\", \"norm2\", or some other user defined function.")
   }
-  # end -> NORM.FUN
-
-  # safety check: NORM.FUN
   # I am going to check if the function returns an error, if called with only 1 parameter
   tmp <- try(NORM.FUN(tweak.vec), silent = TRUE)
   if(any(grepl(pattern = "Error ", x = tmp))){
@@ -145,6 +156,11 @@ descent_generalized_fista <- function(tweak.vec,
   # end -> NORM.FUN
 
   # safety check: NESTEROV.FUN
+  if( is.character(NESTEROV.FUN) && NESTEROV.FUN == "positive" ) {
+    NESTEROV.FUN = positive_subspace_pmax
+  } else if (is.character(NESTEROV.FUN)) {
+    stop("unknown nesterov function. may currently be just \"positive\" or some user defined function.")
+  }
   # I am going to check if the function returns an error, if called with only 1 parameter
   tmp <- try(NESTEROV.FUN(tweak.vec), silent = TRUE)
   if(any(grepl(pattern = "Error ", x = tmp))){

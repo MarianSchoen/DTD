@@ -60,6 +60,8 @@ set_model_normfunction <- function(model, normfnname) {
     model$normfnid <- as.integer(0)
   } else if( normfnname == 'NORM2' || normfnname == 'norm2' ) {
     model$normfnid <- as.integer(1)
+  } else if( normfnname == 'NORM1' || normfnname == 'norm1' ) {
+    model$normfnid <- as.integer(2)
   } else {
     stop("invalid or unimplemented norm function.")
   }

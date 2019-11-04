@@ -111,5 +111,6 @@ model <- train_deconvolution_model(
   lambda.len = 3,
   cv.verbose = TRUE,
   verbose = FALSE,
-  useImplementation = "cpp"
+  NORM.FUN = identity,
+  use.implementation = "cxx"
 )

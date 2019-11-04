@@ -6,7 +6,8 @@ namespace dtd {
   namespace models {
     enum class NormFunctions {
                               IDENTITY,
-                              NORM2
+                              NORM2,
+                              NORM1
     };
     enum class ThresholdFunctions {
                                    SOFTMAX
