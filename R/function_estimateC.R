@@ -40,7 +40,8 @@
 #' estimated.c <- estimate_c(
 #'   X.matrix = random.data,
 #'   new.data = bulk,
-#'   DTD.model = rep(1, nrow(random.data))
+#'   DTD.model = rep(1, nrow(random.data)),
+#'   estimate.c.type = "direct"
 #' )
 #'
 #' # visualize that the estimated c are close to the true c
