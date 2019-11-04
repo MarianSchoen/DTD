@@ -148,8 +148,11 @@ mix_samples <- function(exp.data,
   rownames(geneExpression) <- rownames(exp.data)
   colnames(geneExpression) <- paste0("mixtures", 1:n.samples)
 
-  # which types are within the pheno?
-  types <- unique(pheno)
+  # which types are within the pheno (or 'include.in.X')?
+  # if there are only a few samples, it might happen that
+  # there is no sample for a cell type.
+  types <- unique(c(pheno, include.in.X))
+
   # how many types?
   nTypes <- length(types)
 
@@ -191,7 +194,6 @@ mix_samples <- function(exp.data,
       cat("done ", 100 * lsample/n.samples, " %\n")
     }
   }
-
   # only the information about  cells "included in X" should be stored in quantities:
   quantities <- quantities[included.in.X, ]
 
