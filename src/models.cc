@@ -30,7 +30,7 @@ namespace dtd {
       const std::size_t n = x.cols();
       // there is some empirical arbitrariness in here...
       // but this is probably still save (whenever it failed it was O(1) and not O(1e-13)
-      const ftype eps = 100*n*n*std::numeric_limits<ftype>::epsilon();
+      const ftype eps = 1000*n*n*std::numeric_limits<ftype>::epsilon();
       const mat zero = xi*xtgx - mat::Identity(n, n);
       if( zero.norm() > eps ){
         std::stringstream ss;
