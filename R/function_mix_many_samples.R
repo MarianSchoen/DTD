@@ -151,7 +151,24 @@ mix_samples <- function(exp.data,
   # which types are within the pheno (or 'include.in.X')?
   # if there are only a few samples, it might happen that
   # there is no sample for a cell type.
-  types <- unique(c(pheno, include.in.X))
+  types <- unique(pheno)
+  if(!all(included.in.X %in% types)){
+    useable.types <- unique(
+      c(
+        pheno,
+        included.in.X
+      )
+    )
+    stop(
+      paste(
+        "In 'mix_samples': for some types in 'included.in.X' there are no samples in your data. Provide e.g. the following vector as 'included.in.X': \n",
+        paste0(
+          useable.types
+          , collapse = ", "
+        )
+      )
+    )
+  }
 
   # how many types?
   nTypes <- length(types)
