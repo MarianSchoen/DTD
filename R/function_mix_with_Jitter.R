@@ -107,7 +107,7 @@ mix_samples_with_jitter <- function(
   # end -> pheno, exp.data
 
   if(any(is.na(prob.each))){
-    warning("in mix_samples_with_jitter: There are 'NA' in 'prob.each', therfore set it to a all 1 vector")
+    warning("in mix_samples_with_jitter: There are 'NA' in 'prob.each', therefore set it to a all 1 vector")
     prob.each <- rep(1, length(included.in.X))
   }else{
     if(any(!is.numeric(prob.each))){
@@ -155,6 +155,25 @@ mix_samples_with_jitter <- function(
                        min = 1,
                        max = Inf)
   # end -> n.samples
+
+  types <- unique(pheno)
+  if(!all(included.in.X %in% types)){
+    useable.types <- unique(
+      c(
+        pheno,
+        included.in.X
+      )
+    )
+    stop(
+      paste(
+        "In 'mix_samples_with_jitter': for some types in 'included.in.X' there are no samples in your data. Provide e.g. the following vector as 'included.in.X': \n",
+        paste0(
+          useable.types
+          , collapse = ", "
+        )
+      )
+    )
+  }
 
   # initialise return variables:
   mix.matrix <- matrix(nrow=nrow(exp.data), ncol=0)

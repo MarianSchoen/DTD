@@ -171,7 +171,7 @@ evaluate_cor <- function(X.matrix = NA,
   # initialise loss:
   loss <- 0
   for(l1 in 1:nrow(C)){
-    if(stats::sd(esti.cs[l1, ]) != 0){
+    if(stats::sd(esti.cs[l1, ], na.rm = TRUE) != 0){
       # calculate the correlation per Type and add them up
       loss <- loss + stats::cor(C[l1, ], esti.cs[l1, ])
     }
