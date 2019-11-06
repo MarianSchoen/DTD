@@ -56,8 +56,10 @@ ggplot_true_vs_esti <- function(DTD.model,
       }
     }
     if ("estimate.c.type" %in% names(DTD.model)){
-      if( estimate.c.type != DTD.model$estimate.c.type ){
-        warning("In 'ggplot_true_vs_esti': 'estimate.c.type' is not the same as the models '$estimate.c.type'")
+      if(!is.na(estimate.c.type)){
+        if( estimate.c.type != DTD.model$estimate.c.type ){
+          warning("In 'ggplot_true_vs_esti': 'estimate.c.type' is not the same as the models '$estimate.c.type'")
+        }
       }
       estimate.c.type <- DTD.model$estimate.c.type
     }
@@ -177,7 +179,7 @@ ggplot_true_vs_esti <- function(DTD.model,
   cor.list <- c()
   for (l1 in 1:nrow(estimated.c)) {
     if(stats::sd(true.c[l1, ], na.rm = TRUE) != 0){ # => can't calculate corelation
-      cor.list <- c(cor.list, stats::cor(estimated.c[l1, ], true.c[l1, ]))
+      cor.list <- c(cor.list, stats::cor(estimated.c[l1, ], true.c[l1, ], use = "complete.obs"))
     }else{
       cor.list <- c(cor.list, 0)
     }
