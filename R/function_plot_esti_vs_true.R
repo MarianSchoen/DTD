@@ -41,7 +41,7 @@ ggplot_true_vs_esti <- function(DTD.model,
                                 test.data,
                                 norm.mixturewise = FALSE,
                                 norm.typewise = FALSE,
-                                estimate.c.type,
+                                estimate.c.type = NA,
                                 title = "",
                                 shape.indi = NA,
                                 show.legend = FALSE) {
@@ -54,6 +54,12 @@ ggplot_true_vs_esti <- function(DTD.model,
       } else {
         tweak <- DTD.model$Tweak
       }
+    }
+    if ("estimate.c.type" %in% names(DTD.model)){
+      if( estimate.c.type != DTD.model$estimate.c.type ){
+        warning("In 'ggplot_true_vs_esti': 'estimate.c.type' is not the same as the models '$estimate.c.type'")
+      }
+      estimate.c.type <- DTD.model$estimate.c.type
     }
   } else {
     if(is.numeric(DTD.model)){
@@ -109,8 +115,10 @@ ggplot_true_vs_esti <- function(DTD.model,
   # end -> norm.mixturewise
 
   # safety check: estimate.c.tye
-  test <- test_c_type(test.value = estimate.c.type,
-                      output.info = c("ggplot_true_vs_esti", "estimate.c.type"))
+  test <- test_c_type(
+    test.value = estimate.c.type,
+    output.info = c("ggplot_true_vs_esti", "estimate.c.type")
+    )
   # end -> estimate.c.type
   # safety check: title
   title <- test_string(test.value = title,
@@ -168,7 +176,7 @@ ggplot_true_vs_esti <- function(DTD.model,
   # In the title of the subplots we add the correlation per type, therefore:
   cor.list <- c()
   for (l1 in 1:nrow(estimated.c)) {
-    if(stats::sd(true.c[l1, ]) != 0){ # => can't calculate corelation
+    if(stats::sd(true.c[l1, ], na.rm = TRUE) != 0){ # => can't calculate corelation
       cor.list <- c(cor.list, stats::cor(estimated.c[l1, ], true.c[l1, ]))
     }else{
       cor.list <- c(cor.list, 0)
