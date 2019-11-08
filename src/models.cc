@@ -39,7 +39,7 @@ namespace dtd {
         ss << "It may help to: \n";
         ss << " * decrease lambda \n";
         ss << " * increase the number of features \n";
-        ss << " * increase number of lambas\n\n";
+        ss << " * increase number of lambdas\n\n";
         ss << "residual: " << zero.norm() << "\n";
         ss << "admissible threshold: " << eps << "\n";
         throw std::runtime_error(ss.str());
