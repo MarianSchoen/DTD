@@ -118,8 +118,6 @@ DTD_cv_lambda_R <- function(
       ),
       silent = TRUE
       )
-
-
       # If the regularization parameter lambda is too big,
       # the fista algorithm does not find a model, and throws an error
       if (any(grepl(pattern = "Error", catch))) {
@@ -141,7 +139,7 @@ DTD_cv_lambda_R <- function(
     cv.object[[as.character(lambda)]] <- lambda.fold
   }
   if (cv.verbose) {
-    cat("\ncross validation completed, starting to build model on complete data, with  best lambda\n")
+    cat("\ncross validation completed, \n starting to build model on complete data, \n with  best lambda \n")
   }
 
   # after the cross validation, find the lambda with best evaluation score
@@ -359,7 +357,7 @@ DTD_cv_lambda_cxx <- function(
   lmin <- as.numeric(names(mean.test.results)[lmin.pos])
 
   if (cv.verbose) {
-    cat("\ncross validation completed, starting to build model on complete data, with  best lambda = ", lmin, "\n")
+    cat("\ncross validation completed, \n starting to build model on complete data, \n with  best lambda = ", lmin, "\n")
   }
 
   model$tweak <- tweak.start.end.model
