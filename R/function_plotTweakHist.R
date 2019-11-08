@@ -22,9 +22,9 @@
 #'
 ggplot_ghistogram <- function(DTD.model,
                               n.bins = NA,
-                              TRANSFORM.FUN = identity,
+                              TRANSFORM.FUN = log10,
                               title = "",
-                              x.lab = "g-vec") {
+                              x.lab = "log10(g)") {
 
   # test if DTD.model can be used for plotting:
   if (is.list(DTD.model) && ("Tweak" %in% names(DTD.model))) {

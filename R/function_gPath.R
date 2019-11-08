@@ -39,10 +39,10 @@
 #'
 ggplot_gpath <- function(DTD.model,
                          number.pics = 3,
-                         G.TRANSFORM.FUN = identity,
-                         ITER.TRANSFORM.FUN = log10,
-                         y.lab = "g",
-                         x.lab = "log10(iteration)",
+                         G.TRANSFORM.FUN = log10,
+                         ITER.TRANSFORM.FUN = identity,
+                         y.lab = "log10(g)",
+                         x.lab = "iteration",
                          subset = NA,
                          title = "",
                          show.legend = FALSE) {
