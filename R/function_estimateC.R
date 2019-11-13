@@ -83,22 +83,22 @@ estimate_c <- function(
 
   if(is.list(new.data) && length(new.data) == 2){
     if(!"mixtures" %in%  names(new.data)){
-      stop("In estimate.c.type: entry of 'new.data' must be named 'mixtures'.")
+      stop("In 'estimate_c': entry of 'new.data' must be named 'mixtures'.")
     }else{
       if(!is.matrix(new.data$mixtures)){
-        stop("In estimate.c.type: 'new.data$mixtures' is not a matrix.")
+        stop("In 'estimate_c': 'new.data$mixtures' is not a matrix.")
       }
     }
     Y <- new.data$mixtures
   }else{
     if(!is.matrix(new.data)){
-      stop("In estimate.c.type: 'new.data' is not a matrix.")
+      stop("In 'estimate_c': 'new.data' is not a matrix.")
     }
     Y <- new.data
   }
 
   if (length(gamma.vec) != nrow(X) || nrow(X) != nrow(Y)) {
-    stop("estimate_c: dimension of provided input (X, Y, g) does not match")
+    stop("In 'estimate_c': dimension of provided input (X, Y, g) does not match")
   }
 
   # check if the estimate.c.type of the model, fits the user input:
