@@ -9,7 +9,7 @@ pick.mean.test.results.function <- function(lambda.list){
     if("cor.test" %in% names(each.fold)){
       return(each.fold$cor.test)
     }else{
-      return(Inf)
+      return(NA)
     }
   })
   test.vec <- mean(unlist(tmp, use.names = FALSE), na.rm = TRUE)
