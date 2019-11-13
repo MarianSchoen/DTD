@@ -62,11 +62,13 @@
 #'                              verbose = FALSE)
 #'
 #'  start.tweak <- rep(1, nrow(X.matrix))
-#'  sum.cor <- evaluate_cor(X.matrix = X.matrix,
-#'                       new.data = training.data$mixtures,
-#'                       true.compositions = training.data$quantities,
-#'                       DTD.model = start.tweak,
-#'                       estimate.c.type = "direct")
+#'  sum.cor <- evaluate_cor(
+#'    X.matrix = X.matrix
+#'    , new.data = training.data$mixtures
+#'    , true.compositions = training.data$quantities
+#'    , DTD.model = start.tweak
+#'    , estimate.c.type = "decide.on.model"
+#'    )
 #'
 #'  rel.cor <- sum.cor/ncol(X.matrix)
 #' cat("Relative correlation: ", -rel.cor, "\n")
