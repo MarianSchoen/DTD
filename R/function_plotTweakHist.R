@@ -11,7 +11,7 @@
 #' or\code{\link{descent_generalized_fista}}.
 #' @param n.bins : positive integer, number of bins in the histogram. Defaults to 50
 #' @param TRANSFORM.FUN : function that expects a list of floats, and returns a list of floats
-#' Defaults to identity. (defaults to identity)
+#' Defaults to identity. (defaults to log10(g+1))
 #' @param title string, additionally title (default "")
 #' @param x.lab string, used as x label of the plot. Defaults to ""
 #'
@@ -22,9 +22,9 @@
 #'
 ggplot_ghistogram <- function(DTD.model,
                               n.bins = NA,
-                              TRANSFORM.FUN = log10,
+                              TRANSFORM.FUN = log10p1,
                               title = "",
-                              x.lab = "log10(g)") {
+                              x.lab = "log10(g+1)") {
 
   # test if DTD.model can be used for plotting:
   if (is.list(DTD.model) && ("Tweak" %in% names(DTD.model))) {

@@ -36,12 +36,11 @@
 #' @return list, with "gPath" entry. "gPath" will be a ggplot object.
 #' Depending on "show.legend" the list has a second entry named "legend". "legend" will be a grid object, which can be plotted via 'plot', or 'grid::grid.draw'.
 #' @export
-#'
 ggplot_gpath <- function(DTD.model,
                          number.pics = 3,
-                         G.TRANSFORM.FUN = log10,
+                         G.TRANSFORM.FUN = log10p1,
                          ITER.TRANSFORM.FUN = identity,
-                         y.lab = "log10(g)",
+                         y.lab = "log10(g+1)",
                          x.lab = "iteration",
                          subset = NA,
                          title = "",
@@ -180,3 +179,5 @@ ggplot_gpath <- function(DTD.model,
   # return ret (including the picture without legend, and the legend if required)
   return(ret)
 }
+
+log10p1 <- function(g){return(log10(g+1))}
