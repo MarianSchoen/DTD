@@ -107,7 +107,7 @@ test_logical <- function(test.value,
 #' @param test.value value to be tested for integer
 #' @param output.info [1] function that calls, [2] name of value to test
 #'
-#' @return a estimate_c function, or stops with an error
+#' @return NULL or stops with an error
 test_c_type <- function(test.value,
                         output.info){
   error.message <- paste0("In ", output.info[1], ": ", "'", output.info[2], "'")
@@ -116,7 +116,7 @@ test_c_type <- function(test.value,
     stop(error.message, call. = FALSE)
   }
 
-  if(!test.value %in% c("non_negative", "direct")){
+  if(!test.value %in% c("non_negative", "direct", "decide.on.model") ){
     error.message <- paste0(error.message, " does not match 'non_negative' or 'direct.")
     stop(error.message, call. = FALSE)
   }
