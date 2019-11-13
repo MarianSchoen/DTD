@@ -39,7 +39,7 @@
 ggplot_heatmap <- function(DTD.model,
                            X.matrix = NA,
                            test.data=NULL,
-                           estimate.c.type,
+                           estimate.c.type = "decide.on.model",
                            title = "",
                            feature.subset = 100,
                            log2.expression = TRUE){
@@ -52,6 +52,9 @@ ggplot_heatmap <- function(DTD.model,
         stop("In ggplot_heatmap: There is no Tweak entry in the 'DTD.model'")
       } else {
         tweak <- DTD.model$Tweak
+      }
+      if ("estimate.c.type" %in% names(DTD.model)){
+        estimate.c.type <- DTD.model$estimate.c.type
       }
     }
   } else {
@@ -210,16 +213,28 @@ ggplot_heatmap <- function(DTD.model,
     ordered = TRUE
   )
 
+  if(log2.expression){
+    legend.name <- "log2(expr)"
+  }else{
+    legend.name <- "expr"
+  }
+
   pic0 <- ggplot(melted.X, aes(x = .data$Var1, y = .data$Var2)) +
     geom_tile(aes(fill = expression)) +
     scale_fill_gradient(
+      name = legend.name,
       low = "darkblue",
       high = "yellow"
-      ) +
+    ) +
     xlab("features") +
     ylab("Cell types") +
     ggtitle(title) +
-    theme(axis.text.x = element_text(angle = 90,
-                                     hjust = 1))
+    theme(
+      axis.text.x = element_text(
+        angle = 90
+        , hjust = 1)
+    )
+
+
   return(pic0)
 }

@@ -36,7 +36,7 @@ ggplot_convergence <- function(
   DTD.model,
   X.matrix = NA,
   test.data = NULL,
-  estimate.c.type,
+  estimate.c.type = "decide.on.model",
   title = "") {
   # convergence can be plotted for training AND test set, if:
   #   - the complete model of 'DTD.model' has the "History" entry
@@ -54,6 +54,9 @@ ggplot_convergence <- function(
       } else {
         fista.output <- DTD.model
       }
+    }
+    if ("estimate.c.type" %in% names(DTD.model)){
+      estimate.c.type <- DTD.model$estimate.c.type
     }
   } else {
     stop("In ggplot_convergence: DTD.model is not a list")
