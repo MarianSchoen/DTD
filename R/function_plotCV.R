@@ -130,7 +130,7 @@ ggplot_cv <- function(DTD.model,
   upper.info.per.lambda <- lapply(cross.val.list,
                                   pick.upper.x.fun)
 
-  upper.info.per.lambda <- round(x = unlist(upper.info.per.lambda, use.names = FALSE), digits = 2)
+  upper.info.per.lambda <- round(x = unlist(upper.info.per.lambda, use.names = FALSE), digits = 0)
 
   # if DTD.model is build by train_correlation_model => pick lambda from the best.model
   if(is.list(DTD.model) && "best.model" %in% names(DTD.model)){
