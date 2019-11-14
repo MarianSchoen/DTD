@@ -89,7 +89,7 @@ descent_generalized_fista <- function(tweak.vec,
                                       cycles=5,
                                       save.all.tweaks=FALSE,
                                       use.restart=TRUE,
-                                      verbose=TRUE,
+                                      verbose=FALSE,
                                       NESTEROV.FUN = "positive",
                                       stop.crit.threshold = 1e-5
                                       ){
