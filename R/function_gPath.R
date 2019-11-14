@@ -45,7 +45,6 @@ ggplot_gpath <- function(DTD.model,
                          subset = NA,
                          title = "",
                          show.legend = FALSE) {
-
   # safety check: number.pics
   test <- test_integer(number.pics,
                        output.info = c("ggplot_gpath", "number.pics"),
