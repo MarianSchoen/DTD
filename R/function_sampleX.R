@@ -14,20 +14,20 @@
 #' For examples see the DTD vignette: browseVignettes("DTD")
 #'
 #' @param included.in.X vector of strings, which cell types should be included in X?
-#' @param pheno named vector of strings, names have to match 'colnames(exp.data)'.
+#' @param pheno named vector of strings, names have to match 'colnames(expr.data)'.
 #' Information about the cell type (values of vector) for each sample (names of vector)
-#' @param exp.data numeric matrix with features as rows, and samples as columns
+#' @param expr.data numeric matrix with features as rows, and samples as columns
 #' @param percentage.of.all.cells 0 < float < 1, which percentage of all possible cells should
 #'  be use to generate a cell type profile? Defaults to 0.1
 #' @param normalize.to.count logical, normalize the reference profiles? Defaults to TRUE
 #'
-#' @return list with two entries: (1) X.matrix: numeric matrix with as many rows as exp.data,
+#' @return list with two entries: (1) X.matrix: numeric matrix with as many rows as expr.data,
 #' and as many columns as length(included.in.X)
 #' (2) samples.to.remove: vector of strings, all samples that have been used in generating X.
 #' @export
 sample_random_X <- function(included.in.X,
                             pheno,
-                            exp.data,
+                            expr.data,
                             percentage.of.all.cells = 0.1,
                             normalize.to.count = TRUE) {
 
@@ -44,12 +44,12 @@ sample_random_X <- function(included.in.X,
     stop("in sample_random_X: no cell type in 'included.in.X' fits 'pheno'")
   }
 
-  if(!(all(names(pheno) %in% colnames(exp.data)) && length(pheno) == ncol(exp.data))){
-    stop("in sample_random_X: 'names(pheno)' do not fit 'colnames(exp.data)'. For every entry of 'colnames(exp.data)' there has to be an entry in 'pheno'")
+  if(!(all(names(pheno) %in% colnames(expr.data)) && length(pheno) == ncol(expr.data))){
+    stop("in sample_random_X: 'names(pheno)' do not fit 'colnames(expr.data)'. For every entry of 'colnames(expr.data)' there has to be an entry in 'pheno'")
   }
 
-  if(!is.matrix(exp.data)){
-    stop("in sample_random_X: 'exp.data' is no matrix")
+  if(!is.matrix(expr.data)){
+    stop("in sample_random_X: 'expr.data' is no matrix")
   }
 
   # test: normalize.to.count:
@@ -61,11 +61,11 @@ sample_random_X <- function(included.in.X,
   ############################
   # initialise empty matrix:
   X.mat <- matrix(NA,
-    nrow = nrow(exp.data),
+    nrow = nrow(expr.data),
     ncol = length(included.in.X)
   )
   colnames(X.mat) <- included.in.X
-  rownames(X.mat) <- rownames(exp.data)
+  rownames(X.mat) <- rownames(expr.data)
   # Keep track of all samples that have been used while generating X,
   # these have to be removed from the training set afterwards
   samples.to.remove <- c()
@@ -85,7 +85,7 @@ sample_random_X <- function(included.in.X,
     samples.to.remove <- c(samples.to.remove, chosen.for.X)
 
     # for each gene average over the selected
-    average <- rowSums(exp.data[, chosen.for.X, drop = FALSE])
+    average <- rowSums(expr.data[, chosen.for.X, drop = FALSE])
     X.mat[, l.type] <- average
   }
   # normalize to common number of counts:

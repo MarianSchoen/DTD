@@ -1,6 +1,6 @@
 #' Mix samples with jitter
 #'
-#' "mix_samples_with_jitter" takes 'pheno' information and a expression matrix ('exp.data').
+#' "mix_samples_with_jitter" takes 'pheno' information and a expression matrix ('expr.data').
 #' Its output is a list of two matrices. A matrix holding in-silicio 'mixtures' and a quantity matrix,
 #' holding the corresponding compositions.
 #' Each profile of the 'mixture' matrix is the result of a linear combination of input expression,
@@ -18,21 +18,21 @@
 #' @param n.samples integer above 0, numbers of samples to be drawn (defaults to 1000)
 #' @param prob.each numeric vector with same length as 'included.in.X.' For each cell type in 'included.in.X'
 #' 'prob.each' holds the average quantity in the mixtures.
-#' @param exp.data non-negative numeric matrix, with features as rows and samples as columns
+#' @param expr.data non-negative numeric matrix, with features as rows and samples as columns
 #' @param add.jitter logical, should the mixtures be multiplied with a vector of normally distributed numbers? (JITTER)
 #' @param verbose logical, should the function print about progress to the terminal? (Defaults to FALSE)
-#' @param pheno named vector of strings, with pheno information ('pheno') for each sample ('names(pheno)') in exp.data
+#' @param pheno named vector of strings, with pheno information ('pheno') for each sample ('names(pheno)') in expr.data
 #' @param chosen.mean float, mean of jitter (Default: 1)
 #' @param chosen.sd float, standard deviation of jitter (Default: 0.05)
 #' @param included.in.X vector of strings, indicating types that are in the reference matrix.
 #' Only those types, and sorted in that order, will be included in the quantity matrix.
-#' Notice, every profile of 'exp.data' might be included in the mixture.
+#' Notice, every profile of 'expr.data' might be included in the mixture.
 #' But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.
 #' @param n.per.mixture integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)
 #' @param normalize.to.count logical, normalize each mixture? Defaults to TRUE
 #'
-#' @return list with two entries. "quantities": matrix (nrow = ncol(exp.data), ncol = n.samples)
-#' and "mixtures": matrix (nrow = nrow(exp.data), ncol = n.samples)
+#' @return list with two entries. "quantities": matrix (nrow = ncol(expr.data), ncol = n.samples)
+#' and "mixtures": matrix (nrow = nrow(expr.data), ncol = n.samples)
 #'
 #' @export
 #'
@@ -61,7 +61,7 @@
 #'     included.in.X = included.in.X
 #'     , prob.each = c(2,1,1,1)
 #'     , n.samples = 1e3
-#'     , exp.data = random.data
+#'     , expr.data = random.data
 #'     , pheno = indicator.list
 #'     , add.jitter = TRUE
 #'     , chosen.mean = 1
@@ -72,7 +72,7 @@ mix_samples_with_jitter <- function(
   included.in.X, # tested
   prob.each = NA, # tested
   n.samples, # tested
-  exp.data, # tested
+  expr.data, # tested
   pheno, # tested
   verbose = FALSE, # tested
   add.jitter = FALSE, # tested
@@ -81,7 +81,7 @@ mix_samples_with_jitter <- function(
   n.per.mixture = 1, # tested
   normalize.to.count = TRUE
 ){
-  # Safety check: pheno, exp.data
+  # Safety check: pheno, expr.data
   if(!is.vector(included.in.X)){
     stop("in mix_samples_with_jitter: 'included.in.X' is not provided as vector")
   }
@@ -92,19 +92,19 @@ mix_samples_with_jitter <- function(
     stop("in mix_samples_with_jitter: no cell type in 'included.in.X' fits 'pheno'")
   }
 
-  if(!(is.matrix(exp.data) && is.numeric(exp.data))){
-    stop("in mix_samples_with_jitter: 'exp.data' is not a numeric matrix")
+  if(!(is.matrix(expr.data) && is.numeric(expr.data))){
+    stop("in mix_samples_with_jitter: 'expr.data' is not a numeric matrix")
   }
 
-  if(!(all(names(pheno) %in% colnames(exp.data)) && length(pheno) == ncol(exp.data))){
-    stop("in mix_samples_with_jitter: 'names(pheno)' do not fit 'colnames(exp.data)'.
-         For every entry of 'colnames(exp.data)' there has to be a entry in 'pheno'")
+  if(!(all(names(pheno) %in% colnames(expr.data)) && length(pheno) == ncol(expr.data))){
+    stop("in mix_samples_with_jitter: 'names(pheno)' do not fit 'colnames(expr.data)'.
+         For every entry of 'colnames(expr.data)' there has to be a entry in 'pheno'")
   }
   test <- test_logical(
     test.value = normalize.to.count,
     output.info = c("mix_samples_with_jitter", "normalize.to.count")
   )
-  # end -> pheno, exp.data
+  # end -> pheno, expr.data
 
   if(any(is.na(prob.each))){
     warning("in mix_samples_with_jitter: There are 'NA' in 'prob.each', therefore set it to a all 1 vector")
@@ -176,8 +176,8 @@ mix_samples_with_jitter <- function(
   }
 
   # initialise return variables:
-  mix.matrix <- matrix(nrow=nrow(exp.data), ncol=0)
-  rownames(mix.matrix) <- rownames(exp.data)
+  mix.matrix <- matrix(nrow=nrow(expr.data), ncol=0)
+  rownames(mix.matrix) <- rownames(expr.data)
 
   quant.matrix <- matrix(nrow=len, ncol=0)
   rownames(quant.matrix) <- included.in.X
@@ -203,7 +203,7 @@ mix_samples_with_jitter <- function(
 
     # Now, using the sampled quantities, calculated the expression profiles of the mixtures.
     # Initialise a numerc vector with zeros:
-    mixture <- rep(0, nrow(exp.data))
+    mixture <- rep(0, nrow(expr.data))
     # Go through all samples:
     for(lsample in included.in.X){
       # Find all cells in the pheno which match to "lsample"
@@ -215,7 +215,7 @@ mix_samples_with_jitter <- function(
         , replace = TRUE
       )
       # and multiple these with their quantity:
-      next.mix <- quant.matrix[lsample, lrun] * rowSums(exp.data[, chosen.sample, drop = FALSE])
+      next.mix <- quant.matrix[lsample, lrun] * rowSums(expr.data[, chosen.sample, drop = FALSE])
       # jitter means to multply every entry of every "next.mix" with a random number close to 1:
       if(add.jitter){
         # get a vector of random numbers:

@@ -47,14 +47,14 @@
 #' percentage.of.all.cells <- 0.2
 #' sample.X <- sample_random_X(included.in.X = include.in.X,
 #'                             pheno = indicator.list,
-#'                             exp.data = normalized.data,
+#'                             expr.data = normalized.data,
 #'                             percentage.of.all.cells = percentage.of.all.cells)
 #' X.matrix <- sample.X$X.matrix
 #' samples.to.remove <- sample.X$samples.to.remove
 #' remaining.mat <- normalized.data[, -which(colnames(normalized.data) %in% samples.to.remove)]
 #'
 #' indicator.remain <- indicator.list[names(indicator.list) %in% colnames(remaining.mat)]
-#' training.data <- mix_samples(exp.data = remaining.mat,
+#' training.data <- mix_samples(expr.data = remaining.mat,
 #'                              pheno = indicator.remain,
 #'                              included.in.X = include.in.X,
 #'                              n.samples = 500,
