@@ -145,7 +145,7 @@ ggplot_true_vs_esti <- function(DTD.model,
   if (any(is.na(shape.indi))) {
     shape.indi <- rep(1, ncol(estimated.c))
   } else {
-    if(length(shape.indi) != ncol(estimate.c)){
+    if(length(shape.indi) != ncol(estimated.c)){
       warning(
         "In 'ggplot_true_vs_esti':
         provided 'shape.indi' has different length as 'test.data$quantities'.
