@@ -137,13 +137,21 @@ ggplot_true_vs_esti <- function(DTD.model,
   true.c <- test.data$quantities
 
   if(!all(dim(estimated.c) == dim(true.c))){
-    stop("In ggplot_true_vs_esti: dimension of estimated C, and C in 'test.data$quantities' differ" )
+    stop("In 'ggplot_true_vs_esti': dimension of estimated C, and C in 'test.data$quantities' differ" )
   }
 
 
-  # If shape.indi has not been set, initialize it
+  # If shape.indi can not be used:
   if (any(is.na(shape.indi))) {
     shape.indi <- rep(1, ncol(estimated.c))
+  } else {
+    if(length(shape.indi) != ncol(estimate.c)){
+      warning(
+        "In 'ggplot_true_vs_esti':
+        provided 'shape.indi' has different length as 'test.data$quantities'.
+        It can not be used."
+        )
+    }
   }
 
   # Norm every mixture (column of the data) to sum of 1
