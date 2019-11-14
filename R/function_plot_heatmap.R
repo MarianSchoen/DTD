@@ -27,7 +27,7 @@
 #' if estimate.c.type is set to "non_negative" the estimates "C"
 #' must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
 #' @param feature.subset numeric or a vector of strings. If it is a numeric, "subset" features will be picked from the
-#' 'explained correlation' ranking (if 'feature.subset' < 1, this is the fraction of feature, if 'feature.subset' > 1
+#' 'explained correlation' ranking (if 'feature.subset' <= 1, this is the fraction of feature, if 'feature.subset' > 1
 #' it is the total amount). If it is a vector of strings, these features will be used.
 #' @param title string, additionally title (default "")
 #' @param log2.expression logical, in the heatmap, should the values be log transformed?
