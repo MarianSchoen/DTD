@@ -144,13 +144,26 @@ DTD_cv_lambda_R <- function(
 
   # after the cross validation, find the lambda with best evaluation score
   # pick the average mean per lambda:
-  test.result.per.lambda <- lapply(
-    cv.object,
-    pick.mean.test.results.function
+  test.result.per.lambda <- unlist(
+    lapply(
+      cv.object
+      , pick.mean.test.results.function
+    )
   )
 
-  # unlist it => keep names
-  mean.test.results <- unlist(test.result.per.lambda)
+  if(all(is.na(test.result.per.lambda))){
+    stop(
+      "in 'DTD_cv_lambda_cxx': all lambdas crashed. \n
+      Did you provide a custom lambda sequence? \n
+      If yes: provide smaller lambdas \n
+      If no: provide more features to the model,
+      or provide a custom lambda sequence
+      (via 'lambda.seq' in train_deconvolution_model(...). \n
+      in 'train_deconvolution_model' set 'cv.verbose=TRUE' for logging information"
+    )
+  }
+
+  mean.test.results <- test.result.per.lambda
 
   # and rebuild a model on the complete dataset:
   lmin.pos <- which.min(mean.test.results)
@@ -227,7 +240,6 @@ DTD_cv_lambda_cxx <- function(
   ST.FUN = "softmax",
   ...
   ) {
-
   DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)
   if( ! is.numeric(X.matrix) ||
       ! is.matrix(X.matrix) ||
@@ -346,11 +358,26 @@ DTD_cv_lambda_cxx <- function(
 
 
   # pick the average mean per lambda:
-  test.result.per.lambda <- lapply(cv.object,
-                                   pick.mean.test.results.function)
+  test.result.per.lambda <- unlist(
+    lapply(
+      cv.object
+      , pick.mean.test.results.function
+      )
+  )
 
-  # unlist it => keep names
-  mean.test.results <- unlist(test.result.per.lambda)
+  if(all(is.na(test.result.per.lambda))){
+    stop(
+      "in 'DTD_cv_lambda_cxx': all lambdas crashed. \n
+      Did you provide a custom lambda sequence? \n
+      If yes: provide smaller lambdas \n
+      If no: provide more features to the model,
+      or provide a custom lambda sequence
+      (via 'lambda.seq' in train_deconvolution_model(...). \n
+      in 'train_deconvolution_model' set 'cv.verbose=TRUE' for logging information"
+    )
+  }
+
+  mean.test.results <- test.result.per.lambda
 
   # and rebuild a model on the complete dataset:
   lmin.pos <- which.min(mean.test.results)
