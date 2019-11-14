@@ -49,17 +49,17 @@ DTD_cv_lambda_test_input_generic <- function(lambda.seq,
   # safety check for train.data.list:
   if(is.list(train.data.list) && length(train.data.list) == 2){
     if(!all(c("quantities", "mixtures") %in%  names(train.data.list))){
-      stop("In DTD_cv_lambda: entries of train.data.list must be named 'quantities' and 'mixtures'")
+      stop("In 'DTD_cv_lambda': entries of train.data.list must be named 'quantities' and 'mixtures'")
     }else{
       if(!is.matrix(train.data.list$mixtures)){
-        stop("In DTD_cv_lambda: 'train.data.list$mixtures' is not a matrix")
+        stop("In 'DTD_cv_lambda': 'train.data.list$mixtures' is not a matrix")
       }
       if(!is.matrix(train.data.list$quantities)){
-        stop("In DTD_cv_lambda: 'train.data.list$quantities' is not a matrix")
+        stop("In 'DTD_cv_lambda': 'train.data.list$quantities' is not a matrix")
       }
     }
   }else{
-    stop("In DTD_cv_lambda: train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'")
+    stop("In 'DTD_cv_lambda': train.data.list must be provided as a list with two entries: 'quantities' and 'mixtures'")
   }
   # end -> train.data.list
 
