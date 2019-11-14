@@ -40,6 +40,7 @@ namespace dtd {
         ss << " * decrease lambda \n";
         ss << " * increase the number of features \n";
         ss << " * increase number of lambdas\n\n";
+        ss << "in 'train_deconvolution_model' set 'cv.verbose=TRUE' for logging information";
         ss << "residual: " << zero.norm() << "\n";
         ss << "admissible threshold: " << eps << "\n";
         throw std::runtime_error(ss.str());
