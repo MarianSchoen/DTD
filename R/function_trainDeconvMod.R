@@ -59,7 +59,6 @@ train_deconvolution_model <- function(
   use.implementation = "cxx",
   ...
   ){
-
   if(length(tweak) != nrow(X.matrix)){
     stop("In train_deconvolution_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'")
   }
