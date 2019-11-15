@@ -89,7 +89,7 @@ ggplot_cv <- function(DTD.model,
       if("cor.test" %in% names(each.fold)){
         return(each.fold$cor.test)
       }else{
-        return(Inf)
+        return(NA)
       }
     })
     test.vec <- unlist(tmp, use.names = FALSE)
@@ -135,7 +135,7 @@ ggplot_cv <- function(DTD.model,
   # if DTD.model is build by train_correlation_model => pick lambda from the best.model
   if(is.list(DTD.model) && "best.model" %in% names(DTD.model)){
     used.lambda <- LAMBDA.TRANS.FUN(DTD.model$best.model$Lambda)
-    used.lambda.median <- stats::median(as.numeric(test.results.frame[as.character(DTD.model$best.model$Lambda), ]))
+    used.lambda.median <- stats::median(as.numeric(test.results.frame[as.character(DTD.model$best.model$Lambda), ]), na.rm=TRUE)
   }else{
     # find mean per lambda:
     median.per.lambda <- apply(test.results.frame, 1, stats::median, na.rm = TRUE)
