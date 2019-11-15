@@ -83,6 +83,7 @@ namespace dtd {
     template<class Model>
     int FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double epsilon, double lambda, std::function<void(Model const &, vec const &)> callback) {
       vec y_vec = model.getParams();
+      model.norm_constraint(y_vec);
       vec g_new = y_vec;
       ftype fy = model.evaluate();
       ftype fy_old = fy;
@@ -94,6 +95,7 @@ namespace dtd {
       int iter = 2;
       for( ; iter <= maxiter; ++iter ){
         ftype rate = m_learning_rate / static_cast<double>(m_cyclelength - 1);
+        model.norm_constraint(y_vec);
         model.grad(m_grad, y_vec);
         for(int i = 0; i < m_cyclelength; ++i) {
           ftype alpha = rate * static_cast<ftype>(i);

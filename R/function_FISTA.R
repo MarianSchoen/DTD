@@ -252,7 +252,7 @@ descent_generalized_fista <- function(tweak.vec,
   # initialise required variables:
   tweak_old <- tweak.vec
   converge_vec <- EVAL.FUN(tweak.vec)
-  y_vec <- tweak.vec
+  y_vec <- NORM.FUN(tweak.vec)
   nesterov.counter <- 2
   factor <- FACTOR.FUN(nesterov.counter)
 
@@ -278,6 +278,10 @@ descent_generalized_fista <- function(tweak.vec,
 
   # Notice that the for loop starts at 2, due to the extrapolation/correction step of the FISTA algorithm
   for(iter in 2:maxit){
+    # changed here
+    y_vec <- NORM.FUN(y_vec)
+    # till here
+
     # calculate gradient at the current position:
     grad <- F.GRAD.FUN(y_vec)
 
@@ -319,7 +323,8 @@ descent_generalized_fista <- function(tweak.vec,
 
 
     # set the winning u_vec, and eval. Norm the u_vec using the provided function:
-    u_vec <- NORM.FUN(u_mat[winner.pos, ])
+#    u_vec <- NORM.FUN(u_mat[winner.pos, ])
+    u_vec <- u_mat[winner.pos, ]
     eval <- eval.vec[winner.pos]
 
     # update tweak_old (tweak of last iteration)
