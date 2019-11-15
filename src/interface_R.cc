@@ -183,7 +183,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
     SET_VECTOR_ELT(result, 2, _newLambda);
     // 3: History:
     if( saveHistory ) {
-      SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), maxiter));
+      SEXP history_r = PROTECT(allocMatrix(REALSXP, model.dim(), iter));
       fillPtr(REAL(history_r), history);
       SET_VECTOR_ELT(result, 3, history_r);
     }
