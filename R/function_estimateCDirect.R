@@ -6,20 +6,20 @@
 #' \deqn{ C(g) = (X^T \Gamma X )^(-1) X^T \Gamma Y}
 #' with \eqn{\Gamma} = diag(g)
 #'
-#' @param X.matrix numeric matrix with cells as columns, and features as rows.
-#'  Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-#'  includes the reference matrix X (default for \code{\link{train_deconvolution_model}})
-#' @param new.data numeric matrix with samples as columns, and features as rows.
-#' In the formula above denoated as Y.
-#' @param Gamma either a numeric vector with length of nrow(X),
-#' or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
-#' or\code{\link{descent_generalized_fista}}. In the equation above
-#'   the DTD.model provides the vector g.
+#' @param X.matrix numeric matrix, with features/genes as rows,
+#' and cell types as column. Each column of X.matrix is a reference
+#' expression profile.
+#' @param new.data numeric matrix with samples as columns,
+#' and features/genes as rows. In the formula above denoated as Y.
+#' @param Gamma numeric matrix, with nrow(X) x nrow(X)
 #'
 #' @return numeric matrix with ncol(X) rows, and ncol(Y) columns
 estimate_direct_c <- function(
   X.matrix, Gamma, new.data
 ){
+  if(!is.matrix(Gamma)){
+    stop('in estimate_c_direct: Gamm must be a matrix')
+  }
   sol <- solve(t(X.matrix) %*% Gamma %*% X.matrix) %*% t(X.matrix) %*% Gamma %*% new.data
   return(sol)
 }
