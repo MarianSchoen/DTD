@@ -7,7 +7,6 @@
 #' @param train.Y training data, used for heuristics involving the dimensionality of the problem
 #'
 #' @return sequence of lambdas (numeric vector)
-#'
 lambda_sequence <- function(lambda.seq, lambda.length, train.Y) {
   # if necessary, generate a generic sequence,
   # based on "p" and "n" of the mixture matrix:
