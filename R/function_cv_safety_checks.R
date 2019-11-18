@@ -2,19 +2,23 @@
 #'
 #' tests common input parameters to the cxx and R implementation of DTD_cv_lambda.
 #'
-#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
-#' If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
-#' of the training set -  will be generated. Default: NULL
+#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the
+#' FISTA will be optimized. If 'lambda.seq' is set to NULL, a generic series of
+#' lambdas - depending on the dimensions of the training set -
+#' will be generated.
 #' @param tweak.start numeric vector, starting vector for the DTD algorithm.
 #' @param n.folds integer, number of buckets in the cross validation.
-#' @param lambda.length integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 10
-#' @param train.data.list list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
+#' @param lambda.length integer, how many lambdas will be generated
+#' (only used if lambda.seq is NULL)
+#' @param train.data.list list, with two entries, a numeric matrix each,
+#' named 'mixtures' and 'quantities'
 #' Within this list the train/test cross validation will be done.
-#' Notice, that the train.data.list must have an entry named "mixtues". In this entry, the matrix containing the
-#' training samples (as columns) and all features (as rows) must be present. (see Vignette for details)
-#' @param cv.verbose logical, should information about the cv process be printed to the screen? (Defaults to TRUE)
-#' @param warm.start logical, should the solution of a previous model of the cross validation be used as a start
-#'  in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.
+#' (see Vignette `browseVignettes("DTD")` for details)
+#' @param cv.verbose logical, should information about the cv process be
+#' printed to the screen?
+#' @param warm.start logical, should the solution of a previous model of
+#' the cross validation be used as start in the next model.
+#' Notice, that the warm.start starts with the most unpenalized model.
 #'
 #'  @return NULL, or it throws an error
 DTD_cv_lambda_test_input_generic <- function(lambda.seq,
