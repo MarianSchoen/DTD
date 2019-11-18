@@ -1,53 +1,66 @@
 #' Cross-validation for digital tissue deconvolution
 #'
-#' Our descent generalized FISTA implementation includes a l1 regularization term
-#' (see \code{\link{train_deconvolution_model}}.
-#' This function performs a k-fold cross validation to find the
+#' Our descent generalized FISTA implementation includes a l1 regularization
+#' term (see \code{\link{train_deconvolution_model}}).
+#' This function performs a 'n.folds'-fold cross validation to find the
 #' best fitting regularization parameter.
-#' For an example see `browseVignettes("DTD")`
 #'
-#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
-#' If 'lambda.seq' is set to NULL, a generic series of lambdas - depending on the dimensions
-#' of the training set -  will be generated. Default: NULL
+#' For an example see `browseVignettes("DTD")`.
+#'
+#' Notice, there is an R and a C++ implementation of our optimizer.
+#' Hence, there are two cross validation implementations,
+#' calling either the R or C++ implementation:
+#' \code{\link{DTD_cv_lambda_R}} and \code{\link{DTD_cv_lambda_cxx}}.
+#'
+#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the
+#' FISTA will be optimized. If 'lambda.seq' is set to NULL, a generic series of
+#' lambdas - depending on the dimensions of the training set -
+#' will be generated.
 #' @param tweak.start numeric vector, starting vector for the DTD algorithm.
-#' @param n.folds integer, number of buckets in the cross validation. Defaults to 10
+#' @param n.folds integer, number of buckets in the cross validation.
 #' @param lambda.length integer, how many lambdas will be generated
-#' (only used if lambda.seq is NULL). Defaults to 10
-#' @param train.data.list list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
+#' (only used if lambda.seq is NULL)
+#' @param train.data.list list, with two entries, a numeric matrix each,
+#' named 'mixtures' and 'quantities'
 #' Within this list the train/test cross validation will be done.
-#' Notice, that the train.data.list must have an entry named "mixtues".
-#' In this entry, the matrix containing the training samples (as columns)
-#' and all features (as rows) must be present. (see Vignette for details)
-#' @param F.GRAD.FUN gradient function, see \code{\link{descent_generalized_fista}}
-#' @param EVAL.FUN evaluation function, see \code{\link{descent_generalized_fista}}
-#' @param cv.verbose logical, should information about the cv process be printed to the screen? (Defaults to TRUE)
-#' @param ... all parameters that are passed to the \code{\link{descent_generalized_fista}} function.
-#' E.g. maxiter, tweak_vec etc ...
-#' @param warm.start logical, should the solution of a previous model of the cross validation be used as a start
-#'  in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.
+#' (see Vignette `browseVignettes("DTD")` for details)
+#' @param F.GRAD.FUN gradient function, see
+#' \code{\link{descent_generalized_fista}}
+#' The 'F.GRAD.FUN' and 'EVAL.FUN' parameters are only present in the
+#' R cross validation. With these parameters an alternativ gradient,
+#' and evaluation function can be provided. Both functions are called
+#' using only the tweak vector as first argument.
+#' @param EVAL.FUN evaluation function,
+#' see \code{\link{descent_generalized_fista}}
+#' @param cv.verbose logical, should information about the cv process be
+#' printed to the screen?
+#' @param ... all parameters that are passed to the
+#' \code{\link{descent_generalized_fista}} function.
+#' E.g. 'maxiter', 'NORM.FUN',  'cycles' etc ...
+#' @param warm.start logical, should the solution of a previous model of
+#' the cross validation be used as start in the next model.
+#' Notice, that the warm.start starts with the most unpenalized model.
 #'
-#' @return list of length 2.
+#' @return list of length 2:
 #' \itemize{
 #'    \item 'cv.obj', list of lists. DTD model for each lambda, and every folds.
-#'    \item 'best.model', list. DTD model optimized on the complete data set with the best lambda from the cross validation.
+#'    \item 'best.model', list. DTD model optimized on the complete data set
+#'     with the best lambda from the cross validation.
 #' }
-#' A cross validation matrix as entry "cv.obj", and the model with minimal loss function
-#' retrained on the complete dataset as "best.model
-#' @export
 #'
+#' @export
 DTD_cv_lambda_R <- function(
   lambda.seq = NULL,
   tweak.start,
   n.folds = 5,
   lambda.length = 10,
   train.data.list,
-  F.GRAD.FUN,
-  EVAL.FUN,
   cv.verbose = TRUE,
   warm.start = FALSE,
+  F.GRAD.FUN,
+  EVAL.FUN,
   ...
   ) {
-
   DTD_cv_lambda_test_input_generic(
     lambda.seq = lambda.seq
     , tweak.start = tweak.start
@@ -153,7 +166,7 @@ DTD_cv_lambda_R <- function(
 
   if(all(is.na(test.result.per.lambda))){
     stop(
-      "in 'DTD_cv_lambda_cxx': all lambdas crashed. \n
+      "in 'DTD_cv_lambda_R': all lambdas crashed. \n
       Did you provide a custom lambda sequence? \n
       If yes: provide smaller lambdas \n
       If no: provide more features to the model,
@@ -182,49 +195,72 @@ DTD_cv_lambda_R <- function(
   ret <- list(cv.obj = cv.object, best.model = bestModel)
   return(ret)
 }
-
-
-
-
-
 #' Cross-validation for digital tissue deconvolution
 #'
-#' Our descent generalized FISTA implementation includes a l1 regularization term (see \code{\link{train_deconvolution_model}}.
-#' This function performs a k-fold cross validation to find the best fitting regularization parameter.
+#' Our descent generalized FISTA implementation includes a l1 regularization
+#' term (see \code{\link{train_deconvolution_model}}).
+#' This function performs a 'n.folds'-fold cross validation to find the
+#' best fitting regularization parameter.#'
+#'
 #' For an example see `browseVignettes("DTD")`
-#' This routine calls the cxx variant of DTD_cv_lambda. See that function for dynamic dispatch, based on the useImplementation parameter
 #'
-#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
-#' If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
-#' of the training set -  will be generated. Default: NULL
+#' Notice, there is an R and a C++ implementation of our optimizer.
+#' Hence, there are two cross validation implementations,
+#' calling either the R or C++ implementation:
+#'
+#' \code{\link{DTD_cv_lambda_R}} and \code{\link{DTD_cv_lambda_cxx}}.
+#'
+#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the
+#' FISTA will be optimized. If 'lambda.seq' is set to NULL, a generic series of
+#' lambdas - depending on the dimensions of the training set -
+#' will be generated.
 #' @param tweak.start numeric vector, starting vector for the DTD algorithm.
-#' @param X.matrix reference matrix, X, each column i holds the gene expression of celltype i.
-#' @param n.folds integer, number of buckets in the cross validation. Defaults to 10
-#' @param lambda.length integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 10
-#' @param train.data.list list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
+#' @param X.matrix numeric matrix, with features/genes as rows,
+#' and cell types as column. Each column of X.matrix is a reference
+#' expression profile
+#' @param n.folds integer, number of buckets in the cross validation.
+#' @param lambda.length integer, how many lambdas will be generated
+#' (only used if lambda.seq is NULL)
+#' @param train.data.list list, with two entries, a numeric matrix each,
+#' named 'mixtures' and 'quantities'
 #' Within this list the train/test cross validation will be done.
-#' Notice, that the train.data.list must have an entry named "mixtues". In this entry, the matrix containing the
-#' training samples (as columns) and all features (as rows) must be present. (see Vignette for details)
-#' @param cv.verbose logical, should information about the cv process be printed to the screen? (Defaults to TRUE)
-#' @param ... all parameters that are passed to the \code{\link{descent_generalized_fista}} function.
-#' E.g. maxiter, tweak_vec etc ...
-#' @param warm.start logical, should the solution of a previous model of the cross validation be used as a start
-#'  in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.
+#' (see Vignette `browseVignettes("DTD")` for details)
+#' @param cv.verbose logical, should information about the cv process be
+#' printed to the screen?
+#' @param ... all parameters that are passed to the c++ optimization function.
+#' @param warm.start logical, should the solution of a previous model of
+#' the cross validation be used as start in the next model.
+#' Notice, that the warm.start starts with the most unpenalized model.
 #' @param estimate.c.type string, either "non_negative", or "direct".
-#' Indicates how the algorithm finds the solution of \eqn{arg min_C ||diag(g)(Y - XC)||_2}.
-#' If 'estimate.c.type' is set to "direct" there is no regularization (see \code{\link{estimate_c}}),
-#' if 'estimate.c.type' is set to "non_negative" the estimates "C" must not be negative (non-negative least squares)
+#' Indicates how the algorithm finds the solution of
+#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}.
+#' \itemize{
+#'    \item If 'estimate.c.type' is set to "direct",
+#'  there is no regularization (see \code{\link{estimate_c}}),
+#'    \item if 'estimate.c.type' is set to "non_negative",
+#'  the estimates "C" must not be negative (non-negative least squares)
 #' (see (see \code{\link{estimate_nn_c}}))
+#' }
+#' @param NORM.FUN string, after each gradient descent and nesterov step, the
+#' the resulting tweak/g-vector can be normed. There are three implemenations:
+#' \itemize{
+#'    \item 'identity': No normalization, every entry stays as it is.
+#'    \item 'n2normed': the vector is scaled to \eqn{||g||_2 = 1}
+#'    \item 'n1normed': the vector is scaled to \eqn{||g||_1 = 1}
+#' }
+#' @param NESTEROV.FUN string, sets the nesterov function. The current
+#' implementation restricts the result to be positive
+#'  (due to the optimization constraint \eqn{g_i \ge 0})
+#' @param ST.FUN string, sets the soft thresholding function.
 #'
-#' @return list of length 2.
+#' @return list of length 2:
 #' \itemize{
 #'    \item 'cv.obj', list of lists. DTD model for each lambda, and every folds.
-#'    \item 'best.model', list. DTD model optimized on the complete data set with the best lambda from the cross validation.
+#'    \item 'best.model', list. DTD model optimized on the complete data set
+#'     with the best lambda from the cross validation.
 #' }
-#' A cross validation matrix as entry "cv.obj", and the model with minimal loss function
-#' retrained on the complete dataset as "best.model
-#' @export
 #'
+#' @export
 DTD_cv_lambda_cxx <- function(
   lambda.seq = NULL,
   tweak.start,
