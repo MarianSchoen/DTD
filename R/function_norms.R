@@ -24,7 +24,11 @@ identity <- function(x) {
 #' print(norm(normed.values, type = "2"))
 n2normed <- function(x) {
   n2 <- norm(matrix(x, ncol = 1), type = "2")
-  ret <- (length(x) * x) / n2
+  if(n2 == 0){
+    ret <- x
+  }else{
+    ret <- (length(x) * x) / n2
+  }
   return(ret)
 }
 
@@ -41,7 +45,11 @@ n2normed <- function(x) {
 #' normed.values <- n1normed(same.values)
 #' print(norm(as.matrix(normed.values), type = "O"))
 n1normed <- function(x) {
-  n2 <- norm(matrix(x, ncol = 1), type = "O")
-  ret <- (length(x) * x) / n2
+  n1 <- norm(matrix(x, ncol = 1), type = "O")
+  if(n1 == 0){
+    ret <- x
+  }else{
+    ret <- (length(x) * x) / n1
+  }
   return(ret)
 }

@@ -1,23 +1,31 @@
 #' Mix samples for loss-function learning DTD
 #'
-#' mix_samples takes a gene expresssion matrix ('expr.data'),
+#' 'mix_samples' takes a gene expresssion matrix ('expr.data'),
 #' and 'pheno' information.
 #' It then mixes the samples with known quantities such that it can be
 #' used for loss-function learning digital tissue deconvolution.
-#' For a mixture it randomly selects "n.samples" samples from "expr.data", and averages over them.
-#' Using the information stored in pheno, it can get the quantities per cell in each mixture.
+#' For a mixture it randomly selects "n.samples" samples from "expr.data",
+#' and averages over them. Using the information stored in pheno, it can get
+#' the quantities per cell in each mixture.
+#' Notice, in the mixtures, the frequency of a cell type is reflected
+#' by their occurrence in 'pheno'. A cell type that is uncommon, can not occur
+#'  frequently in the mixtures. In such a case, consider using
+#'  \code{\link{mix_samples_with_jitter}}
 #'
 #' @param expr.data numeric matrix, with features as rows and samples as columns
-#' @param pheno named vector of strings, with pheno information ('pheno') for each sample ('name(pheno)') in expr.data
-#' @param n.samples integer above 0, numbers of samples to be drawn (defaults to 1000)
+#' @param pheno named vector of strings, with pheno information ('pheno')
+#' for each sample ('name(pheno)') in 'expr.data'
+#' @param n.samples integer above 0, numbers of samples to be drawn
 #' @param n.per.mixture integer above 0, below ncol(expr.data),
-#'  how many samples should be included per mixutre. (Default: 100)
-#' @param included.in.X vector of strings, indicating types that are in the reference matrix.
-#' Only those types, and sorted in that order, will be included in the quantity matrix.
-#' Notice, every profile of 'expr.data' might be included in the mixture.
-#' But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.
-#' @param verbose logical, should information be printed? (Default: FALSE)
-#' @param normalize.to.count logical, normalize each mixture? Defaults to TRUE
+#'  how many samples should be included per mixutre
+#' @param included.in.X vector of strings, indicating types that are in the
+#' reference matrix. Only those types, and sorted in that order, will be
+#' included in the quantity matrix. Notice, every profile of 'expr.data' might
+#' be included in the mixture. But the quantity matrix only reports quantity
+#' information for the cell types in 'included.in.X'. This means, that the
+#' sum per mixture in the 'quantities' matrix must not add up to 1.
+#' @param verbose logical, should information be printed to console?
+#' @param normalize.to.count logical, normalize each mixture?
 #'
 #' @return list with two entries: 'mixtures' and 'quantities'.
 #'
@@ -88,6 +96,10 @@
 #'       n.per.mixture = 100,
 #'       verbose = FALSE
 #'       )
+#' # In order to show, that in our mixtures, the sum over the quantities in a
+#' # mixture might not be 1:
+#' sum.per.mixture <- apply(test.data$quantities, 2, sum)
+#' plot(sum.per.mixture)
 mix_samples <- function(expr.data,
                        pheno,
                        included.in.X,

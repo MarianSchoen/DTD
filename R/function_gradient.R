@@ -4,13 +4,25 @@
 #' For the mathematical theory see Goertler et al, 2018.
 #' For examples see code of \code{\link{train_deconvolution_model}}
 #'
-#' @param X numeric matrix with features as rows, and reference samples as columns
-#' @param Y numeric matrix with features as rows, and samples as columns
-#' @param C numeric matrix with reference samples as rows, and samples as columns
+#' @param X.matrix numeric matrix, with features/genes as rows,
+#' and cell types as column. Each column of X.matrix is a reference
+#' expression profile
+#' @param Y numeric matrix with samples as columns,
+#' and features/genes as rows. Holding bulk gene expressions
+#' @param C numeric matrix with reference samples as rows,
+#' and samples as columns. Holding cellular composionts
 #' @param tweak numeric vector with length of nrow(X).
 #' In the Loss function above tweak is named "g"
 #' @param estimate.c.type string, either "non_negative", or "direct".
 #' Indicates how the algorithm finds the solution of
+#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}.
+#' \itemize{
+#'    \item If 'estimate.c.type' is set to "direct",
+#'  there is no regularization (see \code{\link{estimate_c}}),
+#'    \item if 'estimate.c.type' is set to "non_negative",
+#'  the estimates "C" must not be negative (non-negative least squares)
+#' (see (see \code{\link{estimate_nn_c}}))
+#' }
 #'
 #' @export
 #'

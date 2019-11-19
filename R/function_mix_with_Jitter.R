@@ -1,35 +1,35 @@
 #' Mix samples with jitter
 #'
-#' "mix_samples_with_jitter" takes 'pheno' information and a expression matrix ('expr.data').
-#' Its output is a list of two matrices. A matrix holding in-silicio 'mixtures' and a quantity matrix,
-#' holding the corresponding compositions.
-#' Each profile of the 'mixture' matrix is the result of a linear combination of input expression,
-#' multiplied with a random jitter vector.
+#' 'mix_samples_with_jitter' takes a expression matrix ('expr.data')
+#' and 'pheno' information.
+#' It then mixes the samples with known quantities, such that it can be used for
+#' loss-function learning digital tissue deconvolution.
+#' For a mixture it randomly selects a quantity for each cell type. Then, it
+#' randomly selects profiles from 'expr.data' for each cell type, multiplies it
+#' with the respective quantity, and averages it to a simulated bulk profile.
+#' Notice, in the mixtures, the frequency of a cell type is reflected by the
+#' 'prob.each' vector, and not by their occurrence in 'pheno'. Alternatively,
+#' there is a 'mix_samples' function, that reflects the underlying composition
+#' of the data set: \code{\link{mix_samples}}
 #'
-#' In the DTD package there are 2 ways to generate 'in-silicio' mixtures:
-#'  - take 'n.per.mixture' random profiles from the expression matrix, and average over them.
-#'  Here, the quantities (or probabilities) for each cell type is set by their relative
-#'  frequency in the expression matrix.
-#'  (DTD::mix_samples)
-#'  - for each cell type, pick a random number, interpret this number as the cell types quantity.
-#'  Multiply the profile with its quantity, and average over the resulting mixture.
-#'  (DTD::mix_samples_with_jitter)
-#'
-#' @param n.samples integer above 0, numbers of samples to be drawn (defaults to 1000)
-#' @param prob.each numeric vector with same length as 'included.in.X.' For each cell type in 'included.in.X'
-#' 'prob.each' holds the average quantity in the mixtures.
-#' @param expr.data non-negative numeric matrix, with features as rows and samples as columns
-#' @param add.jitter logical, should the mixtures be multiplied with a vector of normally distributed numbers? (JITTER)
-#' @param verbose logical, should the function print about progress to the terminal? (Defaults to FALSE)
-#' @param pheno named vector of strings, with pheno information ('pheno') for each sample ('names(pheno)') in expr.data
-#' @param chosen.mean float, mean of jitter (Default: 1)
-#' @param chosen.sd float, standard deviation of jitter (Default: 0.05)
-#' @param included.in.X vector of strings, indicating types that are in the reference matrix.
-#' Only those types, and sorted in that order, will be included in the quantity matrix.
-#' Notice, every profile of 'expr.data' might be included in the mixture.
-#' But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.
-#' @param n.per.mixture integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)
-#' @param normalize.to.count logical, normalize each mixture? Defaults to TRUE
+#' @param n.samples integer above 0, numbers of samples to be drawn
+#' @param prob.each numeric vector with same length as 'included.in.X.'
+#' For each cell type in 'included.in.X', prob.each' holds the expected
+#' average quantity in the mixtures.
+#' @param expr.data numeric matrix, with features as rows and samples as columns
+#' @param add.jitter logical, should each mixture be multiplied with a vector
+#' of normally distributed numbers? (JITTER)
+#' @param verbose logical, should information be printed to console?
+#' @param pheno named vector of strings, with pheno information ('pheno')
+#' for each sample ('name(pheno)') in 'expr.data'
+#' @param chosen.mean float, mean of jitter
+#' @param chosen.sd float, standard deviation of jitter
+#' @param included.in.X vector of strings, indicating types that are in the
+#' reference matrix. Only those types, and sorted in that order, will be
+#' included in the quantity matrix.
+#' @param n.per.mixture integer above 0, below ncol(expr.data),
+#'  how many samples should be included per mixutre
+#' @param normalize.to.count logical, normalize each mixture?
 #'
 #' @return list with two entries. "quantities": matrix (nrow = ncol(expr.data), ncol = n.samples)
 #' and "mixtures": matrix (nrow = nrow(expr.data), ncol = n.samples)
@@ -67,6 +67,9 @@
 #'     , chosen.mean = 1
 #'     , chosen.sd = 0.05
 #' )
+#'
+#' # see the effect of "Type2" having higher 'prob.each' entry:
+#' apply(training.data$quantities, 1, mean)
 #'
 mix_samples_with_jitter <- function(
   included.in.X, # tested

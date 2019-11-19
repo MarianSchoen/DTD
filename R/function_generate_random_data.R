@@ -1,21 +1,27 @@
 #' Generating random data
 #'
-#' generate_random_data simulates data which can be used exemplary for digital tissue deconvolution.
-#' It will generate a numeric matrix with 'n.features' rows, and ('n.types' * 'n.samples.per.type')
-#' columns. Each column represents a sample of special type. The function will generate 'n.types',
-#' and for each type 'n.samples.per.type'.\cr
-#' Mathematically, each feature is drawn from a poisson distribution. For each feature in every cell type,
-#' a lambda is drawn randomly.Then it generates multiple samples per type. This ensures that samples
+#' 'generate_random_data' simulates data which can be used exemplary for
+#' digital tissue deconvolution. It will generate a numeric matrix with '
+#' n.features' rows, and ('n.types' * 'n.samples.per.type') columns.
+#' Each column represents a sample of special type. The function will generate
+#' 'n.types', and for each type 'n.samples.per.type'.\cr
+#' Mathematically, each feature is drawn from a poisson distribution.
+#' For each feature in every cell type, a lambda is drawn randomly.
+#' Then it generates multiple samples per type. This ensures that samples
 #' from the same cell type have similar counts for the same feature.
 #'
-#' @param n.types integer, 2 <= 'n.types', how many different types should be included in the data set (default 5)
-#' @param n.samples.per.type integer 1 <= 'n.samples.per.type', how many samples should be generated per type (default 10)
-#' @param n.features integer, 1 <= 'n.features', how many features should be included (default 1000)
-#' @param sample.type string, name of samples, defaults to "Cell"
-#' @param feature.type string, name of features, defaults to "gene"
-#' @param seed integer, will be passed to "set_seed", defaults to 1310
+#' @param n.types integer, 2 <= 'n.types', how many different types should be
+#' included in the data set
+#' @param n.samples.per.type integer 1 <= 'n.samples.per.type',
+#' how many samples should be generated per type
+#' @param n.features integer, 1 <= 'n.features', how many features should be
+#' included
+#' @param sample.type string, name of samples
+#' @param feature.type string, name of features
+#' @param seed integer, will be passed to "set_seed"
 #'
-#' @return matrix with ('n.types' * 'n.samples.per.type') columns, and 'n.features' rows
+#' @return matrix with ('n.types' * 'n.samples.per.type') columns,
+#' and 'n.features' rows
 #' @export
 #'
 #' @examples

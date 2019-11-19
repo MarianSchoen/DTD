@@ -74,7 +74,7 @@
 #' iterations be stored.
 #' @param use.restart logical, restart the algorithm if the update was
 #' not a descent step.
-#' @param verbose logical, should information be printed to console.
+#' @param verbose logical, should information be printed to console?
 #' @param NESTEROV.FUN function, applied to the nesterov extrapolation.
 #' @param stop.crit.threshold numeric value. The change in either the gradient
 #' or nesterov step has to be at least 'stop.crit.threshold', or the algorithm
