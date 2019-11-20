@@ -68,9 +68,9 @@ ggplot_heatmap <- function(DTD.model,
       } else {
         tweak <- DTD.model$Tweak
       }
-      if ("estimate.c.type" %in% names(DTD.model)){
-        estimate.c.type <- DTD.model$estimate.c.type
-      }
+    }
+    if ("estimate.c.type" %in% names(DTD.model)){
+      estimate.c.type <- DTD.model$estimate.c.type
     }
   } else {
     if(is.numeric(DTD.model)){
