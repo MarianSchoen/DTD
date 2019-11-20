@@ -166,7 +166,7 @@ solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, stop.crit.
 #'
 #' returns loss function, evaluated on the given model
 #'
-#' @param model
+#' @param model input model, as constructed by, e.g., empty_model()
 #'
 #' @return loss function
 #' @export
@@ -184,7 +184,7 @@ cxx_evaluate_model <- function(model) {
 #'
 #' returns estimated phenotype composition, given a trained model. Call cxx implementation.
 #'
-#' @param model
+#' @param model  input model, as constructed by, e.g., empty_model()
 #'
 #' @return composition (C)
 #' @export
@@ -200,8 +200,8 @@ cxx_estimate_c <- function(model) {
 }
 #' NNLS
 #'
-#' @param A
-#' @param b
+#' @param A numeric matrix
+#' @param b vector with same length as 'nrow(A)'
 #'
 #' @return x
 #'

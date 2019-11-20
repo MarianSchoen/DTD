@@ -21,7 +21,8 @@
 #' of normally distributed numbers? (JITTER)
 #' @param verbose logical, should information be printed to console?
 #' @param pheno named vector of strings, with pheno information ('pheno')
-#' for each sample ('name(pheno)') in 'expr.data'
+#' for each sample in 'expr.data'. names(pheno)' must all be in
+#' 'colnames(expr.data)'
 #' @param chosen.mean float, mean of jitter
 #' @param chosen.sd float, standard deviation of jitter
 #' @param included.in.X vector of strings, indicating types that are in the

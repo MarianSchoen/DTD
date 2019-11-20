@@ -18,7 +18,6 @@
 #' @param DTD.model either a numeric vector with length of nrow(X), or a list
 #' returned by \code{\link{train_deconvolution_model}},
 #' \code{\link{DTD_cv_lambda_cxx}}, or \code{\link{descent_generalized_fista}}.
-#' In the equation above the DTD.model provides the vector g.
 #' @param number.pics integer, into how many pictures should the
 #' resutlt be split
 #' @param G.TRANSFORM.FUN function, that expects a vector of numerics,

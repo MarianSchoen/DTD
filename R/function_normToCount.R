@@ -1,16 +1,17 @@
 #' normalize_to_count
 #'
-#' 'normalize_to_count' takes a numeric matrix 'expr.data' with only non-negative
-#' entries and normalizes each column (=> sample) to a total number of counts.\cr
+#' 'normalize_to_count' takes a numeric matrix 'expr.data' with only
+#' non-negative entries and normalizes each column (=> sample) to a total
+#' number of counts.\cr
 #' For every sample i, each feature j gets scaled to
 #'  \deqn{expr.data[j, i] = (count * expr.data[j, i]) / sum(expr.data[, i])}
 #'
-#' @param expr.data positive numeric matrix, with samples as columns and features as rows.
+#' @param expr.data numeric matrix, with features as rows and samples as columns.
 #' Notice, 'normalize_to_count' normalizes the columns of this matrix.
-#' @param count float, 0 < 'count', to which every sample of expr.data will be scaled.
-#' If 'is.na(count)' (default), count is set to nrow(expr.data)
+#' @param count float, 0 < 'count', to which every sample of expr.data is scaled.
+#' If 'is.na(count)' count is set to nrow(expr.data)
 #'
-#' @return "ret", matrix with same dimension as "expr.data"
+#' @return 'ret', matrix with same dimension as 'expr.data'
 #' @export
 #'
 #' @examples

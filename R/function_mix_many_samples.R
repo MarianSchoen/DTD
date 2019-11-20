@@ -14,7 +14,8 @@
 #'
 #' @param expr.data numeric matrix, with features as rows and samples as columns
 #' @param pheno named vector of strings, with pheno information ('pheno')
-#' for each sample ('name(pheno)') in 'expr.data'
+#' for each sample in 'expr.data'. names(pheno)' must all be in
+#' 'colnames(expr.data)'
 #' @param n.samples integer above 0, numbers of samples to be drawn
 #' @param n.per.mixture integer above 0, below ncol(expr.data),
 #'  how many samples should be included per mixutre
