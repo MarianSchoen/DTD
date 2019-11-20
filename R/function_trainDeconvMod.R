@@ -262,7 +262,7 @@ train_deconvolution_model <- function(
 
   pics$histogram <- DTD::ggplot_ghistogram(DTD.model = catch)
 
-  pics$Xheatmap <- ggplot_heatmap(DTD.model = catch,
+  pics$Xheatmap <- DTD::ggplot_heatmap(DTD.model = catch,
                                   X.matrix = X.matrix)
 
   if(!is.null(test.data.list)){
