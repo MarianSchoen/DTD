@@ -13,7 +13,6 @@ namespace dtd {
     }
     vec softmax(vec const & v, ftype softfactor) {
       vec res(v.size());
-      // TODO: non-loop based approach may be faster.
       for( int i = 0; i < v.size(); ++i ){
         double const & x = v.coeff(i);
         res.coeffRef(i) = sgn(x)*std::max(std::abs(x)-softfactor, 0.0);
@@ -40,7 +39,7 @@ namespace dtd {
         ss << " * decrease lambda \n";
         ss << " * increase the number of features \n";
         ss << " * increase number of lambdas\n\n";
-        ss << "in 'train_deconvolution_model' set 'cv.verbose=TRUE' for logging information";
+        ss << "in 'train_deconvolution_model' set 'cv.verbose=TRUE' for logging information\n";
         ss << "residual: " << zero.norm() << "\n";
         ss << "admissible threshold: " << eps << "\n";
         throw std::runtime_error(ss.str());

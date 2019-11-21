@@ -156,6 +156,7 @@ ggplot_true_vs_esti <- function(DTD.model,
         provided 'shape.indi' has different length as 'test.data$quantities'.
         It can not be used."
         )
+      shape.indi <- rep(1, ncol(estimated.c))
     }
   }
   # Norm every type to range from 0 to 1
@@ -182,7 +183,13 @@ ggplot_true_vs_esti <- function(DTD.model,
   cor.list <- c()
   for (l1 in 1:nrow(estimated.c)) {
     if(stats::sd(true.c[l1, ], na.rm = TRUE) != 0){ # => can't calculate corelation
-      cor.list <- c(cor.list, stats::cor(estimated.c[l1, ], true.c[l1, ], use = "complete.obs"))
+      cor.list <- c(
+        cor.list,
+        round(
+          stats::cor(estimated.c[l1, ], true.c[l1, ], use = "complete.obs")
+          , digits = 2
+          )
+      )
     }else{
       cor.list <- c(cor.list, 0)
     }

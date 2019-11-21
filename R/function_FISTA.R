@@ -402,16 +402,15 @@ descent_generalized_fista <- function(tweak.vec,
       cat("Loss: ", rev(converge_vec)[1], "\n")
       cat("learning.rate: ", learning.rate, "\n")
       cat("cycle winner pos:", winner.pos, "\n")
-      cat("factor: ", factor, "\n")
-      cat("nesterov rate: ", nesterov.winner.pos, "\n")
+      cat("nesterov extrapolation: ", factor, "\n")
       # plot converge_vec:
       if(iter %% 100 == 0){
         graphics::plot(1:iter, log(-converge_vec))
       }
       # stop crit output
-      cat("change.last.iter.before.nesterov: ", change.last.iter.before.nesterov, "\n")
-      cat("change.last.iter.after.nesterov: ", change.last.iter.after.nesterov, "\n")
-      cat("change.last.iter: ", change.last.iter, "\n")
+      cat("change in g, only gradient step: ", change.last.iter.before.nesterov, "\n")
+      cat("change in g, only nesterov step: ", change.last.iter.after.nesterov, "\n")
+      cat("change in g: ", change.last.iter, "\n")
     }
 
 
