@@ -14,7 +14,10 @@ lambda_sequence <- function(lambda.seq, lambda.length, train.Y) {
     p <- nrow(train.Y)
     n <- ncol(train.Y)
     lambda.0 <- sqrt(log(p) / n)
-    lambda.seq <- lambda.0 * 2^seq(2, -20, length.out = lambda.length)
+    lambda.seq <- lambda.0 * 2^seq(
+      from = 0 # lambda.0 * 2^0 = lambda.0
+      , to = -50 # 2^-50 nearly 0
+      , length.out = lambda.length)
   }
   # cross validation can be called with warm.start.
   # these warm starts should start with the most unregularized scenario:
