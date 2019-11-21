@@ -3,6 +3,7 @@ rm(list = ls()); gc()
 
 # I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
 library(DTD)
+library(tictoc)
 # library(devtools)
 # load_all(".")
 
@@ -99,18 +100,21 @@ names(start.tweak) <- rownames(X.matrix)
 #   )
 # )
 
-
-model <- train_deconvolution_model(
-  tweak = start.tweak,
-  X.matrix = X.matrix,
-  train.data.list = training.data,
-  test.data.list = test.data,
-  estimate.c.type = "non_negative",
-  maxit = maxit,
-  n.folds = 2,
-  lambda.len = 3,
-  cv.verbose = TRUE,
-  verbose = FALSE,
-  NORM.FUN = identity,
-  use.implementation = "cxx"
-)
+for(esti.type in c("non_negative", "direct")){
+  tic(esti.type)
+  model <- train_deconvolution_model(
+    tweak = start.tweak,
+    X.matrix = X.matrix,
+    train.data.list = training.data,
+    test.data.list = test.data,
+    estimate.c.type = esti.type,
+    maxit = maxit,
+    n.folds = 10,
+    lambda.len = 10,
+    cv.verbose = FALSE,
+    verbose = FALSE,
+    NORM.FUN = "identity",
+    use.implementation = "cxx"
+  )
+  toc()
+}
