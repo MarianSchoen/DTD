@@ -19,7 +19,7 @@ namespace dtd {
       }
       return res;
     }
-    mat invxtgx(mat const & x, vec const & g) {
+    mat invxtgx(mat const & x, vec const & g, ftype eps = 1000*std::numeric_limits<ftype>::epsilon()) {
       if( g.minCoeff() < 0 )
         throw std::runtime_error("invxtgx: g has negative entries and thus, x^T G x is not positive semi-definite and cannot be inverted.");
       mat xtgx = x.transpose()*g.asDiagonal()*x;
@@ -29,9 +29,8 @@ namespace dtd {
       const std::size_t n = x.cols();
       // there is some empirical arbitrariness in here...
       // but this is probably still save (whenever it failed it was O(1) and not O(1e-13)
-      const ftype eps = 1000*n*n*std::numeric_limits<ftype>::epsilon();
       const mat zero = xi*xtgx - mat::Identity(n, n);
-      if( zero.norm() > eps ){
+      if( zero.trace() > n*eps ){
         std::stringstream ss;
         ss << "invxtgx: could not invert X^T diag(g) X.\n";
         ss << "Usually this happens when the rank of X is too low to compensate for too many zeros in g\n";
@@ -40,7 +39,7 @@ namespace dtd {
         ss << " * increase the number of features \n";
         ss << " * increase number of lambdas\n\n";
         ss << "in 'train_deconvolution_model' set 'cv.verbose=TRUE' for logging information\n";
-        ss << "residual: " << zero.norm() << "\n";
+        ss << "residual: " << zero.trace() << "\n";
         ss << "admissible threshold: " << eps << "\n";
         throw std::runtime_error(ss.str());
       }
@@ -59,7 +58,7 @@ namespace dtd {
     }
     mat GoertlerModel::estimate_c(vec const & g) const {
       if( m_estim_c == CoeffEstimation::DIRECT ) {
-        mat xtgxi = invxtgx(m_x, g);
+        mat xtgxi = invxtgx(m_x, g, inv_prec);
         return estimate_c_direct(m_x, m_y, g, xtgxi);
       } else if( m_estim_c == CoeffEstimation::NNLS ){
         return estimate_c_nnls(m_x, m_y, g);
@@ -130,7 +129,7 @@ namespace dtd {
       clampPos(gr);
     }
     void GoertlerModel::grad(vec & gr, vec const & param) const {
-      const mat xtgxi = invxtgx(m_x, param);
+      const mat xtgxi = invxtgx(m_x, param, inv_prec);
       grad_explicit_inverse(gr, param, xtgxi);
     }
     vec GoertlerModel::threshold(vec const & v, ftype softfactor) const {

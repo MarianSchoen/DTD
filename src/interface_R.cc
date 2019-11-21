@@ -82,6 +82,7 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   int threshfnid = INTEGER(getElementFromRList(model_, "threshfnid"))[0];
   int subspfnid = INTEGER(getElementFromRList(model_, "subspfnid"))[0];
   int estim_c = INTEGER(getElementFromRList(model_, "coeffestim"))[0];
+  double inv_prec = REAL(getElementFromRList(model_, "inversion_precision"))[0];
 
   // crash early (but leave the details to the R space, this is just to prevent segfaults, etc.)
   if( x.size() == 0 || y.size() == 0 || c.size() == 0 || g.size() == 0)
@@ -93,7 +94,10 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   if( y.cols() != c.cols() )
     throw std::runtime_error("make_model: y and c have a different number of samples.");
 
-  return dtd::models::GoertlerModel(x,y,c,g, intToNormFn(normid), intToThreshFn(threshfnid), intToSubspFn(subspfnid), intToCoeffEstim(estim_c));
+  if( inv_prec <= 0 )
+    throw std::runtime_error("make_model: inversion_precision is non-positive.");
+
+  return dtd::models::GoertlerModel(x,y,c,g, intToNormFn(normid), intToThreshFn(threshfnid), intToSubspFn(subspfnid), intToCoeffEstim(estim_c), inv_prec);
 }
 
 SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _epsilon, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate){

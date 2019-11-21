@@ -21,6 +21,10 @@ check_model <- function(model) {
      ) {
     stop("list \"model\" does not contain function enums (normfnid, threshfnid, subspfnid)");
   }
+  if( ! ( "inversion_precision" %in% names(model) ) ) {
+    stop("list \"model\" does not contain inversion_precision (constructed incorrectly)")
+  }
+
   # make sure these are integers:
   model$normfnid <- as.integer(model$normfnid)
   model$threshfnid <- as.integer(model$threshfnid)
@@ -46,6 +50,18 @@ empty_model <- function() {
   model$threshfnid <- as.integer(0)
   model$subspfnid <- as.integer(0)
   model$coeffestim <- as.integer(0)
+  model$inversion_precision <- as.numeric(1e-6)
+  return(model)
+}
+#' set_model_inversion_precision
+#'
+#' @param model input model, as constructed by, e.g., empty_model()
+#' @param precision positive number against which the norm is compared to and the program crashes if this value is exceeded.
+#'
+#' @return the updated model with the precision set.
+#'
+set_model_inversion_precision <- function(model, precision) {
+  model$inversion_precision <- as.numeric(precision)
   return(model)
 }
 #' set_model_normfunction
