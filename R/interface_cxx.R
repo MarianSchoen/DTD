@@ -62,8 +62,8 @@ empty_model <- function() {
 #'
 set_model_inversion_precision <- function(model, precision) {
   # safety check for precision
-  test.value <- test_numeric(
-    tetest.value = precision
+  test <- test_numeric(
+    test.value = precision
     , output.info = c("set_model_inversion_prcecision", "precision")
     , min = 0
     , max = Inf
