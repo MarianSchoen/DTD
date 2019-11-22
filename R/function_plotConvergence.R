@@ -150,8 +150,8 @@ ggplot_convergence <- function(
     if( (! is.null(rownames(fista.output$History))) && all(rownames(fista.output$History) %in% rownames(X.matrix))  ){
       X.matrix <- X.matrix[rownames(fista.output$History), ]
     }else{
-      print(rownames(fista.output$History))
-      print(rownames(X.matrix))
+      # print(rownames(fista.output$History))
+      # print(rownames(X.matrix))
       message("In ggplot_convergence: rownames('X.matrix') does not fit 'DTD.model' (rownames of History entry). Therefore convergence can not be shown on 'test.data'.")
       test.data <- NULL
     }
