@@ -74,7 +74,7 @@ include.in.X <- paste0("Type", 1:5)
 sample.X <- sample_random_X(
   included.in.X = include.in.X,
   pheno = indicator.vector,
-  exp.data = normalized.data,
+  expr.data = normalized.data,
   percentage.of.all.cells = perc.of.all.cells
 )
 X.matrix <- sample.X$X.matrix
@@ -91,7 +91,7 @@ train.mat <- remaining.mat[, train.samples]
 test.mat <- remaining.mat[, test.samples]
 indicator.train <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
 training.data <- mix_samples(
-  exp.data = train.mat,
+  expr.data = train.mat,
   pheno = indicator.train,
   included.in.X = include.in.X,
   n.samples = n.samples,
@@ -100,7 +100,7 @@ training.data <- mix_samples(
 )
 indicator.test <- indicator.vector[names(indicator.vector) %in% colnames(test.mat)]
 test.data <- mix_samples(
-  exp.data = test.mat,
+  expr.data = test.mat,
   pheno = indicator.test,
   included.in.X = include.in.X,
   n.samples = n.samples,
@@ -231,7 +231,7 @@ cat("```\n")
 sample.X <- sample_random_X(
   included.in.X = include.in.X,
   pheno = indicator.vector,
-  exp.data = normalized.data,
+  expr.data = normalized.data,
   percentage.of.all.cells = perc.of.all.cells
 )
 X.matrix <- sample.X$X.matrix
@@ -274,11 +274,11 @@ and averages them as described above. This is the recommended method for large s
 reference samples per cell type (in average below 10 samples per type) we recommend to multiply profiles with random quantities and modify each mixture with a multiplicative jitter.
 For both methods we provide functions within the DTD package.
 
-`mix_samples` randomly selects `n.per.mixture` profiles from `exp.data` and generates bulk profiles. 
+`mix_samples` randomly selects `n.per.mixture` profiles from `expr.data` and generates bulk profiles. 
 Additionally, it reports which profiles have been used and which cell types they were drawn from, resulting in a tissue matrix Y, and a corresponding composition matrix C. 
 The `mix_samples` function needs the following arguments:
 
-* exp.data: numeric matrix, with features as rows, and samples as columns. Here `train.mat`
+* expr.data: numeric matrix, with features as rows, and samples as columns. Here `train.mat`
 * pheno: named vector of strings, here `indicator.vector`
 * included.in.X: vector of strings, here `include.in.X`
 * n.samples: integer, how many in-silicio mixtures should be generated. 
@@ -295,7 +295,7 @@ cat("```\n")
 ```{r}
 indicator.train <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
 training.data <- mix_samples(
-  exp.data = train.mat,
+  expr.data = train.mat,
   pheno = indicator.train,
   included.in.X = include.in.X,
   n.samples = n.samples,
@@ -312,7 +312,7 @@ Using the same function we generate a test set, but this time we select single c
 ```{r}
 indicator.test <- indicator.vector[names(indicator.vector) %in% colnames(test.mat)]
 test.data <- mix_samples(
-  exp.data = test.mat,
+  expr.data = test.mat,
   pheno = indicator.test,
   included.in.X = include.in.X,
   n.samples = n.samples,
@@ -322,11 +322,11 @@ test.data <- mix_samples(
 ```
 
 
-The `mix_samples_with_jitter` function needs additionally a `prob.each` parameter. In the `mix_samples` function the average quantity for each cell type is its occurence in the `exp.data`. In the `mix_samples_with_jitter` function, the average expected quantity for each cell type is set via `prob.each`. `prob.each` must be a numeric vector, with the same length as `included.in.X`. 
+The `mix_samples_with_jitter` function needs additionally a `prob.each` parameter. In the `mix_samples` function the average quantity for each cell type is its occurence in the `expr.data`. In the `mix_samples_with_jitter` function, the average expected quantity for each cell type is set via `prob.each`. `prob.each` must be a numeric vector, with the same length as `included.in.X`. 
 
 ```{r}
 training.data.jitter <- mix_samples_with_jitter(
-  exp.data = train.mat,
+  expr.data = train.mat,
   prob.each = rep(1, length(include.in.X)), # default value
   n.samples = n.samples,
   pheno = indicator.train,

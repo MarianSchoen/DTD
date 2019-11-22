@@ -30,7 +30,7 @@ include.in.X <- paste0("Type", 1:5)
 sample.X <- sample_random_X(
   included.in.X = include.in.X,
   pheno = indicator.vector,
-  exp.data = normalized.data,
+  expr.data = normalized.data,
   percentage.of.all.cells = perc.of.all.cells
 )
 X.matrix <- sample.X$X.matrix
@@ -47,7 +47,7 @@ train.mat <- remaining.mat[, train.samples]
 test.mat <- remaining.mat[, test.samples]
 indicator.train <- indicator.vector[names(indicator.vector) %in% colnames(train.mat)]
 training.data <- mix_samples(
-  exp.data = train.mat,
+  expr.data = train.mat,
   pheno = indicator.train,
   included.in.X = include.in.X,
   n.samples = n.samples,
@@ -56,7 +56,7 @@ training.data <- mix_samples(
 )
 indicator.test <- indicator.vector[names(indicator.vector) %in% colnames(test.mat)]
 test.data <- mix_samples(
-  exp.data = test.mat,
+  expr.data = test.mat,
   pheno = indicator.test,
   included.in.X = include.in.X,
   n.samples = n.samples,
