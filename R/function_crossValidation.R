@@ -252,6 +252,8 @@ DTD_cv_lambda_R <- function(
 #' implementation restricts the result to be positive
 #'  (due to the optimization constraint \eqn{g_i \ge 0})
 #' @param ST.FUN string, sets the soft thresholding function.
+#' @param inv.precision numeric, for the least squares solution (X^T G X)^-1
+#' must be inverted.
 #'
 #' @return list of length 2:
 #' \itemize{
@@ -274,6 +276,7 @@ DTD_cv_lambda_cxx <- function(
   NORM.FUN = "identity",
   NESTEROV.FUN = "positive",
   ST.FUN = "softmax",
+  inv.precision = 1e-6,
   ...
   ) {
   DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)
@@ -295,6 +298,20 @@ DTD_cv_lambda_cxx <- function(
   if( ! is.character(ST.FUN) ) {
     stop("ST.FUN must be a character string when using the cxx implementation (use the R impl to use user defined functions).")
   }
+
+  if(any(is.na(inv.precision))){
+    inv.prec.not.set <- TRUE
+    inv.precision <- 1e-12
+  }else{
+    inv.prec.not.set <- FALSE
+    test <- test_numeric(
+      test.value = inv.precision
+      , output.info = c("DTD_cv_lambda_cxx", "inv.precision")
+      , min = 0
+      , max = Inf
+    )
+  }
+
   # short hand:
   train.Y <- train.data.list$mixtures
   bucket.indicator <- make_buckets(
@@ -323,6 +340,8 @@ DTD_cv_lambda_cxx <- function(
   model <- set_model_normfunction(model, NORM.FUN)
   model <- set_model_subspacefunction(model, NESTEROV.FUN)
   model <- set_model_threshfunction(model, ST.FUN)
+  model <- set_model_inversion_precision(model, inv.precision)
+
   # Start of cross validation:
   for (lambda in lambda.seq) {
     if (cv.verbose) {
@@ -426,6 +445,12 @@ DTD_cv_lambda_cxx <- function(
   model$tweak <- tweak.start.end.model
   model$Y <- train.data.list$mixtures
   model$C <- train.data.list$quantities
+
+  # to ensure that after the cross validation,
+  # a slightly to small precision does not crashes to model
+  if(inv.prec.not.set){
+    model <- set_model_inversion_precision(1e-10)
+  }
 
   bestModel <- descent_generalized_fista_cxx(
     model,
