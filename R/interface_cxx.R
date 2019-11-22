@@ -61,6 +61,13 @@ empty_model <- function() {
 #' @return the updated model with the precision set.
 #'
 set_model_inversion_precision <- function(model, precision) {
+  # safety check for precision
+  test.value <- test_numeric(
+    tetest.value = precision
+    , output.info = c("set_model_inversion_prcecision", "precision")
+    , min = 0
+    , max = Inf
+  )
   model$inversion_precision <- as.numeric(precision)
   return(model)
 }
@@ -146,7 +153,16 @@ set_model_coeff_estimation <- function(model, coeffestimname) {
 #' @export
 #' @useDynLib DTD, .registration = TRUE
 #'
-solve_fista_goertler <- function(model, lambda = 0.01, maxiter = 100, stop.crit.threshold = 1e-5, save.all.tweaks = FALSE, learningrate = NA, linesearchspeed = 2.0, cycles = 5, restarts = TRUE) {
+solve_fista_goertler <- function(
+  model,
+  lambda = 0.01,
+  maxiter = 100,
+  stop.crit.threshold = 1e-5,
+  save.all.tweaks = FALSE,
+  learningrate = NA,
+  linesearchspeed = 2.0,
+  cycles = 5,
+  restarts = TRUE) {
   # check input params...
   check_model(model)
   if( ! (is.numeric(lambda) && lambda >= 0.0 )) {
