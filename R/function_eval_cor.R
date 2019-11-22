@@ -126,6 +126,9 @@ evaluate_cor <- function(X.matrix = NA,
         stop("In evaluate_cor: DTD.model does not fit")
       }
     }
+    if ("estimate.c.type" %in% names(DTD.model)){
+      estimate.c.type <- DTD.model$estimate.c.type
+    }
   }else {
     gamma.vec <- DTD.model
   }
