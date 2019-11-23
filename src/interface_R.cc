@@ -100,7 +100,7 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   return dtd::models::GoertlerModel(x,y,c,g, intToNormFn(normid), intToThreshFn(threshfnid), intToSubspFn(subspfnid), intToCoeffEstim(estim_c), inv_prec);
 }
 
-SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _epsilon, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate){
+SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _epsilon, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate, SEXP _verbose ){
   double lambda = REAL(_lambda)[0];
   int maxiter = INTEGER(_maxiter)[0];
   double epsilon = REAL(_epsilon)[0];
@@ -112,6 +112,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
   double linesearchspeed = REAL(_linesearchspeed)[0];
   int cycles = INTEGER(_cycles)[0];
   bool restarts = LOGICAL(_restarts)[0];
+  bool verbose = LOGICAL(_verbose)[0];
 
 
   try {
@@ -141,7 +142,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
     // 0 is the initial value (iter - 1)
     int iter = 1;
     std::function<void(dtd::models::GoertlerModel const & , vec const & )> record_solve =
-      [&conv_vec,&history,&iter,saveHistory](dtd::models::GoertlerModel const & m, vec const & paramvec) {
+      [&conv_vec,&history,&iter,saveHistory,verbose](dtd::models::GoertlerModel const & m, vec const & paramvec) {
         if( iter < conv_vec.size() )
           conv_vec(iter) = m.evaluate(paramvec);
         if( saveHistory ) {
@@ -150,6 +151,11 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
           if( iter < history.rows() ) {
             history.row(iter) = paramvec;
           }
+        }
+        if( verbose ) {
+          Rprintf("********************************************************************************\n");
+          Rprintf("* iteration %5d", iter);
+          Rprintf("********************************************************************************\n");
         }
         iter++;
       };
@@ -249,7 +255,7 @@ SEXP dtd_nnls(SEXP mat, SEXP vec) {
 }
 extern "C" {
   static const R_CallMethodDef callMethods[] = {
-                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 10},
+                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 11},
                                                 { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
                                                 { "_dtd_estimate_c", (DL_FUNC)&dtd_estimate_c, 1},
                                                 { "_nnls", (DL_FUNC)&dtd_nnls, 2},

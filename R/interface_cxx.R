@@ -162,7 +162,8 @@ solve_fista_goertler <- function(
   learningrate = NA,
   linesearchspeed = 2.0,
   cycles = 5,
-  restarts = TRUE) {
+  restarts = TRUE,
+  verbose = FALSE ) {
   # check input params...
   check_model(model)
   if( ! (is.numeric(lambda) && lambda >= 0.0 )) {
@@ -184,6 +185,7 @@ solve_fista_goertler <- function(
     as.integer(cycles),
     as.logical(restarts),
     (! is.na(learningrate)),
+    as.logical(verbose),
     PACKAGE="DTD"
   )
 
