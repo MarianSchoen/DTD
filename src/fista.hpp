@@ -35,6 +35,7 @@ namespace dtd {
     private:
       vec m_grad;
       ftype m_learning_rate, m_linesearch_speed;
+      ftype m_delta_y_1, m_delta_y_2;
       bool m_restarts;
       int m_cyclelength, m_nesterov_counter;
     public:
@@ -53,6 +54,15 @@ namespace dtd {
         if( learningrate <= 0 )
           throw std::runtime_error("non-positive learning rate.");
         m_learning_rate = learningrate;
+      }
+      int getNesterovCounter() const {
+        return m_nesterov_counter;
+      }
+      ftype getDeltaYBeforeNesterov() const {
+        return m_delta_y_1;
+      }
+      ftype getDeltaYAfterNesterov() const {
+        return m_delta_y_2;
       }
       ftype getLearningRate() const { return m_learning_rate; }
       void setLearningAuto(Model const & m) {
@@ -128,7 +138,7 @@ namespace dtd {
             m_nesterov_counter = 2;
         }
 
-        ftype delta_y_1 = fy_old - fy;
+        m_delta_y_1 = fy_old - fy;
 
         callback(model, g_new);
         fy_old = fy;
@@ -143,10 +153,10 @@ namespace dtd {
           testy(i) = model.evaluate(testmat.row(i));
         }
         fy = testy.minCoeff(&minindex);
-        ftype delta_y_2 = fy_old - fy;
+        m_delta_y_2 = fy_old - fy;
         y_vec = testmat.row(minindex);
 
-        if( std::max(delta_y_1, delta_y_2) < epsilon && delta_y_1 != 0 && delta_y_2 != 0 )
+        if( std::max(m_delta_y_1, m_delta_y_2) < epsilon && m_delta_y_1 != 0 && m_delta_y_2 != 0 )
           break; // converged.
       }
       model.norm_constraint(g_new);

@@ -1,10 +1,13 @@
 #include "utils.hpp"
 #include <cmath>
 #include <limits>
+#include <iostream>
 namespace dtd {
   namespace stat {
     ftype var(vec const & v) {
       vec vm = v.array() - v.mean();
+      if( ! vm.array().isFinite().all() )
+        throw std::runtime_error("variance is not finite (nan / inf?)");
       auto n = v.size();
       if( n <= 1 )
         throw std::runtime_error("cannot compute variance for sample sizes < 2.");
@@ -29,7 +32,7 @@ namespace dtd {
       if( va < a.size()*std::numeric_limits<ftype>::epsilon() ||
           vb < b.size()*std::numeric_limits<ftype>::epsilon() )
         throw std::runtime_error("cor: cannot compute correlation of things that don't vary.");
-      return cov(a, b) / std::sqrt(var(a)*var(b));
+      return cov(a, b) / std::sqrt(va*vb);
     }
   }
 }

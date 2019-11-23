@@ -497,6 +497,8 @@ descent_generalized_fista <- function(tweak.vec,
 #'  them to find the best step size.
 #' @param use.restart logical, restart the algorithm if the update was
 #' not a descent step.
+#' @param verbose logical, if set to true, will output information during
+#' iteration.
 #'
 #' @return a list that contains the trained model and its History
 descent_generalized_fista_cxx <- function(model,
@@ -508,6 +510,7 @@ descent_generalized_fista_cxx <- function(model,
                                           line.search.speed = 2.0,
                                           cycles = 5,
                                           use.restart = TRUE,
+                                          verbose = FALSE,
                                           ...) {
-  return(solve_fista_goertler(model, lambda, maxit, stop.crit.threshold, save.all.tweaks, learning.rate, line.search.speed, cycles, use.restart))
+  return(solve_fista_goertler(model, lambda, maxit, stop.crit.threshold, save.all.tweaks, learning.rate, line.search.speed, cycles, use.restart, verbose))
 }

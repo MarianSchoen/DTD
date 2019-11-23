@@ -11,9 +11,9 @@ library(tictoc)
 lambda.len <- 4
 n.folds <- 2
 ###
-number.types <- 25
-n.features <- 100
-n.per.type <- 10
+number.types <- 5
+n.features <- 200
+n.per.type <- 20
 n.per.mixtures <- 10
 maxit <- 25
 n.samples <- n.features
@@ -100,7 +100,8 @@ names(start.tweak) <- rownames(X.matrix)
 #   )
 # )
 
-for(esti.type in c("non_negative", "direct")){
+# "non_negative", 
+for(esti.type in c("direct")){
   tic(esti.type)
   model <- train_deconvolution_model(
     tweak = start.tweak,
@@ -111,10 +112,10 @@ for(esti.type in c("non_negative", "direct")){
     maxit = maxit,
     n.folds = 10,
     lambda.len = 10,
-    cv.verbose = FALSE,
-    verbose = FALSE,
+    cv.verbose = TRUE,
+    verbose = TRUE,
     NORM.FUN = "identity",
-    use.implementation = "cxx"
+    use.implementation = "R"
   )
   toc()
 }
