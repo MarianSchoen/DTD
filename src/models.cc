@@ -120,8 +120,10 @@ namespace dtd {
         ftype mean_c     = m_c.row(icell).mean();
         if( std_c_hat <= c_hat.rows()*std::numeric_limits<ftype>::epsilon() ||
             std_c     <= m_c.rows()*std::numeric_limits<ftype>::epsilon() )
-          throw std::runtime_error("grad_explicit_inverse: cannot compute gradient, because there is no variance in C over the samples.");
-        A.row(icell) = (stat::cov(m_c.row(icell), c_hat.row(icell)) / (m_nsamples * std_c_hat * std_c_hat) * (c_hat.row(icell).array() - mean_c_hat) - (m_c.row(icell).array() - mean_c)/m_nsamples) / (std_c * std_c_hat);
+          // no variance in C, set sigma = 1, cov = 1:
+          A.row(icell) = (c_hat.row(icell).array() - mean_c_hat) - (m_c.row(icell).array() - mean_c)/m_nsamples;
+        else
+          A.row(icell) = (stat::cov(m_c.row(icell), c_hat.row(icell)) / (m_nsamples * std_c_hat * std_c_hat) * (c_hat.row(icell).array() - mean_c_hat) - (m_c.row(icell).array() - mean_c)/m_nsamples) / (std_c * std_c_hat);
       }
       // TODO: speed this up by ONLY computing the diagonal
       mat tmp = (m_y - m_x*xtgxi*m_x.transpose()*g.asDiagonal()*m_y)*A.transpose()*xtgxi*m_x.transpose();
