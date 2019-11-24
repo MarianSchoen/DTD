@@ -129,6 +129,7 @@ namespace dtd {
           y_vec = g_new;
           g_new = testmat.row(minindex);
           model.norm_constraint(g_new);
+          m_nesterov_counter += 1;
         } else {
           // ascent
           // reset f_y to its previous value
