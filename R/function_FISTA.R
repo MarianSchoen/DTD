@@ -343,6 +343,7 @@ descent_generalized_fista <- function(tweak.vec,
 
     # check if the last step was a descent step:
     if((rev(converge_vec)[1] - eval) > 0){
+      nesterov.counter <- nesterov.counter + 1
       # if it was a descent step, update tweak.vec
       tweak.vec <- u_vec
     }else{
@@ -408,9 +409,9 @@ descent_generalized_fista <- function(tweak.vec,
         graphics::plot(1:iter, log(-converge_vec))
       }
       # stop crit output
-      cat("change in g, only gradient step: ", change.last.iter.before.nesterov, "\n")
-      cat("change in g, only nesterov step: ", change.last.iter.after.nesterov, "\n")
-      cat("change in g: ", change.last.iter, "\n")
+      cat("change of L, only gradient step: ", change.last.iter.before.nesterov, "\n")
+      cat("change of L, only nesterov step: ", change.last.iter.after.nesterov, "\n")
+      cat("change of L: ", change.last.iter, "\n")
     }
 
 
