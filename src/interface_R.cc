@@ -167,6 +167,15 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
 
     solver.solve(model, maxiter, epsilon, lambda, record_solve);
 
+    if( verbose ) {
+      Rprintf("********************************************************************************\n");
+      if( iter == maxiter )
+        Rprintf("* FISTA did not converge to %e during %d iterations of FISTA\n", epsilon, iter);
+      else
+        Rprintf("* FISTA successfully converged to %e after %d iterations.\n", epsilon, iter);
+      Rprintf("********************************************************************************\n");
+    }
+
     history.conservativeResize(iter, Eigen::NoChange_t());
     conv_vec.conservativeResize(iter);
 
