@@ -276,7 +276,7 @@ DTD_cv_lambda_cxx <- function(
   NORM.FUN = "identity",
   NESTEROV.FUN = "positive",
   ST.FUN = "softmax",
-  inv.precision = 1e-6,
+  inv.precision = 1e-12,
   ...
   ) {
   DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)

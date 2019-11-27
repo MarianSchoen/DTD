@@ -102,7 +102,7 @@ descent_generalized_fista <- function(tweak.vec,
                                       use.restart=TRUE,
                                       verbose=FALSE,
                                       NESTEROV.FUN = "positive",
-                                      stop.crit.threshold = 1e-5
+                                      stop.crit.threshold = 1e-6
                                       ){
 
   # safety check: F.GRAD.FUN
@@ -505,7 +505,7 @@ descent_generalized_fista <- function(tweak.vec,
 descent_generalized_fista_cxx <- function(model,
                                           lambda = 0.01,
                                           maxit = 100,
-                                          stop.crit.threshold = 1e-5,
+                                          stop.crit.threshold = 1e-6,
                                           save.all.tweaks = FALSE,
                                           learning.rate = NA,
                                           line.search.speed = 2.0,
