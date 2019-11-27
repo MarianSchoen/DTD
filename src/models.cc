@@ -86,7 +86,8 @@ namespace dtd {
 
       try {
         for( int icell = 0; icell < m_ncells; ++icell ){
-          res -= stat::cor(m_c.row(icell), c_hat.row(icell));
+          if ( stat::std(c_hat.row(icell)) > c_hat.rows()*std::numeric_limits<ftype>::epsilon() )
+            res -= stat::cor(m_c.row(icell), c_hat.row(icell));
         }
       } catch(...) {
         throw;
