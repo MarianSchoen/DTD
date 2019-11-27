@@ -627,7 +627,7 @@ catch <- train_deconvolution_model(
   X.matrix = X.matrix,
   train.data.list = training.data,
   test.data.list = test.data,
-  estimate.c.type = "direct"
+  estimate.c.type = "direct"#, verbose = TRUE
 )
 
 
