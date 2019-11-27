@@ -236,13 +236,15 @@ cxx_estimate_c <- function(model) {
 #'
 #' @param A numeric matrix
 #' @param b vector with same length as 'nrow(A)'
+#' @param eps maximum allowed magnitude of the "zero" coefficients.
+#' @param maxiter maximum number of iterations.
 #'
 #' @return x
 #'
 #' @export
 #' @useDynLib DTD, .registration = TRUE
 #'
-cxx_nnls <- function(A, b) {
+cxx_nnls <- function(A, b, eps = 1e-12, maxiter = 10000) {
   m = nrow(A)
   n = ncol(A)
   if( length(b) != m ) {
@@ -250,7 +252,9 @@ cxx_nnls <- function(A, b) {
   }
   result <- .Call("_nnls",
                   as.matrix(A),
-                  as.vector(b)
+                  as.vector(b),
+                  eps,
+                  maxiter
                   )
   return(result)
 }

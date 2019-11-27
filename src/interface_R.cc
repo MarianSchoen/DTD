@@ -251,11 +251,13 @@ SEXP dtd_evaluate_model_goertler(SEXP model_) {
   }
   return R_NilValue;
 }
-SEXP dtd_nnls(SEXP mat, SEXP vec) {
+SEXP dtd_nnls(SEXP mat, SEXP vec, SEXP eps, SEXP maxiter_) {
   try {
     MatrixXd a = getMatrixFromR(mat);
     MatrixXd b = getVectorFromR(vec);
-    auto c_res = nnls(a, b);
+    double epsilon = REAL(eps)[0];
+    int maxiter = INTEGER(maxiter_)[0];
+    auto c_res = nnls(a, b, epsilon, maxiter);
     SEXP r_res = PROTECT(allocVector(REALSXP, c_res.size()));
     for( int i = 0; i < c_res.size(); ++i) {
       REAL(r_res)[i] = c_res(i);
@@ -272,7 +274,7 @@ extern "C" {
                                                 { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 11},
                                                 { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
                                                 { "_dtd_estimate_c", (DL_FUNC)&dtd_estimate_c, 1},
-                                                { "_nnls", (DL_FUNC)&dtd_nnls, 2},
+                                                { "_nnls", (DL_FUNC)&dtd_nnls, 3},
                                                 {NULL, NULL, 0}
   };
   void R_init_DTD(DllInfo* info) {

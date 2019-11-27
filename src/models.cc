@@ -23,7 +23,7 @@ namespace dtd {
       if( g.minCoeff() < 0 )
         throw std::runtime_error("invxtgx: g has negative entries and thus, x^T G x is not positive semi-definite and cannot be inverted.");
       mat xtgx = x.transpose()*g.asDiagonal()*x;
-      // inversion happens here:
+      // inversion happens here, using Cholesky decomposition of the positive definite matrix xtgx:
       mat xi = xtgx.llt().solve(mat::Identity(x.cols(), x.cols()));
       // the following is just a check. it is a bit costly, but not overly.
       const std::size_t n = x.cols();
@@ -48,11 +48,11 @@ namespace dtd {
     mat estimate_c_direct(mat const & x, mat const & y, vec const & g, mat const & xtgxi) {
       return xtgxi*x.transpose()*g.asDiagonal()*y;
     }
-    mat estimate_c_nnls(mat const & x, mat const & y, vec const & g) {
+    mat estimate_c_nnls(mat const & x, mat const & y, vec const & g, ftype eps = 1000*std::numeric_limits<ftype>::epsilon(), int maxiter = 10000) {
       mat gx = g.asDiagonal()*x;
       mat res = mat(x.cols(), y.cols());
       for( int i = 0; i < y.cols(); ++i ){
-        res.col(i) = nnls(gx, g.asDiagonal()*y.col(i));
+        res.col(i) = nnls(gx, g.asDiagonal()*y.col(i), eps, maxiter);
       }
       return res;
     }
@@ -61,7 +61,7 @@ namespace dtd {
         mat xtgxi = invxtgx(m_x, g, inv_prec);
         return estimate_c_direct(m_x, m_y, g, xtgxi);
       } else if( m_estim_c == CoeffEstimation::NNLS ){
-        return estimate_c_nnls(m_x, m_y, g);
+        return estimate_c_nnls(m_x, m_y, g, inv_prec, 10000); // <- a large random number (maxiter)
       } else {
         throw std::runtime_error("unimplemented estimate_C function.");
       }

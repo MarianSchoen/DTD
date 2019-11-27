@@ -43,7 +43,7 @@ ftype max_coeff_that_is_in_set( vec w, std::set<int> indices, Eigen::Index *j) {
   *j = itmp(k);
   return res;
 }
-vec nnls(mat const & a, vec const & y, ftype eps_) {
+vec nnls(mat const & a, vec const & y, ftype eps_, int maxiter) {
   const auto m = a.rows();
   const auto n = a.cols();
   ftype eps = m*eps_;
@@ -58,8 +58,12 @@ vec nnls(mat const & a, vec const & y, ftype eps_) {
   vec w = a.transpose()*(y - a*x);
 
   Eigen::Index j;
+  int iter = 0;
   while( (! r.empty() ) && max_coeff_that_is_in_set(w, r, &j) > eps ) {
     assert( r.count(j) == 0 );
+    iter++;
+    if( iter > maxiter && maxiter > 0 ) // if maxiter is set to <= 0, ignore it.
+      throw std::runtime_error("maximum number of iterations exceeded in nnls.");
     p.insert(j);
     r.erase(j);
 
