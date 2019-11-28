@@ -241,7 +241,9 @@ train_deconvolution_model <- function(
   catch$estimate.c.type <- estimate.c.type
 
   pics <- vector(mode = "list")
-  pics$cv <- DTD::ggplot_cv(DTD.model = catch)
+  if("cv.obj" %in% names(catch)){
+    pics$cv <- DTD::ggplot_cv(DTD.model = catch)
+  }
   if(is.null(test.data.list)){
     pics$convergence <- DTD::ggplot_convergence(
       estimate.c.type = estimate.c.type
@@ -258,8 +260,9 @@ train_deconvolution_model <- function(
       )
   }
 
-  pics$path <- DTD::ggplot_gpath(catch)$gPath
-
+  if("History" %in% names(catch)){
+    pics$path <- DTD::ggplot_gpath(catch)$gPath
+  }
   pics$histogram <- DTD::ggplot_ghistogram(DTD.model = catch)
 
   pics$Xheatmap <- DTD::ggplot_heatmap(DTD.model = catch,
