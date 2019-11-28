@@ -12,10 +12,11 @@
 #' calling either the R or C++ implementation:
 #' \code{\link{DTD_cv_lambda_R}} and \code{\link{DTD_cv_lambda_cxx}}.
 #'
-#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the
+#' @param lambda.seq numeric vector or NULL or "none": Over this series of lambdas the
 #' FISTA will be optimized. If 'lambda.seq' is set to NULL, a generic series of
 #' lambdas - depending on the dimensions of the training set -
-#' will be generated.
+#' will be generated. If 'lambda.seq' is "none", no cross validation is done.
+#' Only one model with lambda = 0 is trained on the complete data set.
 #' @param tweak.start numeric vector, starting vector for the DTD algorithm.
 #' @param n.folds integer, number of buckets in the cross validation.
 #' @param lambda.length integer, how many lambdas will be generated
@@ -50,7 +51,7 @@
 #'
 #' @export
 DTD_cv_lambda_R <- function(
-  lambda.seq = NULL,
+  lambda.seq = "none",
   tweak.start,
   n.folds = 5,
   lambda.length = 10,
@@ -70,6 +71,30 @@ DTD_cv_lambda_R <- function(
     , cv.verbose = cv.verbose
     , warm.start = warm.start
     )
+
+  if( lambda.seq[1] == "none" ){
+    the.args <- list(...)
+    if(!'save.all.tweaks' %in% names(the.args)){ # save.all.tweaks is not set
+      bestModel <- descent_generalized_fista(
+        lambda = 0,
+        tweak.vec = tweak.start,
+        F.GRAD.FUN = F.GRAD.FUN,
+        EVAL.FUN = EVAL.FUN,
+        save.all.tweaks = TRUE,
+        ...
+      )
+    } else { # save.all.tweaks is not set
+      bestModel <- descent_generalized_fista(
+        lambda = 0,
+        tweak.vec = tweak.start,
+        F.GRAD.FUN = F.GRAD.FUN,
+        EVAL.FUN = EVAL.FUN,
+        ...
+      )
+    }
+
+    return(list(best.model = bestModel))
+  }
 
   # First, all possible training samples get assigned to a bucket:
   # extract Y:
@@ -210,10 +235,11 @@ DTD_cv_lambda_R <- function(
 #'
 #' \code{\link{DTD_cv_lambda_R}} and \code{\link{DTD_cv_lambda_cxx}}.
 #'
-#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the
+#' @param lambda.seq numeric vector or NULL or "none": Over this series of lambdas the
 #' FISTA will be optimized. If 'lambda.seq' is set to NULL, a generic series of
 #' lambdas - depending on the dimensions of the training set -
-#' will be generated.
+#' will be generated. If 'lambda.seq' is "none", no cross validation is done.
+#' Only one model with lambda = 0 is trained on the complete data set.
 #' @param tweak.start numeric vector, starting vector for the DTD algorithm.
 #' @param X.matrix numeric matrix, with features/genes as rows,
 #' and cell types as column. Each column of X.matrix is a reference
@@ -264,7 +290,7 @@ DTD_cv_lambda_R <- function(
 #'
 #' @export
 DTD_cv_lambda_cxx <- function(
-  lambda.seq = NULL,
+  lambda.seq = "none",
   tweak.start,
   X.matrix,
   n.folds = 5,
@@ -280,6 +306,42 @@ DTD_cv_lambda_cxx <- function(
   ...
   ) {
   DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds, lambda.length, train.data.list, cv.verbose, warm.start)
+
+  if(!is.null(lambda.seq)){
+    if( lambda.seq[1] == "none" ){
+      # prepare the model:
+      model <- empty_model()
+      model$X <- X.matrix
+      model <- set_model_coeff_estimation(model, estimate.c.type)
+      model <- set_model_normfunction(model, NORM.FUN)
+      model <- set_model_subspacefunction(model, NESTEROV.FUN)
+      model <- set_model_threshfunction(model, ST.FUN)
+      model <- set_model_inversion_precision(model, inv.precision)
+
+      model$Y <- train.data.list$mixtures
+      model$C <- train.data.list$quantities
+      model$tweak <- tweak.start
+
+      the.args <- list(...)
+      if(!'save.all.tweaks' %in% names(the.args)){
+        bestModel <- descent_generalized_fista_cxx(
+          model = model,
+          lambda = 0,
+          save.all.tweaks = TRUE,
+          ...
+        )
+      }else{
+        bestModel <- descent_generalized_fista_cxx(
+          model = model,
+          lambda = 0,
+          ...
+        )
+      }
+      return(list(best.model = bestModel))
+    }
+  }
+
+
   if( ! is.numeric(X.matrix) ||
       ! is.matrix(X.matrix) ||
       nrow(X.matrix) != nrow(train.data.list$mixtures) ||
