@@ -89,7 +89,7 @@
 #' }
 descent_generalized_fista <- function(tweak.vec,
                                       lambda=0,
-                                      maxit=1e2,
+                                      maxit=5e2,
                                       learning.rate = NA,
                                       F.GRAD.FUN,
                                       ST.FUN = "softmax",
@@ -102,7 +102,7 @@ descent_generalized_fista <- function(tweak.vec,
                                       use.restart=TRUE,
                                       verbose=FALSE,
                                       NESTEROV.FUN = "positive",
-                                      stop.crit.threshold = 1e-6
+                                      stop.crit.threshold = 1e-13
                                       ){
 
   # safety check: F.GRAD.FUN
@@ -504,8 +504,8 @@ descent_generalized_fista <- function(tweak.vec,
 #' @return a list that contains the trained model and its History
 descent_generalized_fista_cxx <- function(model,
                                           lambda = 0.01,
-                                          maxit = 100,
-                                          stop.crit.threshold = 1e-6,
+                                          maxit = 500,
+                                          stop.crit.threshold = 1e-13,
                                           save.all.tweaks = FALSE,
                                           learning.rate = NA,
                                           line.search.speed = 2.0,
