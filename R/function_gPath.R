@@ -78,7 +78,7 @@ ggplot_gpath <- function(DTD.model,
   # for gPath, the following elements are needed:
   # - 'History' of learning
   # Either it is provided as a list ...
-  if(is.list(DTD.model)){
+  if(is.list(DTD.model)){ # model is provided as list. Therefore, select 'best.model':
     if("best.model" %in% names(DTD.model)){
       fista.output <- DTD.model$best.model
     }else{
@@ -88,18 +88,20 @@ ggplot_gpath <- function(DTD.model,
         fista.output <- DTD.model
       }
     }
-    f.history <- fista.output$History
-    tweak <- f.history[, ncol(f.history)]
+    if("History" %in% names(DTD.model)){
+      f.history <- fista.output$History
+    }else{
+      stop("In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)")
+    }
   }else{
     # ... or only the History matrix is provided:
     if(!is.matrix(DTD.model)){
       stop("In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)")
     }else{
       f.history <- DTD.model
-      tweak <- f.history[, ncol(f.history)]
     }
   }
-
+  tweak <- f.history[, ncol(f.history)]
   # safety check: G.TRANSFORM.FUN
   useable.g.trans.fun <- try(G.TRANSFORM.FUN(tweak), silent = TRUE)
   if(any(grepl(x = useable.g.trans.fun, pattern = "Error")) || any(!is.numeric(useable.g.trans.fun))){
@@ -149,8 +151,8 @@ ggplot_gpath <- function(DTD.model,
 
   # For easy visualization with the ggplot2 package we need the f.history matrix in long format:
   f.h.melt <- reshape2::melt(f.history,
-    varnames = c("geneName", "iteration"),
-    value.name = "g"
+                             varnames = c("geneName", "iteration"),
+                             value.name = "g"
   )
 
   # add the "q"unatile "p"er "g"ene information (with the names, not the positions!)
@@ -188,5 +190,6 @@ ggplot_gpath <- function(DTD.model,
   # return ret (including the picture without legend, and the legend if required)
   return(ret)
 }
+
 
 log10p1 <- function(g){return(log10(g+1))}
