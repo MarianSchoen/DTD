@@ -81,17 +81,15 @@ ggplot_gpath <- function(DTD.model,
   if(is.list(DTD.model)){ # model is provided as list. Therefore, select 'best.model':
     if("best.model" %in% names(DTD.model)){
       fista.output <- DTD.model$best.model
+      if("History" %in% names(fista.output)){
+        f.history <- fista.output$History
+      }
     }else{
       if(!"History" %in% names(DTD.model)){
         stop("In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)")
       }else{
         fista.output <- DTD.model
       }
-    }
-    if("History" %in% names(DTD.model)){
-      f.history <- fista.output$History
-    }else{
-      stop("In ggplot_gpath: 'DTD.model' can not be used (provide a DTD.model with 'History' entry)")
     }
   }else{
     # ... or only the History matrix is provided:
