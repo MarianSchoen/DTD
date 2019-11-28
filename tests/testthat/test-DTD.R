@@ -798,20 +798,6 @@ context("Test desecent_generalized_fista ")
 # no test, as I think, if the arguments are invalid, they have been caught before:
 # identiy, n2normed?
 
-context("Test ggplot_cv ")
-test_that("ggplot_cv ", {
-  expect_error(
-    ggplot_cv(
-      DTD.model = catch,
-      title = "iwas",
-      LAMBDA.TRANS.FUN = as.character(),
-      x.lab = "1",
-      y.lab = "2"
-    ),
-    "In ggplot_cv: provided 'LAMBDA.TRANS.FUN' does not return a numeric, if called with '2'"
-  )
-})
-
 
 context("Test ggplot_gpath ")
 test_that("ggplot_gpath ", {
@@ -1108,6 +1094,25 @@ test_that("ggplot_gpath ", {
 
 context("Test ggplot_cv ")
 test_that("ggplot_cv ", {
+  catch <- train_deconvolution_model(
+    tweak = start.tweak,
+    X.matrix = X.matrix,
+    train.data.list = training.data,
+    test.data.list = test.data,
+    lambda.seq = NULL,
+    estimate.c.type = "direct"#, verbose = TRUE
+  )
+
+  expect_error(
+    ggplot_cv(
+      DTD.model = catch,
+      title = "iwas",
+      LAMBDA.TRANS.FUN = as.character(),
+      x.lab = "1",
+      y.lab = "2"
+    ),
+    "In ggplot_cv: provided 'LAMBDA.TRANS.FUN' does not return a numeric, if called with '2'"
+  )
   expect_error(
     ggplot_cv(
       DTD.model = list(),
@@ -1142,6 +1147,7 @@ test_that("ggplot_cv ", {
     "In ggplot_cv: 'upper.x.axis.info' must either be 'non-zero' or 'geometric-mean'"
   )
 })
+
 
 context("Test ggplot_heatmap ")
 test_that("ggplot_heatmap ", {
