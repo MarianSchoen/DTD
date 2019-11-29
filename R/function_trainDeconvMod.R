@@ -260,7 +260,7 @@ train_deconvolution_model <- function(
       )
   }
 
-  if("History" %in% names(catch)){
+  if("History" %in% names(catch$best.model)){
     pics$path <- DTD::ggplot_gpath(catch)$gPath
   }
   pics$histogram <- DTD::ggplot_ghistogram(DTD.model = catch)
