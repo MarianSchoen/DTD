@@ -5,41 +5,52 @@
 \title{Plot loss curve}
 \usage{
 ggplot_convergence(DTD.model, X.matrix = NA, test.data = NULL,
-  estimate.c.type, title = "")
+  estimate.c.type = "decide.on.model", title = "")
 }
 \arguments{
-\item{DTD.model}{list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
-or \code{\link{descent_generalized_fista}}.}
+\item{DTD.model}{either a numeric vector with length of nrow(X), or a list
+returned by \code{\link{train_deconvolution_model}},
+\code{\link{DTD_cv_lambda_cxx}}, or \code{\link{descent_generalized_fista}}.}
 
-\item{X.matrix}{numeric matrix with cells as columns, and features as rows.
-Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-includes the reference matrix X (default for \code{\link{train_deconvolution_model}})}
+\item{X.matrix}{numeric matrix, with features/genes as rows,
+and cell types as column. Each column of X.matrix is a reference
+expression profile. A trained DTD model includes X.matrix, it has been
+trained on. Therefore, X.matrix should only be set, if the 'DTD.model'
+is not a DTD model.}
 
-\item{test.data}{list of two matrices, named "mixtures" and "quantities".
-For examples see \code{\link{mix_samples}}, \code{\link{mix_samples_with_jitter}}
-or the package vignette `browseVignettes("DTD")`.}
+\item{test.data}{list, with two entries, a numeric matrix each,
+named 'mixtures' and 'quantities' For examples see \code{\link{mix_samples}},
+\code{\link{mix_samples_with_jitter}} or the package vignette
+`browseVignettes("DTD")`.}
 
-\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
-\eqn{arg min_C ||diag(g)(Y - XC)||_2}. \cr If estimate.c.type is set to "direct" there is no regularization
-(see \code{\link{estimate_c}}),\cr
-if estimate.c.type is set to "non_negative" the estimates "C"
-must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
+\item{estimate.c.type}{string, either "non_negative", or "direct".
+Indicates how the algorithm finds the solution of
+\eqn{arg min_C ||diag(g)(Y - XC)||_2}.
+\itemize{
+   \item If 'estimate.c.type' is set to "direct",
+ there is no regularization (see \code{\link{estimate_c}}),
+   \item if 'estimate.c.type' is set to "non_negative",
+ the estimates "C" must not be negative (non-negative least squares)
+(see (see \code{\link{estimate_nn_c}}))
+}}
 
-\item{title}{string, additionally title (default "")}
+\item{title}{string, additionally title}
 }
 \value{
 ggplot object
 }
 \description{
-The "ggplot_convergence" function uses ggplot2 and reshape2 to visualize the decrease of the loss-function after
-a model has been trained.
+The "ggplot_convergence" function uses ggplot2 and reshape2 to visualize the
+decrease of the loss-function after a model has been trained.
 }
 \details{
-As input parameter it needs the output of \code{\link{train_deconvolution_model}}, an DTD cross validation object,
+As input parameter it needs the output of
+\code{\link{train_deconvolution_model}}, an DTD cross validation object,
 or the output of an FISTA optimization run.
 If the `DTD.model` includes a 'History' entry, and a `test.data` is available
-the loss function can be evaluated for each intermediate steps of the optimization.
-Then, the resulting picture includes two convergence paths, one for the training data,
-and one for the test.data.\cr
-For an example see section "Visualization of learn curve" in the package vignette `browseVignettes("DTD")`
+the loss function can be evaluated for each intermediate steps of the
+optimization. Then, the resulting picture includes two convergence paths,
+one for the training data, and one for the test.data.\cr
+For an example see section "Visualization of learn curve" in the package
+vignette `browseVignettes("DTD")`
 }

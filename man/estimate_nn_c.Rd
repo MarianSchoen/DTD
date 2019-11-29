@@ -7,23 +7,21 @@
 estimate_nn_c(X.matrix = NA, new.data, Gamma)
 }
 \arguments{
-\item{X.matrix}{numeric matrix with cells as columns, and features as rows.
-Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-includes the reference matrix X (default for \code{\link{train_deconvolution_model}})}
+\item{X.matrix}{numeric matrix, with features/genes as rows,
+and cell types as column. Each column of X.matrix is a reference
+expression profile}
 
-\item{new.data}{numeric matrix with samples as columns, and features as rows.
-In the formula above denoated as Y.}
+\item{new.data}{numeric matrix with samples as columns,
+and features/genes as rows. In the formula above denoated as Y.}
 
-\item{Gamma}{either a numeric vector with length of nrow(X),
-or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
-or\code{\link{descent_generalized_fista}}. In the equation above
-  the DTD.model provides the vector g.}
+\item{Gamma}{numeric matrix, with nrow(X) x nrow(X)}
 }
 \value{
 numeric matrix with ncol(X) rows, and ncol(Y) columns
 }
 \description{
-Given a reference matrix X, a matrix of bulks Y and a g-vector, "estimate_nn_c" finds
-the solution of \deqn{arg min || diag(g) (Y - XC) ||_2} with non negative constraint over C,
+Given a reference matrix X, a matrix of bulks Y and a g-vector,
+"estimate_nn_c" finds the solution of
+\deqn{arg min || diag(g) (Y - XC) ||_2} with non negative constraint over C,
 using the package 'nnls' (non-negative least squares)
 }

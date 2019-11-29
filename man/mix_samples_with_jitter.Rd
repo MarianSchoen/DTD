@@ -5,57 +5,57 @@
 \title{Mix samples with jitter}
 \usage{
 mix_samples_with_jitter(included.in.X, prob.each = NA, n.samples,
-  exp.data, pheno, verbose = FALSE, add.jitter = FALSE,
+  expr.data, pheno, verbose = FALSE, add.jitter = FALSE,
   chosen.mean = 1, chosen.sd = 0.05, n.per.mixture = 1,
   normalize.to.count = TRUE)
 }
 \arguments{
-\item{included.in.X}{vector of strings, indicating types that are in the reference matrix.
-Only those types, and sorted in that order, will be included in the quantity matrix.
-Notice, every profile of 'exp.data' might be included in the mixture.
-But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.}
+\item{included.in.X}{vector of strings, indicating types that are in the
+reference matrix. Only those types, and sorted in that order, will be
+included in the quantity matrix.}
 
-\item{prob.each}{numeric vector with same length as 'included.in.X.' For each cell type in 'included.in.X'
-'prob.each' holds the average quantity in the mixtures.}
+\item{prob.each}{numeric vector with same length as 'included.in.X.'
+For each cell type in 'included.in.X', prob.each' holds the expected
+average quantity in the mixtures.}
 
-\item{n.samples}{integer above 0, numbers of samples to be drawn (defaults to 1000)}
+\item{n.samples}{integer above 0, numbers of samples to be drawn}
 
-\item{exp.data}{non-negative numeric matrix, with features as rows and samples as columns}
+\item{expr.data}{numeric matrix, with features as rows and samples as columns}
 
-\item{pheno}{named vector of strings, with pheno information ('pheno') for each sample ('names(pheno)') in exp.data}
+\item{pheno}{named vector of strings, with pheno information ('pheno')
+for each sample in 'expr.data'. names(pheno)' must all be in
+'colnames(expr.data)'}
 
-\item{verbose}{logical, should the function print about progress to the terminal? (Defaults to FALSE)}
+\item{verbose}{logical, should information be printed to console?}
 
-\item{add.jitter}{logical, should the mixtures be multiplied with a vector of normally distributed numbers? (JITTER)}
+\item{add.jitter}{logical, should each mixture be multiplied with a vector
+of normally distributed numbers? (JITTER)}
 
-\item{chosen.mean}{float, mean of jitter (Default: 1)}
+\item{chosen.mean}{float, mean of jitter}
 
-\item{chosen.sd}{float, standard deviation of jitter (Default: 0.05)}
+\item{chosen.sd}{float, standard deviation of jitter}
 
-\item{n.per.mixture}{integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)}
+\item{n.per.mixture}{integer above 0, below ncol(expr.data),
+how many samples should be included per mixutre}
 
-\item{normalize.to.count}{logical, normalize each mixture? Defaults to TRUE}
+\item{normalize.to.count}{logical, normalize each mixture?}
 }
 \value{
-list with two entries. "quantities": matrix (nrow = ncol(exp.data), ncol = n.samples)
-and "mixtures": matrix (nrow = nrow(exp.data), ncol = n.samples)
+list with two entries. "quantities": matrix (nrow = ncol(expr.data), ncol = n.samples)
+and "mixtures": matrix (nrow = nrow(expr.data), ncol = n.samples)
 }
 \description{
-"mix_samples_with_jitter" takes 'pheno' information and a expression matrix ('exp.data').
-Its output is a list of two matrices. A matrix holding in-silicio 'mixtures' and a quantity matrix,
-holding the corresponding compositions.
-Each profile of the 'mixture' matrix is the result of a linear combination of input expression,
-multiplied with a random jitter vector.
-}
-\details{
-In the DTD package there are 2 ways to generate 'in-silicio' mixtures:
- - take 'n.per.mixture' random profiles from the expression matrix, and average over them.
- Here, the quantities (or probabilities) for each cell type is set by their relative
- frequency in the expression matrix.
- (DTD::mix_samples)
- - for each cell type, pick a random number, interpret this number as the cell types quantity.
- Multiply the profile with its quantity, and average over the resulting mixture.
- (DTD::mix_samples_with_jitter)
+'mix_samples_with_jitter' takes a expression matrix ('expr.data')
+and 'pheno' information.
+It then mixes the samples with known quantities, such that it can be used for
+loss-function learning digital tissue deconvolution.
+For a mixture it randomly selects a quantity for each cell type. Then, it
+randomly selects profiles from 'expr.data' for each cell type, multiplies it
+with the respective quantity, and averages it to a simulated bulk profile.
+Notice, in the mixtures, the frequency of a cell type is reflected by the
+'prob.each' vector, and not by their occurrence in 'pheno'. Alternatively,
+there is a 'mix_samples' function, that reflects the underlying composition
+of the data set: \code{\link{mix_samples}}
 }
 \examples{
 library(DTD)
@@ -82,11 +82,14 @@ training.data <- mix_samples_with_jitter(
     included.in.X = included.in.X
     , prob.each = c(2,1,1,1)
     , n.samples = 1e3
-    , exp.data = random.data
+    , expr.data = random.data
     , pheno = indicator.list
     , add.jitter = TRUE
     , chosen.mean = 1
     , chosen.sd = 0.05
 )
+
+# see the effect of "Type2" having higher 'prob.each' entry:
+apply(training.data$quantities, 1, mean)
 
 }

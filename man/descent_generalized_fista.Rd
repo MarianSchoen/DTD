@@ -5,62 +5,69 @@
 \title{Descent generalized FISTA \cr
 (fast iterative shrinkage thresholding algorithm)}
 \usage{
-descent_generalized_fista(tweak.vec, lambda = 0, maxit = 100,
-  learning.rate = NA, F.GRAD.FUN, ST.FUN = soft_thresholding,
-  FACTOR.FUN = nesterov_faktor, EVAL.FUN, NORM.FUN = identity,
+descent_generalized_fista(tweak.vec, lambda = 0, maxit = 500,
+  learning.rate = NA, F.GRAD.FUN, ST.FUN = "softmax",
+  FACTOR.FUN = "nesterov_factor", EVAL.FUN, NORM.FUN = identity,
   line.search.speed = 2, cycles = 5, save.all.tweaks = FALSE,
-  use.restart = TRUE, verbose = TRUE,
-  NESTEROV.FUN = positive_subspace_pmax, stop.crit.threshold = 1e-05)
+  use.restart = TRUE, verbose = FALSE, NESTEROV.FUN = "positive",
+  stop.crit.threshold = 1e-13)
 }
 \arguments{
-\item{tweak.vec}{numeric vector, with which the minimization algorithm starts}
+\item{tweak.vec}{numeric vector, starting vector for the DTD algorithm}
 
-\item{lambda}{non-negative float, regularization factor for ST.FUN function, defaults to 0}
+\item{lambda}{non-negative float, regularization factor for ST.FUN function.}
 
 \item{maxit}{integer, maximum number of iterations for the iterative
-minimization, defaults to 1000}
+minimization.}
 
-\item{learning.rate}{float, step size while learning. Defaults to NA. If it is NA, the learning rate will
-be estimated as published by Barzilai & Borwein 1988}
+\item{learning.rate}{float, step size during optimization. If it is NA,
+the learning rate will be estimated as published by Barzilai & Borwein 1988.
+Notice, the algorithm adjusts the learning rate during optimization.}
 
 \item{F.GRAD.FUN}{function with one parameter: vector with same length as
 tweak.vec, and one return argument: vector with same length as tweak.vec
 For a given vector, it returns the gradient of the loss-function}
 
 \item{ST.FUN}{function, with one parameter: vector with same length as
-tweak.vec, and one return argument: vector with same length as tweak.vec
-implementation of the proximal operator for the chosen Loss-function. Here
-named soft thresholding function. Defaults to soft_thresholding}
+tweak.vec, and one return argument: vector with same length as tweak.vec.
+Implementation of the proximal operator for the chosen Loss-function. Here
+named soft thresholding function.}
 
 \item{FACTOR.FUN}{function, with a integer as input, and a float as return
-value. This function returns the factor the nesterov correction
-extrapolates. Defaults to nesterov_faktor}
+value. This function returns the factor of the nesterov correction
+extrapolates.}
 
 \item{EVAL.FUN}{function, with one parameter: vector with same length as
 tweak.vec, and a single float as return. This function evaluates the loss
 function.}
 
-\item{NORM.FUN}{function, with one parameter: After each step the tweak vector will be normed/scaled.
-If no scaling should be done, set NORM.FUN to identity. Defaults to identity.}
+\item{NORM.FUN}{function, with one parameter: After each step the
+tweak vector will be normed/scaled. If no scaling should be done,
+set NORM.FUN to identity.}
 
-\item{line.search.speed}{numeric, factor with which the learning rate changes,
-if the optimium has not been found. Defaults to 2.}
+\item{line.search.speed}{numeric, factor with which the learning rate
+changes during optimization. If 'line.search.speed' is, e.g.,
+2, the learning rate gets doubled if the highest 'cycle' led to the best
+eval score. If the 'cycle = 0' led to the best eval score, it would get
+halved.}
 
-\item{cycles}{integer, in each iteration one gradient is calculated. To find the
-best step size, we do "cycles" steps, and evaluate each of them to find the best step size.
-Defaults to 5}
+\item{cycles}{integer, in each iteration one gradient is calculated.
+To find the best step size, we do "cycles" steps, and evaluate each of
+them to find the best step size.}
 
-\item{save.all.tweaks}{boolean, should all tweak vectores during all iterations be stored. Defaults to FALSE}
+\item{save.all.tweaks}{logical, should all tweak vectores during all
+iterations be stored.}
 
-\item{use.restart}{boolean, restart the algorithm if the update was not a descent step. Defaults to TRUE}
+\item{use.restart}{logical, restart the algorithm if the update was
+not a descent step.}
 
-\item{verbose}{boolean, should information be printed to console. Defaults to TRUE}
+\item{verbose}{logical, should information be printed to console?}
 
-\item{NESTEROV.FUN}{function, applied to the nesterov extrapolation.
-In DTD all g must be positive. Therefore we set default to a positive_subspace_pmax wrapper function}
+\item{NESTEROV.FUN}{function, applied to the nesterov extrapolation.}
 
 \item{stop.crit.threshold}{numeric value. The change in either the gradient
-or nesterov step has to be at least 'stop.crit.threshold'.}
+or nesterov step has to be at least 'stop.crit.threshold', or the algorithm
+will stop.}
 }
 \value{
 list, including
@@ -72,13 +79,16 @@ list, including
 }
 }
 \description{
-descent_generalized_fista takes as input a vector, a gradient function and an
-evaluation function (and some additional parameters/functions). Then, it
-iteratively minimizes the tweak vector via FISTA (Beck and Teboulle 2009). Basically,
+descent_generalized_fista takes as input a vector, a gradient function
+and an evaluation function (and some additional parameters/functions).
+Then, it iteratively minimizes the tweak vector via FISTA
+(Beck and Teboulle 2009).
+Basically,
 the following equations are used:\cr
 # prelimary initialization step\cr
 for k = 2,..., maxit:\cr
 \itemize{
+    \item y_vec = NORM.FUN(y_vec)
     \item grad = F.GRAD.FUN(y_vec)\cr
     \item# find best step size between 0 and learning.rate\cr
          for step.size = 0,..., learning.rate:\cr
@@ -104,6 +114,7 @@ for k = 2,..., maxit:\cr
 }
 }
 \details{
-The gradient and evaluation function both take only one argument, the soft thresholding function two.
-If your gradient, evaluation or soft thresholding function require more arguments, please write a wrapper.
+The gradient and evaluation function both take only one argument,
+the soft thresholding function two. If your gradient, evaluation or soft
+thresholding function require more arguments, please write a wrapper.
 }

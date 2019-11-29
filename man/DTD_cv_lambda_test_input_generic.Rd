@@ -8,25 +8,30 @@ DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds,
   lambda.length, train.data.list, cv.verbose, warm.start)
 }
 \arguments{
-\item{lambda.seq}{numeric vector or NULL: Over this series of lambdas the FISTA will be optimized.
-If lambda.seq is set to NULL, a generic series of lambdas - depending on the dimensions
-of the training set -  will be generated. Default: NULL}
+\item{lambda.seq}{numeric vector or NULL or "none": Over this series of lambdas the
+FISTA will be optimized. If 'lambda.seq' is set to NULL, a generic series of
+lambdas - depending on the dimensions of the training set -
+will be generated. If 'lambda.seq' is "none", no cross validation is done.
+Only one model with lambda = 0 is trained on the complete data set.}
 
 \item{tweak.start}{numeric vector, starting vector for the DTD algorithm.}
 
 \item{n.folds}{integer, number of buckets in the cross validation.}
 
-\item{lambda.length}{integer, how many lambdas will be generated (only used if lambda.seq is NULL). Defaults to 10}
+\item{lambda.length}{integer, how many lambdas will be generated
+(only used if lambda.seq is NULL)}
 
-\item{train.data.list}{list, that can be passed to the F.GRAD.FUN and EVAL.FUN.
+\item{train.data.list}{list, with two entries, a numeric matrix each,
+named 'mixtures' and 'quantities'
 Within this list the train/test cross validation will be done.
-Notice, that the train.data.list must have an entry named "mixtues". In this entry, the matrix containing the
-training samples (as columns) and all features (as rows) must be present. (see Vignette for details)}
+(see Vignette `browseVignettes("DTD")` for details)}
 
-\item{cv.verbose}{logical, should information about the cv process be printed to the screen? (Defaults to TRUE)}
+\item{cv.verbose}{logical, should information about the cv process be
+printed to the screen?}
 
-\item{warm.start}{logical, should the solution of a previous model of the cross validation be used as a start
- in the next model. Defaults to TRUE. Notice, that the warm.start starts with the most unpenalized model.
+\item{warm.start}{logical, should the solution of a previous model of
+the cross validation be used as start in the next model.
+Notice, that the warm.start starts with the most unpenalized model.
 
  @return NULL, or it throws an error}
 }
