@@ -3,7 +3,6 @@
 #' @param x, any R object
 #'
 #' @return x
-#' @export
 #'
 #' @examples
 #' DTD::identity(1:10)
@@ -14,9 +13,9 @@ identity <- function(x) {
 #' Norm a vector such that ||x||_2 = 1 is equal to the length of
 #'
 #' @param x numeric vector
+#' @param to numeric, to this value, the norm gets scaled
 #'
 #' @return numeric vector with same length as x
-#' @export
 #'
 #' @examples
 #' set.seed(1)
@@ -24,9 +23,13 @@ identity <- function(x) {
 #' print(norm(same.values, type = "2"))
 #' normed.values <- n2normed(same.values)
 #' print(norm(normed.values, type = "2"))
-n2normed <- function(x) {
+n2normed <- function(x, to=1) {
   n2 <- norm(matrix(x, ncol = 1), type = "2")
-  ret <- (length(x) * x) / n2
+  if(n2 == 0){
+    ret <- x
+  }else{
+    ret <- (to * x) / n2
+  }
   return(ret)
 }
 
@@ -35,7 +38,7 @@ n2normed <- function(x) {
 #' @param x numeric vector
 #'
 #' @return numeric vector with same length as x
-#' @export
+#' @param to numeric, to this value, the norm gets scaled
 #'
 #' @examples
 #' set.seed(1)
@@ -43,8 +46,12 @@ n2normed <- function(x) {
 #' print(norm(as.matrix(same.values), type = "O"))
 #' normed.values <- n1normed(same.values)
 #' print(norm(as.matrix(normed.values), type = "O"))
-n1normed <- function(x) {
-  n2 <- norm(matrix(x, ncol = 1), type = "O")
-  ret <- (length(x) * x) / n2
+n1normed <- function(x, to) {
+  n1 <- norm(matrix(x, ncol = 1), type = "O")
+  if(n1 == 0){
+    ret <- x
+  }else{
+    ret <- (to * x) / n1
+  }
   return(ret)
 }

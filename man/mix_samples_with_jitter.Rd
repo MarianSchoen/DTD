@@ -2,70 +2,70 @@
 % Please edit documentation in R/function_mix_with_Jitter.R
 \name{mix_samples_with_jitter}
 \alias{mix_samples_with_jitter}
-\title{Mix samples with Jitter}
+\title{Mix samples with jitter}
 \usage{
-mix_samples_with_jitter(minor.fraction.type, major.fraction.type,
-  n.samples, exp.data, pheno, verbose = FALSE, single.special = FALSE,
-  add.jitter = FALSE, chosen.mean = 1, chosen.sd = 0.05,
-  n.per.mixture = 1, included.in.X, min.major = 0.5, max.major = 0.7)
+mix_samples_with_jitter(included.in.X, prob.each = NA, n.samples,
+  expr.data, pheno, verbose = FALSE, add.jitter = FALSE,
+  chosen.mean = 1, chosen.sd = 0.05, n.per.mixture = 1,
+  normalize.to.count = TRUE)
 }
 \arguments{
-\item{minor.fraction.type}{vector of strings, have to match colnames(exp.data).}
+\item{included.in.X}{vector of strings, indicating types that are in the
+reference matrix. Only those types, and sorted in that order, will be
+included in the quantity matrix.}
 
-\item{major.fraction.type}{vector of strings, have to match colnames(exp.data), these samples will
-occur with higher quantites in the in-silicio mixtures.}
+\item{prob.each}{numeric vector with same length as 'included.in.X.'
+For each cell type in 'included.in.X', prob.each' holds the expected
+average quantity in the mixtures.}
 
-\item{n.samples}{integer above 0, numbers of samples to be drawn (defaults to 1000)}
+\item{n.samples}{integer above 0, numbers of samples to be drawn}
 
-\item{exp.data}{non-negative numeric matrix, with features as rows and samples as columns}
+\item{expr.data}{numeric matrix, with features as rows and samples as columns}
 
-\item{pheno}{named vector of strings, with pheno information ('pheno') for each sample ('name(pheno)') in exp.data}
+\item{pheno}{named vector of strings, with pheno information ('pheno')
+for each sample in 'expr.data'. names(pheno)' must all be in
+'colnames(expr.data)'}
 
-\item{verbose}{logical, should the function print about progress to the terminal? (Defaults to FALSE)}
+\item{verbose}{logical, should information be printed to console?}
 
-\item{single.special}{logical, in a mixture, should all special names be used? (=> TRUE) Or, should a mixture only include one special sample? (=> FALSE)(Defaults to FALSE)}
+\item{add.jitter}{logical, should each mixture be multiplied with a vector
+of normally distributed numbers? (JITTER)}
 
-\item{add.jitter}{logical, should the mixtures be multiplied with a vector of normally distributed numbers? (JITTER)}
+\item{chosen.mean}{float, mean of jitter}
 
-\item{chosen.mean}{float, mean of jitter (Default: 1)}
+\item{chosen.sd}{float, standard deviation of jitter}
 
-\item{chosen.sd}{float, standard deviation of jitter (Default: 0.05)}
+\item{n.per.mixture}{integer above 0, below ncol(expr.data),
+how many samples should be included per mixutre}
 
-\item{n.per.mixture}{integer, 1 <= 'n.per.mixture', how many samples per type should be used for each mixture (Default: 1)}
-
-\item{included.in.X}{vector of strings, indicating types that are in the reference matrix.
-Only those types, and sorted in that order, will be included in the quantity matrix.
-Notice, every profile of 'exp.data' might be included in the mixture.
-But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.}
-
-\item{min.major}{float, 0 <= 'min.major' <= 'max.major', minimal fraction of 'major.fraction.type' in each mixture}
-
-\item{max.major}{float, 'min.major' <= 'max.major' <= 1, maximal fraciton of 'major.fraction.type' in each mixture}
+\item{normalize.to.count}{logical, normalize each mixture?}
 }
 \value{
-list with two entries. "quantities" matrix (nrow = ncol(exp.data), ncol = nMixtures) and "mixture"
-matrix (nrow = nrow(exp.data), ncol = nMixtures)
+list with two entries. "quantities": matrix (nrow = ncol(expr.data), ncol = n.samples)
+and "mixtures": matrix (nrow = nrow(expr.data), ncol = n.samples)
 }
 \description{
-"mix_samples_with_jitter" takes pheno information ('minor.fraction.type', 'special.names')
-and a expression matrix ('exp.data').
-Its output is a list of two matrices. A matrix holding in-silicio 'mixtures' and a quantity matrix,
-holding the corresponding compositions.
-Each profile of the 'mixture' matrix is the result of a linear combination of input profiles ('exp.data'),
-multiplied with a random jitter vector.
-"mix_samples_with_jitter" mixes samples in a way that they look similar to biological data.
-For example, in a tumor tissue there are several cells included, but we expect that
-most of them are tumor cells. Therefore, the mix_samples_with_jitter function expects a
-vector of samples which represent cells, that occur in minor fractions (e.g. immune cells) and a
-vector of special samples, which occur in major fractions.
+'mix_samples_with_jitter' takes a expression matrix ('expr.data')
+and 'pheno' information.
+It then mixes the samples with known quantities, such that it can be used for
+loss-function learning digital tissue deconvolution.
+For a mixture it randomly selects a quantity for each cell type. Then, it
+randomly selects profiles from 'expr.data' for each cell type, multiplies it
+with the respective quantity, and averages it to a simulated bulk profile.
+Notice, in the mixtures, the frequency of a cell type is reflected by the
+'prob.each' vector, and not by their occurrence in 'pheno'. Alternatively,
+there is a 'mix_samples' function, that reflects the underlying composition
+of the data set: \code{\link{mix_samples}}
 }
 \examples{
 library(DTD)
-random.data <- generate_random_data(n.types = 10,
-                                    n.samples.per.type = 10,
-                                    n.features = 500,
-                                    sample.type = "Cell",
-                                    feature.type = "gene")
+random.data <- generate_random_data(
+      n.types = 10,
+      n.samples.per.type = 10,
+      n.features = 500,
+      sample.type = "Cell",
+      feature.type = "gene"
+      )
 
 # normalize all samples to the same amount of counts:
 random.data <- normalize_to_count(random.data)
@@ -76,26 +76,20 @@ indicator.list <- gsub("^Cell[0-9]*\\\\.", "", colnames(random.data))
 names(indicator.list) <- colnames(random.data)
 
 # First, decide which cells should be deconvoluted.
-include.in.X <- c("Type2", "Type3", "Type4", "Type5")
-
-# here, I declare "Type1" as Tumor cells, and all other as immune cells
-major.fraction.type <- c("Type1")
-all.samples <- unique(indicator.list)
-minor.fraction.type <- all.samples[- which(all.samples \%in\% major.fraction.type)]
+included.in.X <- c("Type2", "Type3", "Type4", "Type5")
 
 training.data <- mix_samples_with_jitter(
-    minor.fraction.type = minor.fraction.type,
-    major.fraction.type = major.fraction.type,
-    included.in.X = include.in.X,
-    n.samples = 1e3,
-    exp.data = random.data,
-    pheno = indicator.list,
-    single.special = FALSE,
-    add.jitter = TRUE,
-    chosen.mean = 1,
-    chosen.sd = 0.05,
-    min.major = 0.5,
-    max.major = 0.5
+    included.in.X = included.in.X
+    , prob.each = c(2,1,1,1)
+    , n.samples = 1e3
+    , expr.data = random.data
+    , pheno = indicator.list
+    , add.jitter = TRUE
+    , chosen.mean = 1
+    , chosen.sd = 0.05
 )
+
+# see the effect of "Type2" having higher 'prob.each' entry:
+apply(training.data$quantities, 1, mean)
 
 }

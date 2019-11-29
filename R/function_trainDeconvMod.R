@@ -1,54 +1,75 @@
 #' Train a DTD model based on correlation loss function
 #'
-#' Loss-function learning Digital Tissue Deconvolution (DTD) adjustes a deconvolution model to
-#' a biological context. 'train_deconvolution_model' is the main function of the DTD package.
-#' As input it takes the reference matrix X, a list of training data and a start vector 'tweak'.
-#' Then, it iteratively finds that vector 'g' that best deconvolutes based on the loss fucntion:
-#' \deqn{L(g) = - \sum cor(C_{j,.} \widehat(C_{j,.}(g))) + \lambda ||g||_1}
-#' The 'train_deconvolution_model' function calls the cross validation function \code{\link{DTD_cv_lambda}}
-#' to find the optimal lambda. Afterwards it optimizes a model on the complete dataset.
-#'
-#' This function works as a wrapper for the correlation loss function and its gradient.
-#' It provides a workaround for digital tissue deconvolution, such that the user only
-#' has to provide a starting vector (in literature "g", in code 'tweak'), a reference matrix X,
-#' and a training list, including the training mixtures, and their cell type quantities.
+#' Loss-function learning Digital Tissue Deconvolution (DTD) adapts a
+#' deconvolution model to its biological context. 'train_deconvolution_model'
+#' is the main function of the DTD package.\cr
+#' As input it takes the reference matrix X, a list of training data and a
+#' start vector 'tweak'. Then, it iteratively finds that vector 'g' that
+#' deconvolutes best based on the loss fucntion:
+#' \deqn{L(g) = - \sum cor(C_{j,.} \widehat C_{j,.}(g) ) + \lambda ||g||_1}
+#' The 'train_deconvolution_model' function calls the cross validation function
+#' \code{\link{DTD_cv_lambda_cxx}} (or \code{\link{DTD_cv_lambda_R}},
+#' depending on 'use.implementation') to find the optimal lambda.
+#' After the cross validation, it optimizes a model on the complete dataset
+#' with the optimal \eqn{\lambda}.
 #'
 #' For an example see `browseVignettes("DTD")`
 #'
-#' @param tweak numeric vector, starting point for the FISTA optimization.
+#' @param tweak numeric vector with length of nrow(X).
+#' In the Loss function above tweak is named "g"
 #' Notice, the names of the vector will be kept, and are of use later on.
-#' @param X.matrix numeric matrix, with features/genes as rows, and cell types as column.
-#' Each column of X.matrix is a reference expression profile
-#' @param train.data.list list, with two entries: 'quantities', numeric matrix with as many rows as columns in X.
-#' Each column of the 'quantities' matrix holds the quantities of the cell types of X in the training mixtures.
-#' 'mixtures', numeric matrix with as many rows as rows in X.matrix. Each column of 'mixtures' is the
-#' expression profile of a training mixture. This data is used to train the deconvolution model
-#' @param ... parameters passed to DTD_cv_lambda
-#' @param test.data.list list, with two entries, same structure as train.data.list:
-#' 'quantities', numeric matrix with as many rows as columns in X. Each column of the 'quantities' matrix
-#'  holds the quantities of the cell types of X in the test mixtures.
-#' 'mixtures', numeric matrix with as many rows as rows in X.matrix. Each column of 'mixtures' is the
-#'  expression profile of a test mixture. After learning, this data is used to validate the model
-#' @param estimate.c.type string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
-#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}. If estimate.c.type is set to "direct" there is no regularization
-#' (see \code{\link{estimate_c}}),
-#' if estimate.c.type is set to "non_negative" the estimates "C" must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))
-#'
-#' @return list, including 4 entries:
+#' @param X.matrix numeric matrix, with features/genes as rows,
+#' and cell types as column. Each column of X.matrix is a reference
+#' expression profile
+#' @param train.data.list list, with two entries, a numeric matrix each,
+#' named 'mixtures' and 'quantities'
+#' Within this list the train/test cross validation will be done.
+#' (see Vignette `browseVignettes("DTD")` for details).
+#' Generate 'train.data.list' using \code{\link{mix_samples}}
+#' or \code{\link{mix_samples_with_jitter}}.
+#' @param ... parameters passed to \code{\link{DTD_cv_lambda_cxx}}, or
+#' \code{\link{DTD_cv_lambda_R}}
+#' @param test.data.list list, with two entries, a numeric matrix each,
+#' named 'mixtures' and 'quantities'
+#' On this data, the trained model will be tested. Notice, this data is not
+#'  shown to the optimization.
+#' (see Vignette `browseVignettes("DTD")` for details).
+#' Generate 'test.data.list' using \code{\link{mix_samples}}
+#' or \code{\link{mix_samples_with_jitter}}.
+#' @param estimate.c.type string, either "non_negative", or "direct".
+#' Indicates how the algorithm finds the solution of
+#' \eqn{arg min_C ||diag(g)(Y - XC)||_2}.
 #' \itemize{
-#'     \item cv.obj' (see \code{\link{DTD_cv_lambda}})
-#'     \item 'best.model' (see \code{\link{DTD_cv_lambda}})
+#'    \item If 'estimate.c.type' is set to "direct",
+#'  there is no regularization (see \code{\link{estimate_c}}),
+#'    \item if 'estimate.c.type' is set to "non_negative",
+#'  the estimates "C" must not be negative (non-negative least squares)
+#' (see (see \code{\link{estimate_nn_c}}))
+#' }
+#' @param use.implementation string, either "R" or "cxx".
+#' Chooses between the R reference implementation and the faster c++
+#' implementation.
+#' Notice, if 'use.implementation' is set to "R" the cross validation
+#' function \code{\link{DTD_cv_lambda_R}} is used.
+#'
+#' @return list, including 5 entries:
+#' \itemize{
+#'     \item cv.obj' (see \code{\link{DTD_cv_lambda_cxx}})
+#'     \item 'best.model' (see \code{\link{DTD_cv_lambda_cxx}})
 #'     \item 'reference.X'
+#'     \item 'estimate.c.type'
 #'     \item 'pics' (see `browseVignettes("DTD")`)
 #' }
 #' @export
-train_deconvolution_model <- function(tweak,
-                                    X.matrix,
-                                    train.data.list,
-                                    test.data.list = NULL,
-                                    estimate.c.type,
-                                    ...){
-
+train_deconvolution_model <- function(
+  tweak,
+  X.matrix,
+  train.data.list,
+  test.data.list = NULL,
+  estimate.c.type,
+  use.implementation = "cxx",
+  ...
+  ){
   if(length(tweak) != nrow(X.matrix)){
     stop("In train_deconvolution_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'")
   }
@@ -154,81 +175,105 @@ train_deconvolution_model <- function(tweak,
   }
   # end => compatible test
 
-  ESTIMATE.C.FUN <- test_c_type(test.value = estimate.c.type,
-                                output.info = c("train_deconvolution_model", "estimate.c.type"))
+  # safety check: estimate.c.type
+  test <- test_c_type(
+    test.value = estimate.c.type,
+    output.info = c("train_deconvolution_model", "estimate.c.type")
+    )
+  # end estimte.c.type
 
+  if( use.implementation == "R" ) {
 
-  # define wrapper functions for gradient and correlation evaluation
-  DTD.grad.wrapper <- function(tweak,
-                               X = X.matrix,
-                               train.list = train.data.list,
-                               esti.c.type = estimate.c.type) {
-    Y <- train.list$mixtures
-    C <- train.list$quantities
-    grad <- gradient_cor_trace(
-      X = X,
-      Y = Y,
-      C = C,
-      tweak = tweak,
-      estimate.c.type = esti.c.type)
-    return(grad)
+    # define wrapper functions for gradient and correlation evaluation
+    DTD.grad.wrapper <- function(
+      tweak,
+      X = X.matrix,
+      train.list = train.data.list,
+      esti.c.type = estimate.c.type
+      ) {
+      Y <- train.list$mixtures
+      C <- train.list$quantities
+      grad <- gradient_cor_trace(
+        X = X,
+        Y = Y,
+        C = C,
+        tweak = tweak,
+        estimate.c.type = esti.c.type)
+      return(grad)
+    }
+
+    DTD.evCor.wrapper <- function(
+      tweak,
+      X = X.matrix,
+      train.list = train.data.list,
+      esti.c.type = estimate.c.type) {
+      Y <- train.list$mixtures
+      C <- train.list$quantities
+      loss <- evaluate_cor(
+        X.matrix = X,
+        new.data = Y,
+        true.compositions = C,
+        DTD.model = tweak,
+        estimate.c.type = esti.c.type
+      ) / ncol(X)
+      return(loss)
+    }
+
+    catch <- DTD_cv_lambda_R(
+      tweak.start = tweak,
+      train.data.list = train.data.list,
+      F.GRAD.FUN = DTD.grad.wrapper,
+      EVAL.FUN = DTD.evCor.wrapper,
+      ...
+    )
+  } else if( use.implementation == "cxx" || use.implementation == "cpp" ) {
+    catch <- DTD_cv_lambda_cxx(
+      tweak.start = tweak,
+      train.data.list = train.data.list,
+      X.matrix = X.matrix,
+      estimate.c.type = estimate.c.type,
+      ...
+    )
+  } else {
+    stop(paste("cannot use implementation \"", use.implementation, "\": not implemented."))
   }
-
-  DTD.evCor.wrapper <- function(tweak,
-                                X = X.matrix,
-                                train.list = train.data.list,
-                                esti.c.type = estimate.c.type) {
-    Y <- train.list$mixtures
-    C <- train.list$quantities
-    loss <- evaluate_cor(
-      X.matrix = X,
-      new.data = Y,
-      true.compositions = C,
-      DTD.model = tweak,
-      estimate.c.type = esti.c.type
-    ) / ncol(X)
-    return(loss)
-  }
-
-  catch <- DTD_cv_lambda(
-    tweak.start = tweak,
-    train.data.list = train.data.list,
-    F.GRAD.FUN = DTD.grad.wrapper,
-    EVAL.FUN = DTD.evCor.wrapper,
-    ...
-  )
   catch$reference.X <- X.matrix
+  catch$estimate.c.type <- estimate.c.type
 
   pics <- vector(mode = "list")
-  pics$cv <- DTD::ggplot_cv(DTD.model = catch)
+  if("cv.obj" %in% names(catch)){
+    pics$cv <- DTD::ggplot_cv(DTD.model = catch)
+  }
   if(is.null(test.data.list)){
-    pics$convergence <- DTD::ggplot_convergence(estimate.c.type = estimate.c.type,
-                                                DTD.model = catch,
-                                                X.matrix = X.matrix,
-                                                test.data = NA
-                                                )
+    pics$convergence <- DTD::ggplot_convergence(
+      estimate.c.type = estimate.c.type
+      , DTD.model = catch
+      , X.matrix = X.matrix
+      , test.data = NA
+      )
   }else{
-    pics$convergence <- DTD::ggplot_convergence(estimate.c.type = estimate.c.type,
-                                                DTD.model = catch,
-                                                X.matrix = X.matrix,
-                                                test.data = test.data.list
-    )
+    pics$convergence <- DTD::ggplot_convergence(
+      estimate.c.type = estimate.c.type
+      , DTD.model = catch
+      , X.matrix = X.matrix
+      , test.data = test.data.list
+      )
   }
 
-  pics$path <- DTD::ggplot_gpath(catch)$gPath
-
+  if("History" %in% names(catch$best.model)){
+    pics$path <- DTD::ggplot_gpath(catch)$gPath
+  }
   pics$histogram <- DTD::ggplot_ghistogram(DTD.model = catch)
 
-  pics$Xheatmap <- ggplot_heatmap(DTD.model = catch,
+  pics$Xheatmap <- DTD::ggplot_heatmap(DTD.model = catch,
                                   X.matrix = X.matrix)
 
   if(!is.null(test.data.list)){
-    estimates <- ESTIMATE.C.FUN(new.data = test.data.list$mixtures,
-                                DTD.model = catch)
-    pics$true_vs_esti <- DTD::ggplot_true_vs_esti(DTD.model = catch,
-                                                  test.data = test.data.list,
-                                                  estimate.c.type = estimate.c.type,
-                                                  X.matrix = X.matrix)
+    pics$true_vs_esti <- DTD::ggplot_true_vs_esti(
+      DTD.model = catch
+      , test.data = test.data.list
+      , estimate.c.type = estimate.c.type
+      , X.matrix = X.matrix)
   }
   catch$pics <- pics
   return(catch)

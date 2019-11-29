@@ -4,10 +4,12 @@
 \alias{n2normed}
 \title{Norm a vector such that ||x||_2 = 1 is equal to the length of}
 \usage{
-n2normed(x)
+n2normed(x, to = 1)
 }
 \arguments{
 \item{x}{numeric vector}
+
+\item{to}{numeric, to this value, the norm gets scaled}
 }
 \value{
 numeric vector with same length as x

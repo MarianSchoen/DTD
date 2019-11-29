@@ -1,0 +1,3 @@
+PKG_CPPFLAGS= -I./eigen/ -DEIGEN_USE_BLAS 
+PKG_LIBS= -L/Library/Frameworks/R.framework/Resources/lib -lRblas 
+CXX_STD = CXX11

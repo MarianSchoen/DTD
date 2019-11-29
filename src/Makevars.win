@@ -1,0 +1,7 @@
+CXX_STD=CXX11
+ifeq (,$(findstring blas,$(BLAS_LIBS)))
+	blascppflags=-DEIGEN_USE_BLAS
+endif
+
+PKG_CPPFLAGS=-I./eigen/ $(blascppflags) $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS=$(BLAS_LIBS) $(SHLIB_OPENMP_CXXFLAGS)

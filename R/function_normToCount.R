@@ -1,16 +1,17 @@
 #' normalize_to_count
 #'
-#' 'normalize_to_count' takes a numeric matrix 'exp.data' with only non-negative
-#' entries and normalizes each column (=> sample) to a total number of counts.\cr
+#' 'normalize_to_count' takes a numeric matrix 'expr.data' with only
+#' non-negative entries and normalizes each column (=> sample) to a total
+#' number of counts.\cr
 #' For every sample i, each feature j gets scaled to
-#'  \deqn{exp.data[j, i] = (count * exp.data[j, i]) / sum(exp.data[, i])}
+#'  \deqn{expr.data[j, i] = (count * expr.data[j, i]) / sum(expr.data[, i])}
 #'
-#' @param exp.data positive numeric matrix, with samples as columns and features as rows.
+#' @param expr.data numeric matrix, with features as rows and samples as columns.
 #' Notice, 'normalize_to_count' normalizes the columns of this matrix.
-#' @param count float, 0 < 'count', to which every sample of exp.data will be scaled.
-#' If 'is.na(count)' (default), count is set to nrow(exp.data)
+#' @param count float, 0 < 'count', to which every sample of expr.data is scaled.
+#' If 'is.na(count)' count is set to nrow(expr.data)
 #'
-#' @return "ret", matrix with same dimension as "exp.data"
+#' @return 'ret', matrix with same dimension as 'expr.data'
 #' @export
 #'
 #' @examples
@@ -23,10 +24,10 @@
 #'
 #' # check:
 #' apply(normalized.matrix, 2, sum)
-normalize_to_count <- function(exp.data,
+normalize_to_count <- function(expr.data,
                                count = NA) {
   if(any(is.na(count))){
-    count <- nrow(exp.data)
+    count <- nrow(expr.data)
   }
   # safety check: count
   test <- test_numeric(test.value = count,
@@ -35,21 +36,21 @@ normalize_to_count <- function(exp.data,
                        max = Inf)
   # end -> count
 
-  # saftey check: exp.data
-  if(any(is.na(exp.data))){
-    stop("In normalize_to_count: exp.data includes NA")
+  # saftey check: expr.data
+  if(any(is.na(expr.data))){
+    stop("In normalize_to_count: expr.data includes NA")
   }
-  if(any(exp.data < 0)){
-    stop("In normalize_to_count: exp.data includes negative values")
+  if(any(expr.data < 0)){
+    stop("In normalize_to_count: expr.data includes negative values")
   }
-  if(!is.matrix(exp.data)){
-    stop("In normalize_to_count: exp.data is not of matrix format")
+  if(!is.matrix(expr.data)){
+    stop("In normalize_to_count: expr.data is not of matrix format")
   }
-  # end -> exp.data
+  # end -> expr.data
 
   # microbenchmark told me that apply is faster than a loop,
   # therefore normalizing is done via apply:
-  norm.data <- apply(exp.data, 2, function(x){count*x/sum(x)})
+  norm.data <- apply(expr.data, 2, function(x){count*x/sum(x)})
 
   return(norm.data)
 }

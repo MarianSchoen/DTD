@@ -4,30 +4,36 @@
 \alias{ggplot_ghistogram}
 \title{Histogram of the g/tweak vector}
 \usage{
-ggplot_ghistogram(DTD.model, n.bins = 50,
-  TRANSFORM.FUN = DTD::identity, title = "", x.lab = "g-vec")
+ggplot_ghistogram(DTD.model, n.bins = NA, G.TRANSFORM.FUN = log10p1,
+  title = "", x.lab = "log10(g+1)")
 }
 \arguments{
-\item{DTD.model}{either a numeric vector ,
-or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
-or\code{\link{descent_generalized_fista}}.}
+\item{DTD.model}{either a numeric vector with length of nrow(X), or a list
+returned by \code{\link{train_deconvolution_model}},
+\code{\link{DTD_cv_lambda_cxx}}, or \code{\link{descent_generalized_fista}}.
+In the equation above the DTD.model provides the vector g.}
 
-\item{n.bins}{: positive integer, number of bins in the histogram. Defaults to 50}
+\item{n.bins}{: positive integer, number of bins in the histogram}
 
-\item{TRANSFORM.FUN}{: function that expects a list of floats, and returns a list of floats
-Defaults to identity. (defaults to identity)}
+\item{G.TRANSFORM.FUN}{function, that expects a vector of numerics,
+and returns a vector of the same length. Will be applied on each intermediate
+'g' vector. Set 'G.TRANSFORM.FUN' to identity if no transformation is required.
+If you change 'G.TRANSFORM.FUN' don't forget to adjust the 'x.lab' parameter.}
 
-\item{title}{string, additionally title (default "")}
+\item{title}{string, additionally title}
 
-\item{x.lab}{string, used as x label of the plot. Defaults to ""}
+\item{x.lab}{string, used as x label on the plot}
 }
 \value{
 ggplot object
 }
 \description{
-The resulting distribution of g are visualized best in a histogram.
-As the g vector may get spread over a big range, you can provide a transformation function.
-This will be applied on the g/tweak vector. If the provided transformation function returns NA,
-the function will state the number of NAs in the title of the plot.
-For an example see section "Histogram of g-vector" in the package vignette `browseVignettes("DTD")`
+The resulting distribution of g is visualized best in a histogram.
+As the g vector may get spread over a big range,
+you can provide a transformation function.
+This will be applied on the g/tweak vector. If the provided transformation
+function returns NA, the function will state the number of NAs in the title
+of the plot.
+For an example see section "Histogram of g-vector" in the package vignette
+`browseVignettes("DTD")`
 }

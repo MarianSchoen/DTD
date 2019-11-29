@@ -1,30 +1,35 @@
 #' Histogram of the g/tweak vector
 #'
-#' The resulting distribution of g are visualized best in a histogram.
-#' As the g vector may get spread over a big range, you can provide a transformation function.
-#' This will be applied on the g/tweak vector. If the provided transformation function returns NA,
-#' the function will state the number of NAs in the title of the plot.
-#' For an example see section "Histogram of g-vector" in the package vignette `browseVignettes("DTD")`
+#' The resulting distribution of g is visualized best in a histogram.
+#' As the g vector may get spread over a big range,
+#' you can provide a transformation function.
+#' This will be applied on the g/tweak vector. If the provided transformation
+#' function returns NA, the function will state the number of NAs in the title
+#' of the plot.
+#' For an example see section "Histogram of g-vector" in the package vignette
+#' `browseVignettes("DTD")`
 #'
-#' @param DTD.model either a numeric vector ,
-#' or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
-#' or\code{\link{descent_generalized_fista}}.
-#' @param n.bins : positive integer, number of bins in the histogram. Defaults to 50
-#' @param TRANSFORM.FUN : function that expects a list of floats, and returns a list of floats
-#' Defaults to identity. (defaults to identity)
-#' @param title string, additionally title (default "")
-#' @param x.lab string, used as x label of the plot. Defaults to ""
+#' @param DTD.model either a numeric vector with length of nrow(X), or a list
+#' returned by \code{\link{train_deconvolution_model}},
+#' \code{\link{DTD_cv_lambda_cxx}}, or \code{\link{descent_generalized_fista}}.
+#' In the equation above the DTD.model provides the vector g.
+#' @param n.bins : positive integer, number of bins in the histogram
+#' @param G.TRANSFORM.FUN function, that expects a vector of numerics,
+#' and returns a vector of the same length. Will be applied on each intermediate
+#''g' vector. Set 'G.TRANSFORM.FUN' to identity if no transformation is required.
+#' If you change 'G.TRANSFORM.FUN' don't forget to adjust the 'x.lab' parameter.
+#' @param title string, additionally title
+#' @param x.lab string, used as x label on the plot
 #'
 #' @import ggplot2
 #'
 #' @return ggplot object
 #' @export
-#'
 ggplot_ghistogram <- function(DTD.model,
-                              n.bins = 50,
-                              TRANSFORM.FUN = DTD::identity,
+                              n.bins = NA,
+                              G.TRANSFORM.FUN = log10p1,
                               title = "",
-                              x.lab = "g-vec") {
+                              x.lab = "log10(g+1)") {
 
   # test if DTD.model can be used for plotting:
   if (is.list(DTD.model) && ("Tweak" %in% names(DTD.model))) {
@@ -44,6 +49,9 @@ ggplot_ghistogram <- function(DTD.model,
   }
 
   # safety check: n.bins
+  if(any(is.na(n.bins))){
+    n.bins <- round(0.25 * length(tweak))
+  }
   test <- test_integer(test.value = n.bins,
                        output.info = c("ggplot_ghistogram", "n.bins"),
                        min = 1,
@@ -64,23 +72,23 @@ ggplot_ghistogram <- function(DTD.model,
   )
   # end -> x.lab
 
-  # safety check: TRANSFORM.FUN
-  if(!is.function(TRANSFORM.FUN)){
-    stop("In ggplot_ghistogram: 'TRANSFORM.FUN' is not a function")
+  # safety check: G.TRANSFORM.FUN
+  if(!is.function(G.TRANSFORM.FUN)){
+    stop("In ggplot_ghistogram: 'G.TRANSFORM.FUN' is not a function")
   }
-  # end -> TRANSFORM.FUN
+  # end -> G.TRANSFORM.FUN
 
   # Transformation:
-  g_vec <- suppressWarnings(TRANSFORM.FUN(tweak))
+  g_vec <- suppressWarnings(G.TRANSFORM.FUN(tweak))
 
   # Get number of na:
   nums.NA <- sum(is.na(g_vec)) + sum(is.infinite(g_vec))
   # If there are na, adjust "title"
   if (nums.NA > 0) {
-    title <- paste0("Due to TRANSFORM.FUN, there are ", nums.NA, " missing values \n", title)
+    title <- paste0("Due to G.TRANSFORM.FUN, there are ", nums.NA, " missing values \n", title)
   }
   if(nums.NA == length(tweak)){
-    stop("In ggplot_ghistogram: after 'TRANSFORM.FUN(tweak), all values are NA or infinite.")
+    stop("In ggplot_ghistogram: after 'G.TRANSFORM.FUN(tweak), all values are NA or infinite.")
   }
 
   # draw the picture:

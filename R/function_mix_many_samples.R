@@ -1,22 +1,32 @@
 #' Mix samples for loss-function learning DTD
 #'
-#' mix_samples takes a gene expresssion matrix ('exp.data'),
+#' 'mix_samples' takes a gene expresssion matrix ('expr.data'),
 #' and 'pheno' information.
 #' It then mixes the samples with known quantities such that it can be
 #' used for loss-function learning digital tissue deconvolution.
-#' For a mixture it randomly selects "n.samples" samples from "exp.data", and averages over them.
-#' Using the information stored in pheno, it can get the quantities per cell in each mixture.
+#' For a mixture it randomly selects "n.samples" samples from "expr.data",
+#' and averages over them. Using the information stored in pheno, it can get
+#' the quantities per cell in each mixture.
+#' Notice, in the mixtures, the frequency of a cell type is reflected
+#' by their occurrence in 'pheno'. A cell type that is uncommon, can not occur
+#'  frequently in the mixtures. In such a case, consider using
+#'  \code{\link{mix_samples_with_jitter}}
 #'
-#' @param exp.data numeric matrix, with features as rows and samples as columns
-#' @param pheno named vector of strings, with pheno information ('pheno') for each sample ('name(pheno)') in exp.data
-#' @param n.samples integer above 0, numbers of samples to be drawn (defaults to 1000)
-#' @param n.per.mixture integer above 0, below ncol(exp.data),
-#'  how many samples should be included per mixutre. (Default: 100)
-#' @param included.in.X vector of strings, indicating types that are in the reference matrix.
-#' Only those types, and sorted in that order, will be included in the quantity matrix.
-#' Notice, every profile of 'exp.data' might be included in the mixture.
-#' But the quantity matrix only reports quantity information for the cell types in 'included.in.X'.
-#' @param verbose logical, should information be printed? (Default: FALSE)
+#' @param expr.data numeric matrix, with features as rows and samples as columns
+#' @param pheno named vector of strings, with pheno information ('pheno')
+#' for each sample in 'expr.data'. names(pheno)' must all be in
+#' 'colnames(expr.data)'
+#' @param n.samples integer above 0, numbers of samples to be drawn
+#' @param n.per.mixture integer above 0, below ncol(expr.data),
+#'  how many samples should be included per mixutre
+#' @param included.in.X vector of strings, indicating types that are in the
+#' reference matrix. Only those types, and sorted in that order, will be
+#' included in the quantity matrix. Notice, every profile of 'expr.data' might
+#' be included in the mixture. But the quantity matrix only reports quantity
+#' information for the cell types in 'included.in.X'. This means, that the
+#' sum per mixture in the 'quantities' matrix must not add up to 1.
+#' @param verbose logical, should information be printed to console?
+#' @param normalize.to.count logical, normalize each mixture?
 #'
 #' @return list with two entries: 'mixtures' and 'quantities'.
 #'
@@ -24,11 +34,13 @@
 #'
 #' @examples
 #' library(DTD)
-#' random.data <- generate_random_data(n.types = 10,
-#'                                     n.samples.per.type = 150,
-#'                                     n.features = 250,
-#'                                     sample.type = "Cell",
-#'                                     feature.type = "gene")
+#' random.data <- generate_random_data(
+#'       n.types = 10,
+#'       n.samples.per.type = 150,
+#'       n.features = 250,
+#'       sample.type = "Cell",
+#'       feature.type = "gene"
+#'       )
 #'
 #' # normalize all samples to the same amount of counts:
 #' normalized.data <- normalize_to_count(random.data)
@@ -44,65 +56,84 @@
 #' include.in.X <- paste0("Type", 2:7)
 #'
 #' percentage.of.all.cells <- 0.2
-#' sample.X <- sample_random_X(included.in.X = include.in.X,
-#'                             pheno = indicator.list,
-#'                             exp.data = normalized.data,
-#'                             percentage.of.all.cells = percentage.of.all.cells)
+#' sample.X <- sample_random_X(
+#'       included.in.X = include.in.X,
+#'       pheno = indicator.list,
+#'       expr.data = normalized.data,
+#'       percentage.of.all.cells = percentage.of.all.cells
+#'       )
 #' X.matrix <- sample.X$X.matrix
 #' samples.to.remove <- sample.X$samples.to.remove
 #'
 #' # all samples that have been used in the reference matrix, must not be included in
 #' # the test/training set
 #' remaining.mat <- random.data[, -which(colnames(random.data) %in% samples.to.remove)]
-#' train.samples <- sample(x = colnames(remaining.mat),
-#'                        size = ceiling(ncol(remaining.mat)/2),
-#'                        replace = FALSE)
+#' train.samples <- sample(
+#'       x = colnames(remaining.mat),
+#'       size = ceiling(ncol(remaining.mat)/2),
+#'       replace = FALSE
+#'       )
 #' test.samples <- colnames(remaining.mat)[which(!colnames(remaining.mat) %in% train.samples)]
 #'
 #' train.mat <- remaining.mat[, train.samples]
 #' test.mat <- remaining.mat[, test.samples]
 #'
 #' indicator.train <- indicator.list[names(indicator.list) %in% colnames(train.mat)]
-#' training.data <- mix_samples(exp.data = train.mat,
-#'                              pheno = indicator.train,
-#'                              included.in.X = include.in.X,
-#'                              n.samples = 500,
-#'                              n.per.mixture = 100,
-#'                              verbose = FALSE)
+#' training.data <- mix_samples(
+#'       expr.data = train.mat,
+#'       pheno = indicator.train,
+#'       included.in.X = include.in.X,
+#'       n.samples = 500,
+#'       n.per.mixture = 100,
+#'       verbose = FALSE
+#'       )
 #'
 #' indicator.test <- indicator.list[names(indicator.list) %in% colnames(test.mat)]
-#' test.data <-  mix_samples(exp.data = test.mat,
-#'                           pheno = indicator.test,
-#'                           included.in.X = include.in.X,
-#'                           n.samples = 500,
-#'                           n.per.mixture = 100,
-#'                           verbose = FALSE)
-mix_samples <- function(exp.data,
+#' test.data <-  mix_samples(
+#'       expr.data = test.mat,
+#'       pheno = indicator.test,
+#'       included.in.X = include.in.X,
+#'       n.samples = 500,
+#'       n.per.mixture = 100,
+#'       verbose = FALSE
+#'       )
+#' # In order to show, that in our mixtures, the sum over the quantities in a
+#' # mixture might not be 1:
+#' sum.per.mixture <- apply(test.data$quantities, 2, sum)
+#' plot(sum.per.mixture)
+mix_samples <- function(expr.data,
                        pheno,
                        included.in.X,
                        n.samples = 1e3,
                        n.per.mixture = 100,
-                       verbose = FALSE){
+                       verbose = FALSE,
+                       normalize.to.count = TRUE){
 
   # Safety checks
   if(!is.vector(included.in.X)){
-    stop("in mix_samples_with_jitter: 'included.in.X' is not provided as vector")
+    stop("in mix_samples: 'included.in.X' is not provided as vector")
   }
   if(!is.vector(pheno)){
-    stop("in mix_samples_with_jitter: 'pheno' is not provided as vector")
+    stop("in mix_samples: 'pheno' is not provided as vector")
   }
-  if(!is.matrix(exp.data)){
-    stop("in mix_samples: 'exp.data' is not a numeric matrix")
+  if(!is.matrix(expr.data)){
+    stop("in mix_samples: 'expr.data' is not a numeric matrix")
   }
 
   if(!any(included.in.X %in% pheno)){
     stop("in mix_samples: no cell type in 'included.in.X' fits 'pheno'")
   }
 
-  if(!(all(names(pheno) %in% colnames(exp.data)) && length(pheno) == ncol(exp.data))){
-    stop("in mix_samples: 'names(pheno)' do not fit 'colnames(exp.data)'.
-         For every entry of 'colnames(exp.data)' there has to be a entry in 'pheno'")
+  if(!(all(names(pheno) %in% colnames(expr.data)) && length(pheno) == ncol(expr.data))){
+    stop("in mix_samples: 'names(pheno)' do not fit 'colnames(expr.data)'.
+         For every entry of 'colnames(expr.data)' there has to be a entry in 'pheno'")
   }
+  # test: normalize.to.count:
+  test <- test_logical(
+    test.value = normalize.to.count,
+    output.info = c("mix_samples", "normalize.to.count")
+  )
+  # end -> normalize.to.count
 
   # safety checks: n.samples
   test <- test_integer(test.value = n.samples,
@@ -115,7 +146,7 @@ mix_samples <- function(exp.data,
   test <- test_integer(test.value = n.per.mixture,
                        output.info = c("mix_samples", "n.per.mixutre"),
                        min = 1,
-                       max = ncol(exp.data))
+                       max = ncol(expr.data))
 
   # end -> n.per.mixture
 
@@ -126,12 +157,32 @@ mix_samples <- function(exp.data,
   # end -> verbose
 
   # initialise geneExpression matrix (here, the mixtures will be stored)
-  geneExpression <- matrix(NA, nrow=nrow(exp.data), ncol=n.samples)
-  rownames(geneExpression) <- rownames(exp.data)
+  geneExpression <- matrix(NA, nrow=nrow(expr.data), ncol=n.samples)
+  rownames(geneExpression) <- rownames(expr.data)
   colnames(geneExpression) <- paste0("mixtures", 1:n.samples)
 
-  # which types are within the pheno?
+  # which types are within the pheno (or 'include.in.X')?
+  # if there are only a few samples, it might happen that
+  # there is no sample for a cell type.
   types <- unique(pheno)
+  if(!all(included.in.X %in% types)){
+    useable.types <- unique(
+      c(
+        pheno,
+        included.in.X
+      )
+    )
+    stop(
+      paste(
+        "In 'mix_samples': for some types in 'included.in.X' there are no samples in your data. Provide e.g. the following vector as 'included.in.X': \n",
+        paste0(
+          useable.types
+          , collapse = ", "
+        )
+      )
+    )
+  }
+
   # how many types?
   nTypes <- length(types)
 
@@ -142,11 +193,11 @@ mix_samples <- function(exp.data,
 
   for(lsample in 1:n.samples){
     # randomly select 'n.per.mixture' samples (without replacing!)
-    randomSamples <- sample(x = colnames(exp.data),
+    randomSamples <- sample(x = colnames(expr.data),
                             size = n.per.mixture,
                             replace = FALSE)
     # average over the selected samples ...
-    avg <- rowSums(exp.data[, randomSamples])
+    avg <- rowSums(expr.data[, randomSamples])
     # ... store the result in the geneExpression matrix:
     geneExpression[,lsample] <- avg
 
@@ -173,14 +224,14 @@ mix_samples <- function(exp.data,
       cat("done ", 100 * lsample/n.samples, " %\n")
     }
   }
-
   # only the information about  cells "included in X" should be stored in quantities:
   quantities <- quantities[included.in.X, ]
 
   # normalize the expression matrix
-  geneExpression <- normalize_to_count(geneExpression)
+  if(normalize.to.count){
+    geneExpression <- normalize_to_count(geneExpression)
+  }
   # and return both matrices as a list:
   ret <- list("mixtures"= geneExpression, "quantities" = quantities)
   return(ret)
 }
-

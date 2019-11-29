@@ -1,17 +1,19 @@
 #' Visualizing cross validation output
 #'
 #' Plot the regularization parameter lambda vs the resulting loss function value.
-#' The lambda with the minimal mean loss in cross validation is marked with a red dot
-#' For an example see " Cross validation" in the package vignette `browseVignettes("DTD")`
+#' The lambda with the minimal mean loss in cross validation is marked with a
+#' red dot. For an example see "Cross validation" in the package vignette
+#' `browseVignettes("DTD")`
 #'
-#' @param DTD.model : list as returned by \code{\link{train_deconvolution_model}} or \code{\link{DTD_cv_lambda}}
-#' @param title string, additionally title (default "")
+#' @param DTD.model : list as returned by \code{\link{train_deconvolution_model}}
+#' \code{\link{DTD_cv_lambda_R}} or \code{\link{DTD_cv_lambda_cxx}}
+#' @param title string, additionally title
 #' @param LAMBDA.TRANS.FUN function, will be applied to the lambda sequence,
-#' e.g. to get equidistance x ticks (defaults to log2)
-#' @param x.lab string, or expression, will be used as the label on the x axis, defaults to "log2(lambda)"
-#' @param y.lab string, or expression, will be used as the label on the y axis, defaults to "Loss function"
+#' e.g. to get equidistance x ticks
+#' @param x.lab string, used as x label on the plot
+#' @param y.lab string, used as y label on the plot
 #' @param upper.x.axis.info string, either "non-zero" or "geometric-mean".
-#' This information will be printed on the upper x axis.
+#' Sets the information that will be printed on the upper x axis.
 #'
 #' @import ggplot2
 #'
@@ -89,7 +91,7 @@ ggplot_cv <- function(DTD.model,
       if("cor.test" %in% names(each.fold)){
         return(each.fold$cor.test)
       }else{
-        return(Inf)
+        return(NA)
       }
     })
     test.vec <- unlist(tmp, use.names = FALSE)
@@ -107,7 +109,6 @@ ggplot_cv <- function(DTD.model,
       byrow=TRUE)
     )
   rownames(test.results.frame) <- names(test.result.per.lambda)
-
   # for each model, pick "upper.x.axis" information (with same function/lapply construct):
   pick.upper.x.fun <- function(lambda.list){
     tmp <- lapply(lambda.list, function(each.fold){
@@ -123,19 +124,20 @@ ggplot_cv <- function(DTD.model,
           tmp,
           mean,
           na.rm = TRUE),
-        use.names = FALSE)
+        use.names = FALSE),
+      na.rm = TRUE
       )
     return(upper.info.vec)
   }
   upper.info.per.lambda <- lapply(cross.val.list,
                                   pick.upper.x.fun)
 
-  upper.info.per.lambda <- round(x = unlist(upper.info.per.lambda, use.names = FALSE), digits = 2)
+  upper.info.per.lambda <- round(x = unlist(upper.info.per.lambda, use.names = FALSE), digits = 0)
 
   # if DTD.model is build by train_correlation_model => pick lambda from the best.model
   if(is.list(DTD.model) && "best.model" %in% names(DTD.model)){
     used.lambda <- LAMBDA.TRANS.FUN(DTD.model$best.model$Lambda)
-    used.lambda.median <- stats::median(as.numeric(test.results.frame[as.character(DTD.model$best.model$Lambda), ]))
+    used.lambda.median <- stats::median(as.numeric(test.results.frame[as.character(DTD.model$best.model$Lambda), ]), na.rm=TRUE)
   }else{
     # find mean per lambda:
     median.per.lambda <- apply(test.results.frame, 1, stats::median, na.rm = TRUE)
