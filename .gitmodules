@@ -1,0 +1,4 @@
+[submodule "src/eigen"]
+    shallow = true
+	path = src/eigen
+	url = https://github.com/eigenteam/eigen-git-mirror.git
