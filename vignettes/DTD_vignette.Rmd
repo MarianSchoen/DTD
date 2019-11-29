@@ -38,7 +38,7 @@ We estimate the matrix $C$ where $C_{i,k}$ is the contribution of cell type i in
 
 Let 
 \begin{equation}
-  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
+  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g))
 \end{equation}
 
 The package DTD learns $g$ by minimizing $L$ on a training set of artificial bulk profiles $Y$ simulated by mixing
@@ -51,9 +51,6 @@ The package DTD provides functions to set up the learning process. To run DTD yo
 ```{r include=FALSE}
 # I'd like to start with 'training the g vector'. Therefore I need a lot of stuff ...
 library(DTD)
-# fast testing:
-lambda.len <- 4
-n.folds <- 2
 ###
 number.types <- 25
 n.features <- 100
@@ -110,6 +107,7 @@ test.data <- mix_samples(
 
 start.tweak <- rep(1, nrow(X.matrix))
 names(start.tweak) <- rownames(X.matrix)
+
 model <- train_deconvolution_model(
   tweak = start.tweak,
   X.matrix = X.matrix,
@@ -117,11 +115,8 @@ model <- train_deconvolution_model(
   test.data.list = test.data,
   estimate.c.type = "direct",
   maxit = maxit,
-  n.folds = n.folds,
-  lambda.len = lambda.len,
-  cv.verbose = FALSE,
   verbose = FALSE
-)
+  )
 ```
 The crucial function in the DTD package is the `train_deconvolution_model` function, which minimizes the vector $g$ over a training set. After some preliminary work it can be called via: 
 ```{r, fig.width = 7, fig.align="center"}
@@ -131,14 +126,13 @@ model <- train_deconvolution_model(
   train.data.list = training.data,
   test.data.list = test.data,
   estimate.c.type = "direct",
-  maxit = maxit,
-  cv.verbose = FALSE,
-  verbose = FALSE
+  verbose = FALSE, 
+  maxit = maxit
   )
 print(model$pics$convergence)
 ```
 
-Here, we trained the $g$-vector for `r maxit` iterations. Both training and test errors were reduced by optimizing the gene weights $g$.
+Here, we trained the $g$-vector for maxit = `r maxit` iterations. Both training and test errors were reduced by optimizing the gene weights $g$.
 
 # How to use DTD? 
 
@@ -215,7 +209,7 @@ It is used in the training process of the algorithm.
 
 ## Reference matrix X  
 
-Next, we build the reference matrix $X$. $X$ holds data from some but not all input profiles. The profiles used to bud $X$ can either be selected manually, or chosen randomly. Within the DTD package we provide the `sample_random_X` function, which generates a reference matrix by randomly selecting samples of the same type, and then averaging them to a reference profile for this type. 
+Next, we build the reference matrix $X$. $X$ holds data from some but not all input profiles. The profiles used to build $X$ can either be selected manually, or chosen randomly. Within the DTD package we provide the `sample_random_X` function, which generates a reference matrix by randomly selecting profiles of the same type, and then averaging them to a reference profile for this type. 
 The parameter `included.in.X` specifies which cell types are included into $X$, while the parameter `perc.of.all.cells` specifies what fraction of cells
 from each type will be used for building $X$.
 
@@ -267,7 +261,7 @@ In addition to the reference matrix $X$, DTD requires training data consisting o
 - Y, a matrix of (typically artificial) tissue profiles. Y has as many rows (=features) as `X.matrix` or `normalized.data`. 
 - C, a composition matrix. C has as many rows as there are cell types in `X.matrix`. 
 
-A column of Y is a simulated bulk tissue profile, where the corresponding row in $C$ annotates the cellular composition of this tissue. 
+A column of Y is a simulated bulk tissue profile, where the corresponding column in $C$ annotates the cellular composition of this tissue. 
 From the single cell profiles in the training set (that were not used to build $X$) we randomly sample profiles and average them to generate  
 artificial tissue profiles. The DTD package provides two methods to generate training and test sets. One method randomly samples cells 
 and averages them as described above. This is the recommended method for large single cell data sets. However, if there are only a few 
@@ -322,12 +316,13 @@ test.data <- mix_samples(
 ```
 
 
-The `mix_samples_with_jitter` function needs additionally a `prob.each` parameter. In the `mix_samples` function the average quantity for each cell type is its occurence in the `expr.data`. In the `mix_samples_with_jitter` function, the average expected quantity for each cell type is set via `prob.each`. `prob.each` must be a numeric vector, with the same length as `included.in.X`. 
+The `mix_samples_with_jitter` function needs additionally a `prob.each` parameter. In the `mix_samples` function the average quantity for each cell type is its occurence in the `expr.data`. In the `mix_samples_with_jitter` function, the average expected quantity for each cell type is set via `prob.each`. It must be a numeric vector, with the same length as `included.in.X`. 
 
 ```{r}
 training.data.jitter <- mix_samples_with_jitter(
   expr.data = train.mat,
-  prob.each = rep(1, length(include.in.X)), # default value
+  prob.each = rep(1, length(include.in.X)), # default value, 
+  # every type occurs in average with the same frequency 
   n.samples = n.samples,
   pheno = indicator.train,
   verbose = FALSE,
@@ -340,17 +335,17 @@ training.data.jitter <- mix_samples_with_jitter(
 
 In the optimizing procedure we search for a vector $g$, which minimizes L, where 
 \begin{equation}
-  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) + \lambda ||g||_1
+  L = - \sum_{j} cor(C_{j,.}, \widehat{C_{j,.}} (g)) 
 \end{equation}
 This optimization is done iteratively by gradient descent, using an implementation of 'FISTA' (Fast iterative shrinkage thresholding algorithm, Beck and Teboulle (2009)). 
-A crucial hyperparameter for the model is $\lambda$. In order to find the optimal $\lambda$ a cross validation is performed. 
 The training procedure can be called via `train_deconvolution_model`, and takes the following arguments: 
 
 * `tweak`: numeric initialization vector for g. Notice, that the names of tweak will be kept during optimization, and might be helpful for further visualizations.  
 * X.matrix: numeric matrix, with as many rows as length(tweak). Each column of X.matrix holds a cell type specific reference profile. 
 * train.data.list: list of training profiles, and compositions. 
 * test.data.list: list of test profiles, and compositions.
-* ... any argument that will be passed to `DTD_cv_lambda` and `descent_generalized_fista`. E.g. `maxiter`, `verbose` or `lambda.length`
+* use.implementation: string, either "cxx" or "R". 
+* ... any argument that will be passed to `descent_generalized_fista`, `descent_generalized_fista_cxx`. E.g. `maxiter` or `verbose` 
 
 ```{r}
 start.tweak <- rep(1, nrow(X.matrix))
@@ -359,26 +354,15 @@ model <- train_deconvolution_model(
   tweak = start.tweak,
   X.matrix = X.matrix,
   train.data.list = training.data,
-  test.data.list = test.data,
+  test.data.list = test.data, 
   estimate.c.type = "direct",
   maxit = maxit,
   cv.verbose = TRUE,
   verbose = FALSE
 )
 ```
-The output of  `train_deconvolution_model` algorithm is a list. The entry 'cv.obj' holds a list of lists with information about the cross validation (see section "Cross validation"). The entry 'best.model' contains a model trained on the full trainings data set with the best lambda of the cross validation. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function), and a loss vector. The loss vector stores the loss function evaluated in every iteration. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found. Additionally, in the `model` object there is a entry named `reference.X` and `pics`. `reference.X` holds the used reference matrix X, in `pics` there are several ggplot figures to assess the quality of the model. 
+The output of  `train_deconvolution_model` algorithm is a list. The entry 'best.model' contains a model trained on the full trainings data set. This model contains the following entries: In the entry `Tweak` it returns the `tweak.vec` after the last iterations (which is that $g$ vector which minimizes the loss function), and a loss vector. The loss vector stores the loss function evaluated in every iteration. Depending on the `save.all.tweaks` argument, there is a third entry named `History`. In this matrix the $g$ vector of every iteration can be found. Additionally, in the `model` object there is a entry named `reference.X` and `pics`. `reference.X` holds the used reference matrix X, in `pics` there are several ggplot figures to assess the quality of the model. 
 
-
-### Calibrating the sparceness of g via cross validation
-The loss function includes a $L_1$ regularization term, controlled by the regularization parameter $\lambda$. 
-In order to find the optimal  $\lambda$  we implemented a k-fold cross validation. The `train_deconvolution_model` function automatically performs a cross validation. The crucial arguments of the cross validation are the following. These can be passed as '...' to the `train_deconvolution_model` function:
-
-- lambda.seq: numeric vector or NULL. Sequence of $\lambda$, for which models are trained. For each $\lambda$ `n.folds` models are trained, and tested in a sense of k-fold cross validation.  If `lambda.seq` is set to NULL (Default-value), a sequence of $\lambda$ will be generated based on the dimension of the training set. 
-- n.folds: integer, number of folds for k-fold cross validation
-- lambda.length: integer, if `lambda.seq == NULL`, a sequence of $\lambda$ will be generated based on the dimension of the training set. `lambda.length` determines the length of the generated sequence.
-- train.list: list with two entries (`mixtures` and `quantities`, as described previously). The entry `mixtures` must be a numeric matrix, with training samples as columns. The cross validation folds are assigned using these column names. During the cross validation a copy of the train.list will be used, in which only samples of the current fold are present. Sample selection is done via column names for matrices, and via names for vectors. 
-- ... any argument that can be passed to the `descent_generalized_fista` function (e.g. maxiter, verbose etc.)
-The return object from the cross validation is a list with 2 entries. The `cv.obj` entry holds a list of list. For every lambda, and each fold the DTD model is reported. The second entry `best.model` of the `cv.obj` is a trained model which uses the lambda with minimal loss function during the cross validation. Notice that this model is trained on the complete trainings data set.
 
 ## Visualizations
 
@@ -386,7 +370,7 @@ Each of the following visualizations is called automatically after training a mo
 
 ### Visualization of the learning curve  
 
-The function `ggplot_correlation` plots the loss L against the iteration of gradient descent algorithm for both training and test data. It can be used to monitor learning rates and potential overfitting.
+The function `ggplot_correlation` plots the loss $L$ against the iteration of gradient descent algorithm for both training and test data. It can be used to monitor learning rates and potential overfitting.
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
 print(model$pics$convergence)
@@ -404,11 +388,11 @@ print(model$pics$convergence)
 ```
 
 ### Performance cell type per cell type
-The function `ggplot_true_vs_esti` plots true versus estimated cell fractions of the test data for all cell types .
+The function `ggplot_true_vs_esti` plots true versus estimated cell fractions of the test data for all cell types. In the first entry, a a  plot including all cell types is drawn. In the subsequent plots, each cell type is plotted in a seperate picture.
 
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
-print(model$pics$true_vs_esti)
+print(model$pics$true_vs_esti[[1]])
 
 # or via function call:
 # print(
@@ -436,7 +420,7 @@ print(model$pics$histogram)
 
 ### g-Path
 Additional useful information that can be gained from the `History` of the `tweak.vec` can be visualized using the `ggplot_gpath` function.
-In the plot below each line tracks the change of one $g_i$ during all iterations. In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. Accordingly, there are `r nrow(X.matrix)` lines in the plot. Notice, that most of the change in $g$ takes place in the early steps of the algorithm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10) to transform the iteration axis.  \cr
+In the plot below each line tracks the change of one $g_i$ during all iterations. In this showcase, we included `r nrow(X.matrix)` features in the model, therefore the length of our $g$ vector is `r nrow(X.matrix)`. Accordingly, there are `r nrow(X.matrix)` lines in the plot. Notice, that most of the change in $g$ takes place in the early steps of the algorithm, therefore we included a `ITER.TRANSFORM.FUN` (defaults to log10(g + 1)) to transform the iteration axis.  \cr
 ```{r, fig.width = 7, fig.align="center"}
 # print via model$pics list:
 print(model$pics$path)
@@ -495,26 +479,13 @@ print(model$pics$Xheatmap)
 #   ggplot_heatmap(
 #     DTD.model = model,
 #     test.data = test.data,
-#     estimate.c.type = "direct", 
+#     estimate.c.type = "direct",
 #     feature.subset = 0.1
 #   )
 # )
 ```
  
-### Cross validation
-You can visualize the cross-validation process via:
-```{r, fig.width = 7, fig.align='center'}
-# print via model$pics list:
-print(model$pics$cv)
-# or via function call:
-# print(
-#   ggplot_cv(
-#     DTD.model = model,
-#     title =  "DTD Vignette"
-#   )
-# )
-```
-
+ 
 ## Session Info  
 
 ```{r}
