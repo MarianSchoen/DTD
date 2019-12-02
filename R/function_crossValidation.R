@@ -299,7 +299,7 @@ DTD_cv_lambda_cxx <- function(
   cv.verbose = TRUE,
   warm.start = FALSE,
   estimate.c.type = "direct",
-  NORM.FUN = "identity",
+  NORM.FUN = "norm2",
   NESTEROV.FUN = "positive",
   ST.FUN = "softmax",
   inv.precision = 1e-12,
