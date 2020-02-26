@@ -13,7 +13,7 @@ test_c_type(test.value, output.info)
 \item{output.info}{[1] function that calls, [2] name of value to test}
 }
 \value{
-a estimate_c function, or stops with an error
+NULL or stops with an error
 }
 \description{
 test_c_type

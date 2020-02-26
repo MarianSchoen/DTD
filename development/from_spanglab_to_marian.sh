@@ -1,4 +1,4 @@
-exclude#!/bin/bash
+#!/bin/bash
 
 PATH_TO="/Users/marian/Documents/"
 SOURCE="${PATH_TO}/git/DTD_spanglab"

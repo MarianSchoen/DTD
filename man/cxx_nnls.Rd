@@ -4,10 +4,16 @@
 \alias{cxx_nnls}
 \title{NNLS}
 \usage{
-cxx_nnls(A, b)
+cxx_nnls(A, b, eps = 1e-12, maxiter = 10000)
 }
 \arguments{
-\item{b}{}
+\item{A}{numeric matrix}
+
+\item{b}{vector with same length as 'nrow(A)'}
+
+\item{eps}{maximum allowed magnitude of the "zero" coefficients.}
+
+\item{maxiter}{maximum number of iterations.}
 }
 \value{
 x

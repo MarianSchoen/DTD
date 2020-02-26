@@ -9,28 +9,34 @@ generate_random_data(n.types = 5, n.samples.per.type = 10,
   seed = 1310)
 }
 \arguments{
-\item{n.types}{integer, 2 <= 'n.types', how many different types should be included in the data set (default 5)}
+\item{n.types}{integer, 2 <= 'n.types', how many different types should be
+included in the data set}
 
-\item{n.samples.per.type}{integer 1 <= 'n.samples.per.type', how many samples should be generated per type (default 10)}
+\item{n.samples.per.type}{integer 1 <= 'n.samples.per.type',
+how many samples should be generated per type}
 
-\item{n.features}{integer, 1 <= 'n.features', how many features should be included (default 1000)}
+\item{n.features}{integer, 1 <= 'n.features', how many features should be
+included}
 
-\item{sample.type}{string, name of samples, defaults to "Cell"}
+\item{sample.type}{string, name of samples}
 
-\item{feature.type}{string, name of features, defaults to "gene"}
+\item{feature.type}{string, name of features}
 
-\item{seed}{integer, will be passed to "set_seed", defaults to 1310}
+\item{seed}{integer, will be passed to "set_seed"}
 }
 \value{
-matrix with ('n.types' * 'n.samples.per.type') columns, and 'n.features' rows
+matrix with ('n.types' * 'n.samples.per.type') columns,
+and 'n.features' rows
 }
 \description{
-generate_random_data simulates data which can be used exemplary for digital tissue deconvolution.
-It will generate a numeric matrix with 'n.features' rows, and ('n.types' * 'n.samples.per.type')
-columns. Each column represents a sample of special type. The function will generate 'n.types',
-and for each type 'n.samples.per.type'.\cr
-Mathematically, each feature is drawn from a poisson distribution. For each feature in every cell type,
-a lambda is drawn randomly.Then it generates multiple samples per type. This ensures that samples
+'generate_random_data' simulates data which can be used exemplary for
+digital tissue deconvolution. It will generate a numeric matrix with '
+n.features' rows, and ('n.types' * 'n.samples.per.type') columns.
+Each column represents a sample of special type. The function will generate
+'n.types', and for each type 'n.samples.per.type'.\cr
+Mathematically, each feature is drawn from a poisson distribution.
+For each feature in every cell type, a lambda is drawn randomly.
+Then it generates multiple samples per type. This ensures that samples
 from the same cell type have similar counts for the same feature.
 }
 \examples{

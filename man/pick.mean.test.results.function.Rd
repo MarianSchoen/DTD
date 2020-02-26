@@ -2,7 +2,8 @@
 % Please edit documentation in R/function_cv_pick_mean_test.R
 \name{pick.mean.test.results.function}
 \alias{pick.mean.test.results.function}
-\title{returns mean of the individual test results, setting unconverged or unavailable results to Inf.}
+\title{returns mean of the individual test results,
+setting unconverged or unavailable results to NA}
 \usage{
 pick.mean.test.results.function(lambda.list)
 }
@@ -13,5 +14,6 @@ pick.mean.test.results.function(lambda.list)
 list of means.
 }
 \description{
-returns mean of the individual test results, setting unconverged or unavailable results to Inf.
+returns mean of the individual test results,
+setting unconverged or unavailable results to NA
 }

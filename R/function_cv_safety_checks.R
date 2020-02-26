@@ -2,10 +2,11 @@
 #'
 #' tests common input parameters to the cxx and R implementation of DTD_cv_lambda.
 #'
-#' @param lambda.seq numeric vector or NULL: Over this series of lambdas the
+#' @param lambda.seq numeric vector or NULL or "none": Over this series of lambdas the
 #' FISTA will be optimized. If 'lambda.seq' is set to NULL, a generic series of
 #' lambdas - depending on the dimensions of the training set -
-#' will be generated.
+#' will be generated. If 'lambda.seq' is "none", no cross validation is done.
+#' Only one model with lambda = 0 is trained on the complete data set.
 #' @param tweak.start numeric vector, starting vector for the DTD algorithm.
 #' @param n.folds integer, number of buckets in the cross validation.
 #' @param lambda.length integer, how many lambdas will be generated

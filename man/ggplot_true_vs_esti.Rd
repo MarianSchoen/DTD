@@ -5,49 +5,60 @@
 \title{Plot true vs estimated cell composition}
 \usage{
 ggplot_true_vs_esti(DTD.model, X.matrix = NA, test.data,
-  norm.mixturewise = FALSE, norm.typewise = FALSE, estimate.c.type,
-  title = "", shape.indi = NA, show.legend = FALSE)
+  norm.typewise = FALSE, estimate.c.type = NA, title = "",
+  shape.indi = NA, show.legend = FALSE)
 }
 \arguments{
-\item{DTD.model}{either a numeric vector with length of nrow(X),
-or a list returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
-or\code{\link{descent_generalized_fista}}.}
+\item{DTD.model}{either a numeric vector with length of nrow(X), or a list
+returned by \code{\link{train_deconvolution_model}},
+\code{\link{DTD_cv_lambda_cxx}}, or \code{\link{descent_generalized_fista}}.}
 
-\item{X.matrix}{numeric matrix with cells as columns, and features as rows.
-Reference matrix X of the DTD problem. X.matrix can be set to NA (default), if the DTD.model
-includes the reference matrix X (default for \code{\link{train_deconvolution_model}})}
+\item{X.matrix}{numeric matrix, with features/genes as rows,
+and cell types as column. Each column of X.matrix is a reference
+expression profile. A trained DTD model includes X.matrix, it has been
+trained on. Therefore, X.matrix should only be set, if the 'DTD.model'
+is not a DTD model.}
 
-\item{test.data}{list of two matrices, named "mixtures" and "quantities".
-For examples see \code{\link{mix_samples}}, \code{\link{mix_samples_with_jitter}}
-or the package vignette `browseVignettes("DTD")`.}
+\item{test.data}{list, with two entries, a numeric matrix each,
+named 'mixtures' and 'quantities' For examples see \code{\link{mix_samples}},
+\code{\link{mix_samples_with_jitter}} or the package vignette
+`browseVignettes("DTD")`.}
 
-\item{norm.mixturewise}{logical, in the known AND estimated quantity matrix, should every mixture (=> column) be normalized to sum of 1? (Defaults to FALSE)}
+\item{norm.typewise}{logical, in the known AND estimated quantity matrix,
+should every type (=> row) be normalized to range from 0 to 1?}
 
-\item{norm.typewise}{logical, in the known AND estimated quantity matrix, should every type (=> row) be normalized to range from 0 to 1? (Defaults to FALSE)}
+\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of}
 
-\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of
-\eqn{arg min_C ||diag(g)(Y - XC)||_2}. \cr
-If estimate.c.type is set to "direct" there is no regularization (see \code{\link{estimate_c}}),\cr
-if estimate.c.type is set to "non_negative" the estimates "C"
-must not be negative (non-negative least squares) (see (see \code{\link{estimate_nn_c}}))}
+\item{title}{string, additionally title}
 
-\item{title}{string, additionally title (default "")}
+\item{shape.indi}{vector with length 'ncol(test.data$quantities)',
+is passed to shape argument of aes in geom_point. Idea is to mark samples
+from different origin. If set to NA, the shape will not be showed.}
 
-\item{shape.indi}{vector with length of ncol(test.data$quantities), will be passed to shape argument of geom_point.
-Idea is to mark samples from different origin. Defaults to NA. If set to NA, the shape will not be changed.}
+\item{show.legend}{logical, should the legend be plotted?
+Notice, this function generates a plot, holding a subfigure for each type
+of the deconvolution. In every subfigure, the cell type, and the
+corresponding correlation is shown. This parameter only controls
+the additional legend.}
 
-\item{show.legend}{logical, should an additional legend be plotted?
-Notice, this function generates a plot, holding a subfigure for each type of the deconvolution.
-In every subfigure, the cell type, and the corresponding correlation is shown.
-In the title of each subfigure the correlation of the included type and the type is shown.
-This parameter only controls the additional legend. (Defaults to FALSE)}
+\item{estimate.c.type}{string, either "non_negative", or "direct".
+Indicates how the algorithm finds the solution of
+\eqn{arg min_C ||diag(g)(Y - XC)||_2}.
+\itemize{
+   \item If 'estimate.c.type' is set to "direct",
+ there is no regularization (see \code{\link{estimate_c}}),
+   \item if 'estimate.c.type' is set to "non_negative",
+ the estimates "C" must not be negative (non-negative least squares)
+(see (see \code{\link{estimate_nn_c}}))
+}}
 }
 \value{
 ggplot object
 }
 \description{
-'ggplot_true_vs_esti' can be used to evaluate a trained DTD model, in the way that
-it plots known/true quantities versus estimated quantities per cell type.
-As input, 'ggplot_true_vs_esti' expects a DTD.model, and test.data.
-For an example see section "Correlation per cell type" in the package vignette `browseVignettes("DTD")`
+'ggplot_true_vs_esti' can be used to evaluate a trained DTD model,
+in the way that it plots known/true quantities versus estimated quantities
+per cell type. As input, 'ggplot_true_vs_esti' expects a DTD.model,
+and test.data. For an example see section "Correlation per cell type" in the
+package vignette `browseVignettes("DTD")`
 }

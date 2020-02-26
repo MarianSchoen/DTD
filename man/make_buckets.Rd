@@ -7,13 +7,23 @@
 make_buckets(train.Y, folds)
 }
 \arguments{
-\item{train.Y}{training data}
+\item{train.Y}{numeric matrix, training data}
 
-\item{folds}{number of buckets to build.}
+\item{folds}{integer, number of buckets to build.}
 }
 \value{
-list of lists of same structure as train.Y, but with names indicating the bucket.
+named vector
 }
 \description{
 takes training data and sorts it into buckets, one for each fold.
+}
+\examples{
+some.mat <- matrix(1:20, nrow = 2)
+colnames(some.mat) <- paste0("some.mat", 1:ncol(some.mat))
+n.folds <- 5
+mapped.buckets <- make_buckets(
+  train.Y = some.mat
+  , folds = n.folds
+  )
+table(mapped.buckets)
 }

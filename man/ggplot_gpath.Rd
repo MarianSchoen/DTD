@@ -4,53 +4,62 @@
 \alias{ggplot_gpath}
 \title{Visualize the path of each \eqn{g_i} over all iterations}
 \usage{
-ggplot_gpath(DTD.model, number.pics = 3, G.TRANSFORM.FUN = identity,
-  ITER.TRANSFORM.FUN = log10, y.lab = "g",
-  x.lab = "log10(iteration)", subset = NA, title = "",
+ggplot_gpath(DTD.model, number.pics = 3, G.TRANSFORM.FUN = log10p1,
+  ITER.TRANSFORM.FUN = identity, y.lab = "log10(g+1)",
+  x.lab = "iteration", subset = NA, title = "",
   show.legend = FALSE)
 }
 \arguments{
-\item{DTD.model}{: list as returned by \code{\link{train_deconvolution_model}}, \code{\link{DTD_cv_lambda}},
-or \code{\link{descent_generalized_fista}}. Must include a 'History' entry.}
+\item{DTD.model}{either a numeric vector with length of nrow(X), or a list
+returned by \code{\link{train_deconvolution_model}},
+\code{\link{DTD_cv_lambda_cxx}}, or \code{\link{descent_generalized_fista}}.}
 
-\item{number.pics}{: integer, into how many pictures should the resutlt be split. (defaults to 3)}
+\item{number.pics}{integer, into how many pictures should the
+resutlt be split}
 
-\item{G.TRANSFORM.FUN}{: function, that expects a vector of numerics, and returns a vector of the same length.
-Will be applied on each intermediate 'g' vector. Set 'G.TRANSFORM.FUN' to identity if no transformation is required.
-If you change 'G.TRANSFORM.FUN' don't forget to adjust the y.lab parameter. (default is identity)}
+\item{G.TRANSFORM.FUN}{function, that expects a vector of numerics,
+and returns a vector of the same length. Will be applied on each intermediate
+'g' vector. Set 'G.TRANSFORM.FUN' to identity if no transformation is required.
+If you change 'G.TRANSFORM.FUN' don't forget to adjust the y.lab parameter.}
 
-\item{ITER.TRANSFORM.FUN}{: function, that expects a vector of numerics, and returns a vector of the same length.
-Will be applied on the iteration/x.axis of the plot. Set 'ITER.TRANSFORM.FUN' to identity if no transformation is required.
-If you change 'ITER.TRANSFORM.FUN' don't forget to adjust the x.lab parameter (Default: log10)}
+\item{ITER.TRANSFORM.FUN}{function, that expects a vector of numerics,
+and returns a vector of the same length. Will be applied on the
+iteration/x.axis of the plot. Set 'ITER.TRANSFORM.FUN' to identity if no
+transformation is required. If you change 'ITER.TRANSFORM.FUN' don't forget
+to adjust the x.lab parameter}
 
-\item{y.lab}{string, used as y label on the plot (Default: "g)}
+\item{y.lab}{string, used as y label on the plot}
 
-\item{x.lab}{string, used as x label on the plot (default is "log10(iteration)")}
+\item{x.lab}{string, used as x label on the plot}
 
-\item{subset}{vector of strings, or NA that match the rownames of fista.output$History.
-Only these entries will be visualized. If set to NA, all entries will be used. (Default: NA)}
+\item{subset}{NA, or a vector of strings,that match the rownames of
+'DTD.model$History'. Only these entries will be visualized.
+If set to NA, all entries are plotted}
 
-\item{title}{string, additionally title (default "")}
+\item{title}{string, additionally title}
 
-\item{show.legend}{logical, should the legend be plotted? Notice that the legend will
-be plotted in a additional figure, and can be visualized via 'grid::grid.draw', or 'plot' (Default: FALSE)}
+\item{show.legend}{logical, should the legend be plotted? Notice that the
+legend will be plotted in a additional figure, and can be visualized via
+'grid::grid.draw', or 'plot'}
 }
 \value{
 list, with "gPath" entry. "gPath" will be a ggplot object.
-Depending on "show.legend" the list has a second entry named "legend". "legend" will be a grid object, which can be plotted via 'plot', or 'grid::grid.draw'.
+Depending on "show.legend" the list has a second entry named "legend".
+"legend" will be a grid object, which can be plotted via 'plot',
+or 'grid::grid.draw'.
 }
 \description{
-With this function the path of each \eqn{g_i} over all iterations can be plotted.
-Notice, that if there are many genes in your model, it may be hard to distinguish between each path.
-As a solution the parameter "number.pics" can be set to a higher integer.
+With this function the regression path of each \eqn{g_i} over all iterations
+can be plotted. Notice, that if there are many genes in your model, it may
+be hard to distinguish between each path. As a solution the parameter
+"number.pics" can be set to a higher integer.
 Then, the visualization will be split into more pictures.
-In each picture all \eqn{g_i} get collected that end up in the same quantile range.
-E.g if you split into 3 pictures, the first picture includes all genes that result into the
-quantile range from 0\% Qu to 33\% Qu of all g.\cr
-There are parameters (G.TRANSFORM.FUN and ITER.TRANSFORM.FUN) to transform the g vector, and iteration number.
-These might help to make the plot more understandable, e.g. if the distribution of the g vector is dominated by
-same outliers, applying a log transformation might help.
-In most of the scenarios the major changes in the g vector occur in the early iterations.
-Focus on this part via a log transformation.
-For an example see section "g-Path" in the package vignette `browseVignettes("DTD")`
+In each picture all \eqn{g_i} get collected that end up in the same
+quantile range. E.g if you split into 3 pictures, the first picture includes
+all genes that result into the quantile range from 0\% Qu to 33\% Qu of all
+g.\cr There are parameters (G.TRANSFORM.FUN and ITER.TRANSFORM.FUN) to
+transform the g vector, and iteration number. These make the plot more
+understandable, e.g. if the distribution of the g vector is dominated by
+For an example see section "g-Path" in the package vignette
+`browseVignettes("DTD")`
 }
