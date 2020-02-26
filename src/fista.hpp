@@ -19,7 +19,7 @@ namespace dtd {
       vec deltaX = - grad / grad.norm();
       m.grad(grad2, params + deltaX);
       vec deltaY = grad2 - grad;
-      return deltaX.dot(deltaY) / deltaY.dot(deltaY);
+      return abs(deltaX.dot(deltaY)) / deltaY.dot(deltaY);
     }
 
     inline double nesterov_factor(int k) {
