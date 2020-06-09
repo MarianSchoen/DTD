@@ -11,14 +11,14 @@ An exemplary analysis can be viewed at https://github.com/MarianSchoen/Exemplary
 # Install
 Install from github, without vignette: 
 ``` r
-  devtools::install_github("MarianSchoen/DTD")
+  devtools::install_github("spang-lab/DTD")
 ```
 I strongly recommend creating the vignette. 
 Therefore, install from github with vignette  
 (creating vignettes approximately takes ~3 minutes)
 ``` r
   devtools::install_github(
-    "MarianSchoen/DTD", 
+    "spang-lab/DTD", 
     build_opts = c("--no-resave-data", "--no-manual"), 
     build_vignettes=TRUE
     )
