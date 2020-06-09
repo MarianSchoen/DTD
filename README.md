@@ -42,3 +42,7 @@ The underlying idea of loss-function learning DTD is to gain the vector g by min
 <a href="https://www.codecogs.com/eqnedit.php?latex=\dpi{150}&space;L&space;=&space;-\sum_j&space;cor(C_{j,&space;.},&space;\widehat{C_{j,&space;.}}(g))" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\dpi{150}&space;L&space;=&space;-\sum_j&space;cor(C_{j,&space;.},&space;\widehat{C_{j,&space;.}}(g))" title="L = -\sum_j cor(C_{j, .}, \widehat{C_{j, .}}(g))" /></a>
 
 Here, <a href="https://www.codecogs.com/eqnedit.php?latex=\dpi{110}&space;\widehat{C}(g)" target="_blank"><img src="https://latex.codecogs.com/png.latex?\dpi{110}&space;\widehat{C}(g)" title="\widehat{C}(g)" /></a> is the solution of formula (2). During training we iteratively adjust the g vector in the direction of the gradient <a href="https://www.codecogs.com/eqnedit.php?latex=\nabla&space;L" target="_blank"><img src="https://latex.codecogs.com/png.latex?\nabla&space;L" title="\nabla L" /></a>, leading to a g vector, which cellular estimates <a href="https://www.codecogs.com/eqnedit.php?latex=\dpi{110}&space;\widehat{C}(g)" target="_blank"><img src="https://latex.codecogs.com/png.latex?\dpi{110}&space;\widehat{C}(g)" title="\widehat{C}(g)" /></a> correlate best with the known cellular compositions C. 
+
+# License
+
+All source code and documentation can be freely used and is available under a [MIT license](LICENSE).
