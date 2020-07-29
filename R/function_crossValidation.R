@@ -83,7 +83,7 @@ DTD_cv_lambda_R <- function(
         save.all.tweaks = TRUE,
         ...
       )
-    } else { # save.all.tweaks is not set
+    } else { # save.all.tweaks is set
       bestModel <- descent_generalized_fista(
         lambda = 0,
         tweak.vec = tweak.start,
@@ -299,7 +299,7 @@ DTD_cv_lambda_cxx <- function(
   cv.verbose = TRUE,
   warm.start = FALSE,
   estimate.c.type = "direct",
-  NORM.FUN = "identity",
+  NORM.FUN = "norm2",
   NESTEROV.FUN = "positive",
   ST.FUN = "softmax",
   inv.precision = 1e-12,
@@ -337,6 +337,7 @@ DTD_cv_lambda_cxx <- function(
           ...
         )
       }
+      bestModel$cpp.parameters <- model
       return(list(best.model = bestModel))
     }
   }
@@ -520,7 +521,7 @@ DTD_cv_lambda_cxx <- function(
     save.all.tweaks = TRUE,
     ...
   )
-
+  bestModel$cpp.parameters <- model
   # return the cv.object for plotting, and the model with best lambda
   ret <- list(cv.obj = cv.object, best.model = bestModel)
   return(ret)
