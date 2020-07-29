@@ -1,8 +1,10 @@
+# written by Marian Schön
 rm(list = ls())
 gc()
 if ("DTD" %in% (.packages())) {
   detach("package:DTD", unload = TRUE)
 }
+# devtools::load_all()
 library(DTD)
 library(testthat)
 
@@ -522,6 +524,7 @@ test_that("train_deconvolution_model ", {
       train.data.list = training.data,
       test.data.list = test.data,
       estimate.c.type = "direct"
+      ,
     ),
     "In train_deconvolution_model: 'tweak' does not fit 'X.matrix'. 'length(tweak)' must be 'nrow(X.matrix)'",
     fixed = TRUE
@@ -642,7 +645,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: 'tweak.start' is not numeric"
@@ -657,7 +660,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: 'nrow(train.data.list$mixtures)' does not match 'length(tweak.start)'",
@@ -674,7 +677,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: there are features in 'train.data.list$mixtures' that don't match with 'names(tweak.start)'",
@@ -689,7 +692,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: 'n.folds' is not a single integer"
@@ -703,7 +706,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: 'n.folds' is not a single integer"
@@ -717,7 +720,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: 'n.folds' is not an integer"
@@ -731,7 +734,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: 'lambda.length' is not a single integer"
@@ -745,7 +748,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: 'lambda.length' is not a single integer"
@@ -759,7 +762,7 @@ test_that("DTD_cv_lambda_cxx ", {
       train.data.list = training.data,
       F.GRAD.FUN = NA,
       EVAL.FUN = NA,
-      cv.verbose = TRUE,
+      cv.verbose = FALSE,
       warm.start = FALSE
     ),
     "In DTD_cv_lambda: 'lambda.length' is not an integer"
@@ -1100,6 +1103,7 @@ test_that("ggplot_cv ", {
     train.data.list = training.data,
     test.data.list = test.data,
     lambda.seq = NULL,
+    cv.verbose = FALSE,
     estimate.c.type = "direct"#, verbose = TRUE
   )
 
@@ -1175,22 +1179,24 @@ test_that("ggplot_heatmap ", {
   )
 })
 
-
 context("Comparing R and cpp implemenation: ")
 test_that("r and cpp: ",
-  { # this last test takes very long to compute
+  {
   list.of.models <- list()
   for(implemenation in c("cpp", "R")){
     for(runs in 1:5){
       name <- paste0(implemenation, runs)
       set.seed(1)
-      list.of.models[[name]] <-  train_deconvolution_model(
+      list.of.models[[name]] <- train_deconvolution_model(
         tweak = start.tweak,
         X.matrix = X.matrix,
         use.implementation = implemenation,
         train.data.list = training.data,
         test.data.list = test.data,
         estimate.c.type = "direct"
+        , verbose = FALSE
+        , cv.verbose = FALSE
+        , maxit = 100
       )
     }
   }
@@ -1227,7 +1233,10 @@ test_that("r and cpp: ",
     expected = rep(0, nrow(tmp.R))
   )
 
-
+  expect_equal(
+    object = tmp.R[, 1]
+    , expected = tmp.cpp[, 1]
+  )
   cor.on.test <- unlist(
     lapply(
       list.of.models,
@@ -1245,7 +1254,8 @@ test_that("r and cpp: ",
 
   cpp.cot <- cor.on.test[grepl(pattern = "cpp", names(cor.on.test))]
   R.cot <- cor.on.test[grepl(pattern = "R", names(cor.on.test))]
-
+  # print(cpp.cot)
+  # print(R.cot)
   expect_equal(
     expected = length(unique(cpp.cot)),
     object = 1
@@ -1259,7 +1269,6 @@ test_that("r and cpp: ",
   expect_equal(
     expected = cpp.cot,
     object = R.cot,
-    tolerance = 1e-3
   )
   }
 )
