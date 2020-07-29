@@ -46,7 +46,7 @@ check_model <- function(model) {
 #'
 empty_model <- function() {
   model <- list()
-  model$normfnid <- as.integer(0)
+  model$normfnid <- as.integer(1)
   model$threshfnid <- as.integer(0)
   model$subspfnid <- as.integer(0)
   model$coeffestim <- as.integer(0)
