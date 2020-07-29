@@ -95,7 +95,7 @@ descent_generalized_fista <- function(tweak.vec,
                                       ST.FUN = "softmax",
                                       FACTOR.FUN = "nesterov_factor",
                                       EVAL.FUN,
-                                      NORM.FUN = identity,
+                                      NORM.FUN = "norm2",
                                       line.search.speed = 2,
                                       cycles=5,
                                       save.all.tweaks=FALSE,
@@ -104,6 +104,12 @@ descent_generalized_fista <- function(tweak.vec,
                                       NESTEROV.FUN = "positive",
                                       stop.crit.threshold = 1e-13
                                       ){
+
+
+  # safety check: tweak.vec
+  test <- test_tweak_vec(tweak.vec = tweak.vec,
+                         output.info = c("descent_generalized_fista", "tweak.vec"))
+  # end -> tweak
 
   # safety check: F.GRAD.FUN
   # I am going to check if the function returns an error, if called with only 1 parameter
@@ -179,13 +185,6 @@ descent_generalized_fista <- function(tweak.vec,
   }
   # end -> NORM.FUN
 
-
-  # safety check: tweak.vec
-  test <- test_tweak_vec(tweak.vec = tweak.vec,
-                         output.info = c("descent_generalized_fista", "tweak.vec"))
-  # end -> tweak
-
-
   # safety check: stop.crit.threshold
   test <- test_numeric(test.value = stop.crit.threshold,
                        output.info = c("descent_generalized_fista", "stop.crit.threshold"),
@@ -241,6 +240,9 @@ descent_generalized_fista <- function(tweak.vec,
     stop("descent_generalized_fista: Norm function changes eval value.")
   }
 
+  # norm the input tweak.vec
+  tweak.vec <- NORM.FUN(tweak.vec)
+
   # If no learning.rate is set, the initial learning rate will be initialized according to:
   # Barzilai & Borwein 1988
   # It estimates via:
@@ -289,9 +291,7 @@ descent_generalized_fista <- function(tweak.vec,
 
   # Notice that the for loop starts at 2, due to the extrapolation/correction step of the FISTA algorithm
   for(iter in 2:maxit){
-    # changed here
     y_vec <- NORM.FUN(y_vec)
-    # till here
 
     # calculate gradient at the current position:
     grad <- F.GRAD.FUN(y_vec)
@@ -334,8 +334,7 @@ descent_generalized_fista <- function(tweak.vec,
 
 
     # set the winning u_vec, and eval. Norm the u_vec using the provided function:
-#    u_vec <- NORM.FUN(u_mat[winner.pos, ])
-    u_vec <- u_mat[winner.pos, ]
+    u_vec <- NORM.FUN(u_mat[winner.pos, ])
     eval <- eval.vec[winner.pos]
 
     # update tweak_old (tweak of last iteration)
@@ -355,9 +354,8 @@ descent_generalized_fista <- function(tweak.vec,
       }
     }
 
-    # find stop criterion
+    # store the loss-change before nesterov
     change.last.iter.before.nesterov <- rev(converge_vec)[1] - eval
-    ###
 
     # and if set, update tweak.history
     if(save.all.tweaks){
