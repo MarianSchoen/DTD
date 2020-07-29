@@ -211,7 +211,7 @@ mix_samples_with_jitter <- function(
     # Go through all samples:
     for(lsample in included.in.X){
       # Find all cells in the pheno which match to "lsample"
-      potentialCells <- names(pheno[pheno == lsample])
+      potentialCells <- names(pheno[which(pheno == lsample)])
       # sample a subset of the potentiallCells:
       chosen.sample <- sample(
         x = potentialCells
