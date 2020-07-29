@@ -237,8 +237,13 @@ train_deconvolution_model <- function(
   } else {
     stop(paste("cannot use implementation \"", use.implementation, "\": not implemented."))
   }
+
   catch$reference.X <- X.matrix
   catch$estimate.c.type <- estimate.c.type
+
+  catch$train.data <- train.data.list
+  catch$test.data <- test.data.list
+  catch$used.implementation <- use.implementation
 
   pics <- vector(mode = "list")
   if("cv.obj" %in% names(catch)){
