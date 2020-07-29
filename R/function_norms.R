@@ -23,7 +23,10 @@ identity <- function(x) {
 #' print(norm(same.values, type = "2"))
 #' normed.values <- n2normed(same.values)
 #' print(norm(normed.values, type = "2"))
-n2normed <- function(x, to=1) {
+n2normed <- function(x, to=NA) {
+  if( is.na(to) ){
+    to <- length(x)
+  }
   n2 <- norm(matrix(x, ncol = 1), type = "2")
   if(n2 == 0){
     ret <- x
