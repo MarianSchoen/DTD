@@ -8,7 +8,7 @@
 select.fun <- function(list.entry, samples) {
   # internal training samples selection function:
   if (is.matrix(list.entry)) {
-    return(list.entry[, samples])
+    return(list.entry[, samples, drop = FALSE])
   }
   if (!is.null(names(list.entry))) {
     return(list.entry[samples])
