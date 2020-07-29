@@ -4,9 +4,14 @@
 \alias{generate_random_data}
 \title{Generating random data}
 \usage{
-generate_random_data(n.types = 5, n.samples.per.type = 10,
-  n.features = 1000, sample.type = "Cell", feature.type = "gene",
-  seed = 1310)
+generate_random_data(
+  n.types = 5,
+  n.samples.per.type = 10,
+  n.features = 1000,
+  sample.type = "Cell",
+  feature.type = "gene",
+  seed = 1310
+)
 }
 \arguments{
 \item{n.types}{integer, 2 <= 'n.types', how many different types should be

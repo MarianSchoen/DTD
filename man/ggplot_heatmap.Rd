@@ -4,9 +4,15 @@
 \alias{ggplot_heatmap}
 \title{clustered heatmap of diag(g) * X}
 \usage{
-ggplot_heatmap(DTD.model, X.matrix = NA, test.data = NULL,
-  estimate.c.type = "decide.on.model", title = "",
-  feature.subset = 100, log2.expression = TRUE)
+ggplot_heatmap(
+  DTD.model,
+  X.matrix = NA,
+  test.data = NULL,
+  estimate.c.type = "decide.on.model",
+  title = "",
+  feature.subset = 100,
+  log2.expression = TRUE
+)
 }
 \arguments{
 \item{DTD.model}{either a numeric vector with length of nrow(X), or a list

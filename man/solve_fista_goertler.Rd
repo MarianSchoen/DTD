@@ -4,10 +4,18 @@
 \alias{solve_fista_goertler}
 \title{solve_fista_goertler}
 \usage{
-solve_fista_goertler(model, lambda = 0.01, maxiter = 100,
-  stop.crit.threshold = 1e-05, save.all.tweaks = FALSE,
-  learningrate = NA, linesearchspeed = 2, cycles = 5,
-  restarts = TRUE, verbose = FALSE)
+solve_fista_goertler(
+  model,
+  lambda = 0.01,
+  maxiter = 100,
+  stop.crit.threshold = 1e-05,
+  save.all.tweaks = FALSE,
+  learningrate = NA,
+  linesearchspeed = 2,
+  cycles = 5,
+  restarts = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{model}{input model, as constructed by, e.g., empty_model()}

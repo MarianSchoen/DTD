@@ -4,10 +4,17 @@
 \alias{ggplot_gpath}
 \title{Visualize the path of each \eqn{g_i} over all iterations}
 \usage{
-ggplot_gpath(DTD.model, number.pics = 3, G.TRANSFORM.FUN = log10p1,
-  ITER.TRANSFORM.FUN = identity, y.lab = "log10(g+1)",
-  x.lab = "iteration", subset = NA, title = "",
-  show.legend = FALSE)
+ggplot_gpath(
+  DTD.model,
+  number.pics = 3,
+  G.TRANSFORM.FUN = log10p1,
+  ITER.TRANSFORM.FUN = identity,
+  y.lab = "log10(g+1)",
+  x.lab = "iteration",
+  subset = NA,
+  title = "",
+  show.legend = FALSE
+)
 }
 \arguments{
 \item{DTD.model}{either a numeric vector with length of nrow(X), or a list

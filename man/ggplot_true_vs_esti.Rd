@@ -4,9 +4,16 @@
 \alias{ggplot_true_vs_esti}
 \title{Plot true vs estimated cell composition}
 \usage{
-ggplot_true_vs_esti(DTD.model, X.matrix = NA, test.data,
-  norm.typewise = FALSE, estimate.c.type = NA, title = "",
-  shape.indi = NA, show.legend = FALSE)
+ggplot_true_vs_esti(
+  DTD.model,
+  X.matrix = NA,
+  test.data,
+  norm.typewise = FALSE,
+  estimate.c.type = NA,
+  title = "",
+  shape.indi = NA,
+  show.legend = FALSE
+)
 }
 \arguments{
 \item{DTD.model}{either a numeric vector with length of nrow(X), or a list
@@ -27,7 +34,16 @@ named 'mixtures' and 'quantities' For examples see \code{\link{mix_samples}},
 \item{norm.typewise}{logical, in the known AND estimated quantity matrix,
 should every type (=> row) be normalized to range from 0 to 1?}
 
-\item{estimate.c.type}{string, either "non_negative", or "direct". Indicates how the algorithm finds the solution of}
+\item{estimate.c.type}{string, either "non_negative", or "direct".
+Indicates how the algorithm finds the solution of
+\eqn{arg min_C ||diag(g)(Y - XC)||_2}.
+\itemize{
+   \item If 'estimate.c.type' is set to "direct",
+ there is no regularization (see \code{\link{estimate_c}}),
+   \item if 'estimate.c.type' is set to "non_negative",
+ the estimates "C" must not be negative (non-negative least squares)
+(see (see \code{\link{estimate_nn_c}}))
+}}
 
 \item{title}{string, additionally title}
 
@@ -40,17 +56,6 @@ Notice, this function generates a plot, holding a subfigure for each type
 of the deconvolution. In every subfigure, the cell type, and the
 corresponding correlation is shown. This parameter only controls
 the additional legend.}
-
-\item{estimate.c.type}{string, either "non_negative", or "direct".
-Indicates how the algorithm finds the solution of
-\eqn{arg min_C ||diag(g)(Y - XC)||_2}.
-\itemize{
-   \item If 'estimate.c.type' is set to "direct",
- there is no regularization (see \code{\link{estimate_c}}),
-   \item if 'estimate.c.type' is set to "non_negative",
- the estimates "C" must not be negative (non-negative least squares)
-(see (see \code{\link{estimate_nn_c}}))
-}}
 }
 \value{
 ggplot object

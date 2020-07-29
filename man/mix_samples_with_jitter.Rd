@@ -4,10 +4,19 @@
 \alias{mix_samples_with_jitter}
 \title{Mix samples with jitter}
 \usage{
-mix_samples_with_jitter(included.in.X, prob.each = NA, n.samples,
-  expr.data, pheno, verbose = FALSE, add.jitter = FALSE,
-  chosen.mean = 1, chosen.sd = 0.05, n.per.mixture = 1,
-  normalize.to.count = TRUE)
+mix_samples_with_jitter(
+  included.in.X,
+  prob.each = NA,
+  n.samples,
+  expr.data,
+  pheno,
+  verbose = FALSE,
+  add.jitter = FALSE,
+  chosen.mean = 1,
+  chosen.sd = 0.05,
+  n.per.mixture = 1,
+  normalize.to.count = TRUE
+)
 }
 \arguments{
 \item{included.in.X}{vector of strings, indicating types that are in the

@@ -4,9 +4,15 @@
 \alias{train_deconvolution_model}
 \title{Train a DTD model based on correlation loss function}
 \usage{
-train_deconvolution_model(tweak, X.matrix, train.data.list,
-  test.data.list = NULL, estimate.c.type, use.implementation = "cxx",
-  ...)
+train_deconvolution_model(
+  tweak,
+  X.matrix,
+  train.data.list,
+  test.data.list = NULL,
+  estimate.c.type,
+  use.implementation = "cxx",
+  ...
+)
 }
 \arguments{
 \item{tweak}{numeric vector with length of nrow(X).

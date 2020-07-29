@@ -5,10 +5,19 @@
 \title{Descent generalized FISTA \cr
 (fast iterative shrinkage thresholding algorithm)}
 \usage{
-descent_generalized_fista_cxx(model, lambda = 0.01, maxit = 500,
-  stop.crit.threshold = 1e-13, save.all.tweaks = FALSE,
-  learning.rate = NA, line.search.speed = 2, cycles = 5,
-  use.restart = TRUE, verbose = FALSE, ...)
+descent_generalized_fista_cxx(
+  model,
+  lambda = 0.01,
+  maxit = 500,
+  stop.crit.threshold = 1e-13,
+  save.all.tweaks = FALSE,
+  learning.rate = NA,
+  line.search.speed = 2,
+  cycles = 5,
+  use.restart = TRUE,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{model}{a model as constructed in interface_cxx.R}

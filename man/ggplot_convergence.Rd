@@ -4,8 +4,13 @@
 \alias{ggplot_convergence}
 \title{Plot loss curve}
 \usage{
-ggplot_convergence(DTD.model, X.matrix = NA, test.data = NULL,
-  estimate.c.type = "decide.on.model", title = "")
+ggplot_convergence(
+  DTD.model,
+  X.matrix = NA,
+  test.data = NULL,
+  estimate.c.type = "decide.on.model",
+  title = ""
+)
 }
 \arguments{
 \item{DTD.model}{either a numeric vector with length of nrow(X), or a list

@@ -4,8 +4,13 @@
 \alias{sample_random_X}
 \title{Sample random X}
 \usage{
-sample_random_X(included.in.X, pheno, expr.data,
-  percentage.of.all.cells = 0.1, normalize.to.count = TRUE)
+sample_random_X(
+  included.in.X,
+  pheno,
+  expr.data,
+  percentage.of.all.cells = 0.1,
+  normalize.to.count = TRUE
+)
 }
 \arguments{
 \item{included.in.X}{vector of strings, indicating types that will be in the

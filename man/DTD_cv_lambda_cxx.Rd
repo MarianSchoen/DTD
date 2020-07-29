@@ -4,11 +4,22 @@
 \alias{DTD_cv_lambda_cxx}
 \title{Cross-validation for digital tissue deconvolution}
 \usage{
-DTD_cv_lambda_cxx(lambda.seq = "none", tweak.start, X.matrix,
-  n.folds = 5, lambda.length = 10, train.data.list,
-  cv.verbose = TRUE, warm.start = FALSE, estimate.c.type = "direct",
-  NORM.FUN = "identity", NESTEROV.FUN = "positive",
-  ST.FUN = "softmax", inv.precision = 1e-12, ...)
+DTD_cv_lambda_cxx(
+  lambda.seq = "none",
+  tweak.start,
+  X.matrix,
+  n.folds = 5,
+  lambda.length = 10,
+  train.data.list,
+  cv.verbose = TRUE,
+  warm.start = FALSE,
+  estimate.c.type = "direct",
+  NORM.FUN = "norm2",
+  NESTEROV.FUN = "positive",
+  ST.FUN = "softmax",
+  inv.precision = 1e-12,
+  ...
+)
 }
 \arguments{
 \item{lambda.seq}{numeric vector or NULL or "none": Over this series of lambdas the

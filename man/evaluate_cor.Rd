@@ -4,8 +4,13 @@
 \alias{evaluate_cor}
 \title{Evaluate correlation}
 \usage{
-evaluate_cor(X.matrix = NA, new.data, true.compositions, DTD.model,
-  estimate.c.type)
+evaluate_cor(
+  X.matrix = NA,
+  new.data,
+  true.compositions,
+  DTD.model,
+  estimate.c.type
+)
 }
 \arguments{
 \item{X.matrix}{numeric matrix, with features/genes as rows,
@@ -100,5 +105,5 @@ training.data <- mix_samples(
    )
 
  rel.cor <- sum.cor/ncol(X.matrix)
-cat("Relative correlation: ", -rel.cor, "\\n")
+cat("Relative correlation: ", -rel.cor, "\n")
 }

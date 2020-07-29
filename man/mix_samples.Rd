@@ -4,8 +4,15 @@
 \alias{mix_samples}
 \title{Mix samples for loss-function learning DTD}
 \usage{
-mix_samples(expr.data, pheno, included.in.X, n.samples = 1000,
-  n.per.mixture = 100, verbose = FALSE, normalize.to.count = TRUE)
+mix_samples(
+  expr.data,
+  pheno,
+  included.in.X,
+  n.samples = 1000,
+  n.per.mixture = 100,
+  verbose = FALSE,
+  normalize.to.count = TRUE
+)
 }
 \arguments{
 \item{expr.data}{numeric matrix, with features as rows and samples as columns}

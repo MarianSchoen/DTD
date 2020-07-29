@@ -4,8 +4,15 @@
 \alias{DTD_cv_lambda_test_input_generic}
 \title{input tests for cross validation}
 \usage{
-DTD_cv_lambda_test_input_generic(lambda.seq, tweak.start, n.folds,
-  lambda.length, train.data.list, cv.verbose, warm.start)
+DTD_cv_lambda_test_input_generic(
+  lambda.seq,
+  tweak.start,
+  n.folds,
+  lambda.length,
+  train.data.list,
+  cv.verbose,
+  warm.start
+)
 }
 \arguments{
 \item{lambda.seq}{numeric vector or NULL or "none": Over this series of lambdas the

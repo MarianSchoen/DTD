@@ -4,9 +4,18 @@
 \alias{DTD_cv_lambda_R}
 \title{Cross-validation for digital tissue deconvolution}
 \usage{
-DTD_cv_lambda_R(lambda.seq = "none", tweak.start, n.folds = 5,
-  lambda.length = 10, train.data.list, cv.verbose = TRUE,
-  warm.start = FALSE, F.GRAD.FUN, EVAL.FUN, ...)
+DTD_cv_lambda_R(
+  lambda.seq = "none",
+  tweak.start,
+  n.folds = 5,
+  lambda.length = 10,
+  train.data.list,
+  cv.verbose = TRUE,
+  warm.start = FALSE,
+  F.GRAD.FUN,
+  EVAL.FUN,
+  ...
+)
 }
 \arguments{
 \item{lambda.seq}{numeric vector or NULL or "none": Over this series of lambdas the

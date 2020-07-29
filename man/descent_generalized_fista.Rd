@@ -5,12 +5,24 @@
 \title{Descent generalized FISTA \cr
 (fast iterative shrinkage thresholding algorithm)}
 \usage{
-descent_generalized_fista(tweak.vec, lambda = 0, maxit = 500,
-  learning.rate = NA, F.GRAD.FUN, ST.FUN = "softmax",
-  FACTOR.FUN = "nesterov_factor", EVAL.FUN, NORM.FUN = identity,
-  line.search.speed = 2, cycles = 5, save.all.tweaks = FALSE,
-  use.restart = TRUE, verbose = FALSE, NESTEROV.FUN = "positive",
-  stop.crit.threshold = 1e-13)
+descent_generalized_fista(
+  tweak.vec,
+  lambda = 0,
+  maxit = 500,
+  learning.rate = NA,
+  F.GRAD.FUN,
+  ST.FUN = "softmax",
+  FACTOR.FUN = "nesterov_factor",
+  EVAL.FUN,
+  NORM.FUN = "norm2",
+  line.search.speed = 2,
+  cycles = 5,
+  save.all.tweaks = FALSE,
+  use.restart = TRUE,
+  verbose = FALSE,
+  NESTEROV.FUN = "positive",
+  stop.crit.threshold = 1e-13
+)
 }
 \arguments{
 \item{tweak.vec}{numeric vector, starting vector for the DTD algorithm}

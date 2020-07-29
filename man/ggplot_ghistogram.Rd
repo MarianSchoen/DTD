@@ -4,8 +4,13 @@
 \alias{ggplot_ghistogram}
 \title{Histogram of the g/tweak vector}
 \usage{
-ggplot_ghistogram(DTD.model, n.bins = NA, G.TRANSFORM.FUN = log10p1,
-  title = "", x.lab = "log10(g+1)")
+ggplot_ghistogram(
+  DTD.model,
+  n.bins = NA,
+  G.TRANSFORM.FUN = log10p1,
+  title = "",
+  x.lab = "log10(g+1)"
+)
 }
 \arguments{
 \item{DTD.model}{either a numeric vector with length of nrow(X), or a list

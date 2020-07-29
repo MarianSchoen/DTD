@@ -4,7 +4,7 @@
 \alias{n2normed}
 \title{Norm a vector such that ||x||_2 = 1 is equal to the length of}
 \usage{
-n2normed(x, to = 1)
+n2normed(x, to = NA)
 }
 \arguments{
 \item{x}{numeric vector}

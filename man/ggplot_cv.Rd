@@ -4,9 +4,14 @@
 \alias{ggplot_cv}
 \title{Visualizing cross validation output}
 \usage{
-ggplot_cv(DTD.model, title = "", LAMBDA.TRANS.FUN = log2,
-  upper.x.axis.info = "non-zero", x.lab = expression("log2(" * lambda *
-  ")"), y.lab = "Loss function")
+ggplot_cv(
+  DTD.model,
+  title = "",
+  LAMBDA.TRANS.FUN = log2,
+  upper.x.axis.info = "non-zero",
+  x.lab = expression("log2(" * lambda * ")"),
+  y.lab = "Loss function"
+)
 }
 \arguments{
 \item{DTD.model}{: list as returned by \code{\link{train_deconvolution_model}}
