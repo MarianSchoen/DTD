@@ -1,6 +1,6 @@
 Package: DTD
 Title: Digital Tissue Deconvolution
-Version: 1.2
+Version: 1.2.001
 Date: 2020-03-18
 Authors@R: c(
   person(
@@ -22,7 +22,7 @@ Description:
 License: MIT
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 Depends:
 	R (>= 3.1.0),
 	stats, 
