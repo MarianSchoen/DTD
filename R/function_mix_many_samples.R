@@ -166,13 +166,9 @@ mix_samples <- function(expr.data,
   # there is no sample for a cell type.
   types <- unique(pheno)
   if(!all(included.in.X %in% types)){
-    useable.types <- unique(
-      c(
-        pheno,
-        included.in.X
-      )
-    )
-    stop(
+    useable.types <- intersect(pheno, included.in.X)
+    # warn the user about an all zero row in quantities:
+    warning(
       paste(
         "In 'mix_samples': for some types in 'included.in.X' there are no samples in your data. Provide e.g. the following vector as 'included.in.X': \n",
         paste0(
@@ -181,6 +177,9 @@ mix_samples <- function(expr.data,
         )
       )
     )
+    # reset types to complete included in X
+    # => subsetting at the end
+    types <- included.in.X
   }
 
   # how many types?
