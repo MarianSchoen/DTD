@@ -141,29 +141,38 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
     // not the true "iter", but the actual iteration count
     // 0 is the initial value (iter - 1)
     int iter = 1;
-    std::function<void(dtd::models::GoertlerModel const & , vec const & )> record_solve =
-      [&conv_vec,&history,&iter,saveHistory,verbose,& solver, epsilon](dtd::models::GoertlerModel const & m, vec const & paramvec) {
-        if( iter < conv_vec.size() )
-          conv_vec(iter) = m.evaluate(paramvec);
-        if( saveHistory ) {
-          // this should never happen, but to be sure and not segfault:
-          // (and since we cannot throw...)
-          if( iter < history.rows() ) {
-            history.row(iter) = paramvec;
+    std::function<void(dtd::models::GoertlerModel const &, vec const &)>
+        record_solve = [&conv_vec, &history, &iter, saveHistory, verbose,
+                        &solver, epsilon](dtd::models::GoertlerModel const &m,
+                                          vec const &paramvec) {
+          double loss = m.evaluate(paramvec);
+          if (iter < conv_vec.size())
+            conv_vec(iter) = loss;
+          if (saveHistory) {
+            // this should never happen, but to be sure and not segfault:
+            // (and since we cannot throw...)
+            if (iter < history.rows()) {
+              history.row(iter) = paramvec;
+            }
           }
-        }
-        if( verbose ) {
-          Rprintf("********************************************************************************\n");
-          Rprintf("* iteration           %d\n", iter);
-          Rprintf("* learning rate:      %5e\n", solver.getLearningRate());
-          Rprintf("* loss:               %5f\n", solver.feval(m));
-          Rprintf("* delta y (before N): %5e (< eps = %e ? %d)\n", solver.getDeltaYBeforeNesterov(), epsilon, solver.getDeltaYBeforeNesterov() < epsilon);
-          Rprintf("* delta y (after N):  %5e (< eps = %e ? %d)\n", solver.getDeltaYAfterNesterov(), epsilon, solver.getDeltaYAfterNesterov() < epsilon);
-          Rprintf("* nesterov counter:   %d\n", solver.getNesterovCounter());
-          Rprintf("* nesterov factor:    %5f\n", dtd::solvers::nesterov_factor(solver.getNesterovCounter()));
-        }
-        iter++;
-      };
+          if (verbose) {
+            Rprintf("**********************************************************"
+                    "**********************\n");
+            Rprintf("* iteration           %d\n", iter);
+            Rprintf("* learning rate:      %5e\n", solver.getLearningRate());
+            Rprintf("* loss:               %5f\n", loss);
+            Rprintf("* delta y (before N): %5e (< eps = %e ? %d)\n",
+                    solver.getDeltaYBeforeNesterov(), epsilon,
+                    solver.getDeltaYBeforeNesterov() < epsilon);
+            Rprintf("* delta y (after N):  %5e (< eps = %e ? %d)\n",
+                    solver.getDeltaYAfterNesterov(), epsilon,
+                    solver.getDeltaYAfterNesterov() < epsilon);
+            Rprintf("* nesterov counter:   %d\n", solver.getNesterovCounter());
+            Rprintf("* nesterov factor:    %5f\n",
+                    dtd::solvers::nesterov_factor(solver.getNesterovCounter()));
+          }
+          iter++;
+        };
 
     solver.solve(model, maxiter, epsilon, lambda, record_solve);
 
