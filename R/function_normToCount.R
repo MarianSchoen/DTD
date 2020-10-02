@@ -24,8 +24,10 @@
 #'
 #' # check:
 #' apply(normalized.matrix, 2, sum)
-normalize_to_count <- function(expr.data,
-                               count = NA) {
+normalize_to_count <- function(
+  expr.data,
+  count = NA
+  ) {
   if(any(is.na(count))){
     count <- nrow(expr.data)
   }
@@ -47,10 +49,10 @@ normalize_to_count <- function(expr.data,
     stop("In normalize_to_count: expr.data is not of matrix format")
   }
   # end -> expr.data
-
+  
   # microbenchmark told me that apply is faster than a loop,
   # therefore normalizing is done via apply:
-  norm.data <- apply(expr.data, 2, function(x){count*x/sum(x)})
+  norm.data <- apply(expr.data, 2, function(x){count*(x/sum(x))})
 
   return(norm.data)
 }
