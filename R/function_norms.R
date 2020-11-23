@@ -23,7 +23,7 @@ identity <- function(x) {
 #' print(norm(same.values, type = "2"))
 #' normed.values <- n2normed(same.values)
 #' print(norm(normed.values, type = "2"))
-n2normed <- function(x, to=NA) {
+n2normed <- function(x, to=1) {
   if( is.na(to) ){
     to <- length(x)
   }
