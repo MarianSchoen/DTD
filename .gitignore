@@ -11,6 +11,9 @@ doc
 .gdbhistory
 .Rbuildignore
 *.Rproj
+src/Makevars
+
+config.*
 
 # hide development folder: 
 development/*
