@@ -17,3 +17,4 @@ config.*
 
 # hide development folder: 
 development/*
+.glacier_pack
