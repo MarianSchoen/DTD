@@ -9,3 +9,8 @@ doc
 *.tar.gz
 *.pdf
 .gdbhistory
+.Rbuildignore
+*.Rproj
+
+# hide development folder: 
+development/*
