@@ -49,7 +49,10 @@ n2normed <- function(x, to=1) {
 #' print(norm(as.matrix(same.values), type = "O"))
 #' normed.values <- n1normed(same.values)
 #' print(norm(as.matrix(normed.values), type = "O"))
-n1normed <- function(x, to) {
+n1normed <- function(x, to=1) {
+  if( is.na(to) ){
+    to <- length(x)
+  }  
   n1 <- norm(matrix(x, ncol = 1), type = "O")
   if(n1 == 0){
     ret <- x

@@ -1179,96 +1179,199 @@ test_that("ggplot_heatmap ", {
   )
 })
 
+
 context("Comparing R and cpp implemenation: ")
-test_that("r and cpp: ",
+test_that("r and cpp with NORM.FUN = 'identity'",
   {
-  list.of.models <- list()
-  for(implemenation in c("cpp", "R")){
-    for(runs in 1:5){
-      name <- paste0(implemenation, runs)
-      set.seed(1)
-      list.of.models[[name]] <- train_deconvolution_model(
-        tweak = start.tweak,
-        X.matrix = X.matrix,
-        use.implementation = implemenation,
-        train.data.list = training.data,
-        test.data.list = test.data,
-        estimate.c.type = "direct"
-        , verbose = FALSE
-        , cv.verbose = FALSE
-        , maxit = 100
-      )
-    }
-  }
-
-  tmp <- matrix(
-    unlist(
-      lapply(list.of.models, function(model){return(model$best.model$Tweak)})
-      ),
-    ncol = length(list.of.models)
-  )
-  colnames(tmp) <- names(list.of.models)
-
-  tmp.cpp <- tmp[, which(grepl(pattern = "cpp", colnames(tmp)))]
-  tmp.R <- tmp[, which(grepl(pattern = "R", colnames(tmp)))]
-
-  expect_equal(
-    object = apply(
-      tmp.cpp, 1, function(row){
-        r <- range(row)
-        return(r[1] - r[2])
-        }
-      ),
-    expected = rep(0, nrow(tmp.cpp))
-    )
-
-
-  expect_equal(
-    object = apply(
-      tmp.R, 1, function(row){
-        r <- range(row)
-        return(r[1] - r[2])
-      }
-    ),
-    expected = rep(0, nrow(tmp.R))
-  )
-
-  expect_equal(
-    object = tmp.R[, 1]
-    , expected = tmp.cpp[, 1]
-  )
-  cor.on.test <- unlist(
-    lapply(
-      list.of.models,
-      function(model){
-        DTD::evaluate_cor(
-          new.data = test.data$mixtures,
-          true.compositions = test.data$quantities,
-          DTD.model = model,
-          estimate.c.type = "decide.on.model"
+    list.of.models <- list()
+    for(implemenation in c("cpp", "R")){
+      for(runs in 1:5){
+        name <- paste0(implemenation, runs)
+        set.seed(1)
+        list.of.models[[name]] <- train_deconvolution_model(
+          tweak = start.tweak
+          , X.matrix = X.matrix
+          , train.data.list = training.data
+          , test.data.list = test.data
+          , use.implementation = implemenation
+          , estimate.c.type = "direct"
+          , NORM.FUN = "identity"
+          , verbose = FALSE
+          , cv.verbose = FALSE
+          , maxit = 3
         )
+      }
+    }
+  
+    tweak.mat <- matrix(
+      unlist(
+        lapply(list.of.models, function(model){return(model$best.model$Tweak)})
+        ),
+      ncol = length(list.of.models)
+    )
+    colnames(tweak.mat) <- names(list.of.models)
+  
+    tweak.cpp <- tweak.mat[, which(grepl(pattern = "cpp", colnames(tweak.mat)))]
+    tweak.R <- tweak.mat[, which(grepl(pattern = "R", colnames(tweak.mat)))]
+  
+    # compare within cpp
+    expect_equal(
+      object = apply(
+        tweak.cpp, 1, function(row){
+          r <- range(row)
+          return(r[1] - r[2])
+          }
+        ),
+      expected = rep(0, nrow(tweak.cpp))
+      )
+  
+    # compare within R
+    expect_equal(
+      object = apply(
+        tweak.R, 1, function(row){
+          r <- range(row)
+          return(r[1] - r[2])
         }
       ),
-    use.names = TRUE
-  )
+      expected = rep(0, nrow(tweak.R))
+    )
+  
+    # compare between cpp and R: 
+    expect_equal(
+      object = tweak.R[, 1]
+      , expected = tweak.cpp[, 1]
+    )
+    
+    cor.on.test <- unlist(
+      lapply(
+        list.of.models,
+        function(model){
+          DTD::evaluate_cor(
+            new.data = test.data$mixtures,
+            true.compositions = test.data$quantities,
+            DTD.model = model,
+            estimate.c.type = "decide.on.model"
+          )
+          }
+        ),
+      use.names = TRUE
+    )
+  
+    cpp.cot <- cor.on.test[grepl(pattern = "cpp", names(cor.on.test))]
+    R.cot <- cor.on.test[grepl(pattern = "R", names(cor.on.test))]
+    # print(cpp.cot)
+    # print(R.cot)
+    expect_equal(
+      expected = length(unique(cpp.cot)),
+      object = 1
+    )
+    expect_equal(
+      expected = length(unique(R.cot)),
+      object = 1
+    )
+    names(cpp.cot) <- NULL
+    names(R.cot) <- NULL
+    expect_equal(
+      expected = cpp.cot,
+      object = R.cot,
+      tolerance = 1e-6
+    )
+  }
+)
 
-  cpp.cot <- cor.on.test[grepl(pattern = "cpp", names(cor.on.test))]
-  R.cot <- cor.on.test[grepl(pattern = "R", names(cor.on.test))]
-  # print(cpp.cot)
-  # print(R.cot)
-  expect_equal(
-    expected = length(unique(cpp.cot)),
-    object = 1
-  )
-  expect_equal(
-    expected = length(unique(R.cot)),
-    object = 1
-  )
-  names(cpp.cot) <- NULL
-  names(R.cot) <- NULL
-  expect_equal(
-    expected = cpp.cot,
-    object = R.cot,
-  )
+test_that("r and cpp with NORM.FUN = 'norm2'",
+  {
+    list.of.models <- list()
+    for(implemenation in c("cpp", "R")){
+      for(runs in 1:5){
+        name <- paste0(implemenation, runs)
+        set.seed(1)
+        list.of.models[[name]] <- train_deconvolution_model(
+          tweak = start.tweak
+          , X.matrix = X.matrix
+          , train.data.list = training.data
+          , test.data.list = test.data
+          , use.implementation = implemenation
+          , estimate.c.type = "direct"
+          , NORM.FUN = "norm1"
+          , verbose = FALSE
+          , cv.verbose = FALSE
+          , maxit = 3
+        )
+      }
+    }
+    
+    tweak.mat <- matrix(
+      unlist(
+        lapply(list.of.models, function(model){return(model$best.model$Tweak)})
+      ),
+      ncol = length(list.of.models)
+    )
+    colnames(tweak.mat) <- names(list.of.models)
+    
+    tweak.cpp <- tweak.mat[, which(grepl(pattern = "cpp", colnames(tweak.mat)))]
+    tweak.R <- tweak.mat[, which(grepl(pattern = "R", colnames(tweak.mat)))]
+    
+    # compare within cpp
+    expect_equal(
+      object = apply(
+        tweak.cpp, 1, function(row){
+          r <- range(row)
+          return(r[1] - r[2])
+        }
+      ),
+      expected = rep(0, nrow(tweak.cpp))
+    )
+    
+    # compare within R
+    expect_equal(
+      object = apply(
+        tweak.R, 1, function(row){
+          r <- range(row)
+          return(r[1] - r[2])
+        }
+      ),
+      expected = rep(0, nrow(tweak.R))
+    )
+    
+    expect_equal(
+      object = tweak.R[, 1]
+      , expected = tweak.cpp[, 1]
+    )
+    
+    cor.on.test <- unlist(
+      lapply(
+        list.of.models,
+        function(model){
+          DTD::evaluate_cor(
+            new.data = test.data$mixtures,
+            true.compositions = test.data$quantities,
+            DTD.model = model,
+            estimate.c.type = "decide.on.model"
+          )
+        }
+      ),
+      use.names = TRUE
+    )
+    
+    cpp.cot <- cor.on.test[grepl(pattern = "cpp", names(cor.on.test))]
+    R.cot <- cor.on.test[grepl(pattern = "R", names(cor.on.test))]
+    # print(cpp.cot)
+    # print(R.cot)
+    expect_equal(
+      expected = length(unique(cpp.cot)),
+      object = 1
+    )
+    expect_equal(
+      expected = length(unique(R.cot)),
+      object = 1
+    )
+    names(cpp.cot) <- NULL
+    names(R.cot) <- NULL
+    expect_equal(
+      expected = cpp.cot,
+      object = R.cot,
+      tolerance = 1e-4
+    )
   }
 )
