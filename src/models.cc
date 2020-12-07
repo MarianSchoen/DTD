@@ -142,14 +142,17 @@ namespace dtd {
         throw std::runtime_error("unimplemented threshold function.");
     }
     void GoertlerModel::norm_constraint(vec & v) const {
+      ftype scale = 1.0;
       if( m_normfn == NormFunctions::IDENTITY ) {
-        ; // leave v unchanged
+        return; // leave v unchanged
       } else if( m_normfn == NormFunctions::NORM2 ) {
-        v *= v.size() / v.norm();
+        //scale = v.size() / v.norm();
+        scale = v.norm();
       } else if( m_normfn == NormFunctions::NORM1 ) {
-        v *= v.size() / v.lpNorm<1>();
+        scale = v.lpNorm<1>();
       } else
         throw std::runtime_error("unimplemented norm function. ");
+      v *= v.size() / scale;
     }
     vec GoertlerModel::subspace_constraint(vec const & v) const {
       if( m_subspfn == SubspaceFunctions::POSITIVE ) {

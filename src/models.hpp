@@ -48,6 +48,8 @@ namespace dtd {
         if( m_g.size() != m_ngenes && m_g.cols() == 1)
           throw std::runtime_error("g is not a ngenes long vector.");
 
+        norm_constraint(m_g);
+
         m_xtgxi = invxtgx(m_x, m_g, inv_prec);
       }
       mat estimate_c(vec const & g) const;
@@ -55,6 +57,7 @@ namespace dtd {
       inline vec const & getParams() const { return m_g; }
       inline void setParams(vec const & g) {
         m_g = g;
+        norm_constraint(m_g);
         m_xtgxi = invxtgx(m_x, m_g, inv_prec);
       }
       ftype evaluate(vec const & params) const {

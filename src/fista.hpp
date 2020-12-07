@@ -105,7 +105,6 @@ namespace dtd {
       int iter = 2;
       for( ; iter <= maxiter; ++iter ){
         ftype rate = m_learning_rate / static_cast<double>(m_cyclelength - 1);
-        model.norm_constraint(y_vec);
         model.grad(m_grad, y_vec);
         for(int i = 0; i < m_cyclelength; ++i) {
           ftype alpha = rate * static_cast<ftype>(i);
@@ -156,11 +155,11 @@ namespace dtd {
         fy = testy.minCoeff(&minindex);
         m_delta_y_2 = fy_old - fy;
         y_vec = testmat.row(minindex);
+        model.norm_constraint(y_vec);
 
         if( std::max(m_delta_y_1, m_delta_y_2) < epsilon && m_delta_y_1 != 0 && m_delta_y_2 != 0 )
           break; // converged.
       }
-      model.norm_constraint(g_new);
       model.setParams(g_new);
       return iter;
     }
