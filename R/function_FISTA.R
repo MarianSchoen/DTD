@@ -262,10 +262,10 @@ descent_generalized_fista <- function(tweak.vec,
   }
 
 
-  # initialise required variables:
+  # initialize required variables:
   tweak_old <- tweak.vec
   converge_vec <- EVAL.FUN(tweak.vec)
-  y_vec <- NORM.FUN(tweak.vec)
+  y_vec <- tweak.vec
   nesterov.counter <- 2
   factor <- FACTOR.FUN(nesterov.counter)
 
