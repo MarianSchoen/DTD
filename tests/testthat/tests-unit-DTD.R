@@ -1180,20 +1180,20 @@ test_that("ggplot_heatmap ", {
 })
 
 
-context("Comparing R and cpp implemenation: ")
+context("Comparing R and cpp implementation: ")
 test_that("r and cpp with NORM.FUN = 'identity'",
   {
     list.of.models <- list()
-    for(implemenation in c("cpp", "R")){
+    for(implementation in c("cpp", "R")){
       for(runs in 1:5){
-        name <- paste0(implemenation, runs)
+        name <- paste0(implementation, runs)
         set.seed(1)
         list.of.models[[name]] <- train_deconvolution_model(
           tweak = start.tweak
           , X.matrix = X.matrix
           , train.data.list = training.data
           , test.data.list = test.data
-          , use.implementation = implemenation
+          , use.implementation = implementation
           , estimate.c.type = "direct"
           , NORM.FUN = "identity"
           , verbose = FALSE
@@ -1282,18 +1282,18 @@ test_that("r and cpp with NORM.FUN = 'identity'",
 test_that("r and cpp with NORM.FUN = 'norm2'",
   {
     list.of.models <- list()
-    for(implemenation in c("cpp", "R")){
+    for(implementation in c("cpp", "R")){
       for(runs in 1:5){
-        name <- paste0(implemenation, runs)
+        name <- paste0(implementation, runs)
         set.seed(1)
         list.of.models[[name]] <- train_deconvolution_model(
           tweak = start.tweak
           , X.matrix = X.matrix
           , train.data.list = training.data
           , test.data.list = test.data
-          , use.implementation = implemenation
+          , use.implementation = implementation
           , estimate.c.type = "direct"
-          , NORM.FUN = "norm1"
+          , NORM.FUN = "norm2"
           , verbose = FALSE
           , cv.verbose = FALSE
           , maxit = 3
