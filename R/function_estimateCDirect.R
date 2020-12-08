@@ -18,8 +18,9 @@ estimate_direct_c <- function(
   X.matrix, Gamma, new.data
 ){
   if(!is.matrix(Gamma)){
-    stop('in estimate_c_direct: Gamm must be a matrix')
+    stop('in estimate_c_direct: Gamma must be a matrix')
   }
-  sol <- solve(t(X.matrix) %*% Gamma %*% X.matrix) %*% t(X.matrix) %*% Gamma %*% new.data
+  sol <- chol2inv(chol(t(X.matrix) %*% Gamma %*% X.matrix)) %*% t(X.matrix) %*% Gamma %*% new.data
+  rownames(sol) <- colnames(X.matrix)
   return(sol)
 }
