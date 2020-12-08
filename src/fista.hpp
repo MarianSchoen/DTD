@@ -10,6 +10,22 @@ using namespace Eigen;
 
 namespace dtd {
   namespace solvers {
+    class AvgResidualChecker {
+    private: 
+      unsigned int m_navg, m_iteration;
+      ftype m_maxres, m_sum;
+      std::vector<ftype> m_deltas;
+    public:
+      AvgResidualChecker(unsigned int navg, ftype maximum_residual) : m_navg(navg), m_maxres(maximum_residual), m_deltas(navg, 0.0), m_iteration(0), m_sum(0.0) {}
+      bool operator()(ftype delta_loss) {
+        auto index = m_iteration%m_navg;
+        m_sum -= m_deltas[index];
+        m_deltas[index] = delta_loss;
+        m_sum += delta_loss;
+        m_iteration += 1;
+        return ( m_iteration >= m_navg ) && ( m_sum / m_navg < m_maxres );
+      }
+    };
     // Barzilai & Borwein (1988) way of determining step sizes:
     template<class Model>
     double bb_learning_rate(Model const & m, vec const & params) {
@@ -92,6 +108,8 @@ namespace dtd {
 
     template<class Model>
     int FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double epsilon, double lambda, std::function<void(Model const &, vec const &)> callback) {
+      const unsigned int n_avg = 20; // TODO set from signature
+      auto is_converged = AvgResidualChecker(n_avg, epsilon);
       vec y_vec = model.getParams();
       model.norm_constraint(y_vec);
       vec g_new = y_vec;
@@ -157,7 +175,7 @@ namespace dtd {
         y_vec = testmat.row(minindex);
         model.norm_constraint(y_vec);
 
-        if( std::max(m_delta_y_1, m_delta_y_2) < epsilon && m_delta_y_1 != 0 && m_delta_y_2 != 0 )
+        if( is_converged(m_delta_y_1 + m_delta_y_2) )
           break; // converged.
       }
       model.setParams(g_new);
