@@ -174,7 +174,6 @@ solve_fista_goertler <- function(
   if( ! (is.numeric(maxiter) && maxiter %% 1 == 0 && maxiter >= 2 )) {
     stop("maxiter is not within range (integer, >= 2)")
   }
-  print(stop.crit.navg)
   if( ! (is.numeric(stop.crit.navg) && stop.crit.navg %% 1 == 0 && stop.crit.navg  >= 1 )) {
     stop("stop.crit.navg is not within range (integer, >= 1)")
   }
