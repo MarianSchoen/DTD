@@ -16,7 +16,8 @@ namespace dtd {
       ftype m_maxres, m_sum;
       std::vector<ftype> m_deltas;
     public:
-      AvgResidualChecker(unsigned int navg, ftype maximum_residual) : m_navg(navg), m_maxres(maximum_residual), m_deltas(navg, 0.0), m_iteration(0), m_sum(0.0) {}
+      AvgResidualChecker(unsigned int navg, ftype maximum_residual) :
+        m_navg(navg), m_maxres(maximum_residual), m_deltas(navg, 0.0), m_iteration(0), m_sum(0.0) {}
       bool operator()(ftype delta_loss) {
         auto index = m_iteration%m_navg;
         m_sum -= m_deltas[index];
@@ -55,7 +56,7 @@ namespace dtd {
       bool m_restarts;
       int m_cyclelength, m_nesterov_counter;
     public:
-      FistaSolver(ftype learningrate, ftype linesearchspeed, int cycles, bool restarts) : m_nesterov_counter(2)
+      FistaSolver(ftype learningrate, ftype linesearchspeed, int cycles, bool restarts) : m_nesterov_counter(2), m_delta_y_1(0.0), m_delta_y_2(0.0)
       {
         setLearningRate(learningrate);
         setLinesearchSpeed(linesearchspeed);
@@ -102,14 +103,13 @@ namespace dtd {
       ftype feval(Model const & m) const {
         return m.evaluate();
       }
-      int solve(Model & m, std::size_t iter, double epsilon, double lambda, std::function<void(Model const & m, vec const &)> callback);
-      inline int solve(Model & m, std::size_t iter, double epsilon, double lambda) { return solve(m, iter, epsilon, lambda, [](Model const &, vec const &){}); }
+      int solve(Model & m, std::size_t iter, double epsilon, std::size_t navg, double lambda, std::function<void(Model const & m, vec const &)> callback);
+      inline int solve(Model & m, std::size_t iter, double epsilon, std::size_t navg, double lambda) { return solve(m, iter, epsilon, lambda, [](Model const &, vec const &){}); }
     };
 
     template<class Model>
-    int FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double epsilon, double lambda, std::function<void(Model const &, vec const &)> callback) {
-      const unsigned int n_avg = 20; // TODO set from signature
-      auto is_converged = AvgResidualChecker(n_avg, epsilon);
+    int FistaSolver<Model>::solve(Model & model, std::size_t maxiter, double epsilon, std::size_t navg, double lambda, std::function<void(Model const &, vec const &)> callback) {
+      auto is_converged = AvgResidualChecker(navg, epsilon);
       vec y_vec = model.getParams();
       model.norm_constraint(y_vec);
       vec g_new = y_vec;

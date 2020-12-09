@@ -100,17 +100,18 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
   return dtd::models::GoertlerModel(x,y,c,g, intToNormFn(normid), intToThreshFn(threshfnid), intToSubspFn(subspfnid), intToCoeffEstim(estim_c), inv_prec);
 }
 
-SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _epsilon, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate, SEXP _verbose ){
+SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _epsilon, SEXP _navg, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate, SEXP _verbose ){
   double lambda = REAL(_lambda)[0];
-  int maxiter = INTEGER(_maxiter)[0];
+  std::size_t maxiter = static_cast<std::size_t>(INTEGER(_maxiter)[0]);
   double epsilon = REAL(_epsilon)[0];
+  std::size_t navg = static_cast<std::size_t>(INTEGER(_navg)[0]);
   bool saveHistory = LOGICAL(_saveHistory)[0];
   bool haveLearningrate = LOGICAL(_haveLearningrate)[0];
   double learningrate = 0.0; // will always throw if left uninitialized
   if( haveLearningrate )
     learningrate = REAL(_learningrate)[0];
   double linesearchspeed = REAL(_linesearchspeed)[0];
-  int cycles = INTEGER(_cycles)[0];
+  std::size_t cycles = static_cast<std::size_t>(INTEGER(_cycles)[0]);
   bool restarts = LOGICAL(_restarts)[0];
   bool verbose = LOGICAL(_verbose)[0];
 
@@ -161,12 +162,10 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
             Rprintf("* iteration           %d\n", iter);
             Rprintf("* learning rate:      %5e\n", solver.getLearningRate());
             Rprintf("* loss:               %5f\n", loss);
-            Rprintf("* delta y (before N): %5e (< eps = %e ? %d)\n",
-                    solver.getDeltaYBeforeNesterov(), epsilon,
-                    solver.getDeltaYBeforeNesterov() < epsilon);
-            Rprintf("* delta y (after N):  %5e (< eps = %e ? %d)\n",
-                    solver.getDeltaYAfterNesterov(), epsilon,
-                    solver.getDeltaYAfterNesterov() < epsilon);
+            Rprintf("* delta y (before N): %5e\n",
+                    solver.getDeltaYBeforeNesterov(), epsilon);
+            Rprintf("* delta y (after N):  %5e\n",
+                    solver.getDeltaYAfterNesterov(), epsilon);
             Rprintf("* nesterov counter:   %d\n", solver.getNesterovCounter());
             Rprintf("* nesterov factor:    %5f\n",
                     dtd::solvers::nesterov_factor(solver.getNesterovCounter()));
@@ -174,7 +173,7 @@ SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _ep
           iter++;
         };
 
-    solver.solve(model, maxiter, epsilon, lambda, record_solve);
+    solver.solve(model, maxiter, epsilon, navg, lambda, record_solve);
 
     if( verbose ) {
       Rprintf("********************************************************************************\n");
@@ -280,7 +279,7 @@ SEXP dtd_nnls(SEXP mat, SEXP vec, SEXP eps, SEXP maxiter_) {
 }
 extern "C" {
   static const R_CallMethodDef callMethods[] = {
-                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 11},
+                                                { "_dtd_solve_fista_goertler", (DL_FUNC)&dtd_solve_fista_goertler, 12},
                                                 { "_dtd_evaluate_model_goertler", (DL_FUNC)&dtd_evaluate_model_goertler, 1},
                                                 { "_dtd_estimate_c", (DL_FUNC)&dtd_estimate_c, 1},
                                                 { "_nnls", (DL_FUNC)&dtd_nnls, 3},

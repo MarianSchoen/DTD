@@ -142,7 +142,8 @@ set_model_coeff_estimation <- function(model, coeffestimname) {
 #' @param model input model, as constructed by, e.g., empty_model()
 #' @param lambda regularization parameter lambda
 #' @param maxiter maximum number of iterations
-#' @param stop.crit.threshold stopping criterion: if loss functions falls by less than this value, stop optimization.
+#' @param stop.crit.threshold stopping criterion: if loss functions falls by less than this value averaged over a period of navg, stop optimization.
+#' @param stop.crit.navg stopping criterion: number of iteration to average the change in loss over
 #' @param save.all.tweaks if set to true, keep results after every iteration
 #' @param learningrate initial learning rate (if set to NA, learning rate is determined automatically)
 #' @param linesearchspeed rate of in- or decrease of learning rate
@@ -158,6 +159,7 @@ solve_fista_goertler <- function(
   lambda = 0.01,
   maxiter = 100,
   stop.crit.threshold = 1e-5,
+  stop.crit.navg = 30,
   save.all.tweaks = FALSE,
   learningrate = NA,
   linesearchspeed = 2.0,
@@ -172,6 +174,10 @@ solve_fista_goertler <- function(
   if( ! (is.numeric(maxiter) && maxiter %% 1 == 0 && maxiter >= 2 )) {
     stop("maxiter is not within range (integer, >= 2)")
   }
+  print(stop.crit.navg)
+  if( ! (is.numeric(stop.crit.navg) && stop.crit.navg %% 1 == 0 && stop.crit.navg  >= 1 )) {
+    stop("stop.crit.navg is not within range (integer, >= 1)")
+  }
 
   result <- .Call(
     "_dtd_solve_fista_goertler",
@@ -179,6 +185,7 @@ solve_fista_goertler <- function(
     as.double(lambda),
     as.integer(maxiter),
     as.double(stop.crit.threshold ),
+    as.integer(stop.crit.navg),
     as.logical(save.all.tweaks),
     learningrate,
     as.double(linesearchspeed),

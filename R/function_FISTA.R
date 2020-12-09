@@ -504,6 +504,7 @@ descent_generalized_fista_cxx <- function(model,
                                           lambda = 0.01,
                                           maxit = 500,
                                           stop.crit.threshold = 1e-13,
+                                          stop.crit.navg = 30,
                                           save.all.tweaks = FALSE,
                                           learning.rate = NA,
                                           line.search.speed = 2.0,
@@ -511,5 +512,5 @@ descent_generalized_fista_cxx <- function(model,
                                           use.restart = TRUE,
                                           verbose = FALSE,
                                           ...) {
-  return(solve_fista_goertler(model, lambda, maxit, stop.crit.threshold, save.all.tweaks, learning.rate, line.search.speed, cycles, use.restart, verbose))
+  return(solve_fista_goertler(model, lambda, maxit, stop.crit.threshold, stop.crit.navg, save.all.tweaks, learning.rate, line.search.speed, cycles, use.restart, verbose))
 }
