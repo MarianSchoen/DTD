@@ -79,6 +79,8 @@
 #' @param stop.crit.threshold numeric value. The change in either the gradient
 #' or nesterov step has to be at least 'stop.crit.threshold', or the algorithm
 #' will stop.
+#' @param stop.crit.navg integer, 
+#' stopping criterion: number of iteration to average the change in loss over
 #'
 #' @return list, including
 #' \itemize{
@@ -102,7 +104,8 @@ descent_generalized_fista <- function(tweak.vec,
                                       use.restart=TRUE,
                                       verbose=FALSE,
                                       NESTEROV.FUN = "positive",
-                                      stop.crit.threshold = 1e-13
+                                      stop.crit.threshold = 1e-5, 
+                                      stop.crit.navg = 50
                                       ){
 
 
@@ -288,6 +291,13 @@ descent_generalized_fista <- function(tweak.vec,
   # Every gradient step is done multiple times with different step sizes larging from 0 to learning.rate
   # sequence holds the different learning rates:
   sequence <- seq(from = 0, to = learning.rate, length.out = cycles)
+  
+  
+  # initialize the 'stop.crit.vec' to be Inf in every entry
+  # after each iteration, we add the loss change in the last iteration, 
+  # and remove the first entry. Then we check whether the mean over the last
+  # 'stop.crit.navg' is below 'stop.crit.threshold'
+  stop.crit.vec <- rep(Inf, stop.crit.navg)
 
   # Notice that the for loop starts at 2, due to the extrapolation/correction step of the FISTA algorithm
   for(iter in 2:maxit){
@@ -389,7 +399,7 @@ descent_generalized_fista <- function(tweak.vec,
     # find stop criterion
     change.last.iter.after.nesterov <- eval - best.y
 
-    change.last.iter <- max(change.last.iter.after.nesterov, change.last.iter.before.nesterov)
+    change.last.iter <- change.last.iter.after.nesterov + change.last.iter.before.nesterov
     ###
 
 
@@ -411,12 +421,13 @@ descent_generalized_fista <- function(tweak.vec,
       cat("change of L, only nesterov step: ", change.last.iter.after.nesterov, "\n")
       cat("change of L: ", change.last.iter, "\n")
     }
-
-
+    
+    # add the change of the last iteration ...
+    stop.crit.vec <- c(stop.crit.vec, change.last.iter)
+    # ... and remove the oldest entry: 
+    stop.crit.vec <- stop.crit.vec[-1]
     if(
-      change.last.iter <= stop.crit.threshold && # converged
-      !change.last.iter == 0
-      # learning.rate <= stop.crit.threshold
+      mean(stop.crit.vec) < stop.crit.threshold
       ){
       break
     }
@@ -498,13 +509,16 @@ descent_generalized_fista <- function(tweak.vec,
 #' not a descent step.
 #' @param verbose logical, if set to true, will output information during
 #' iteration.
+#' @param stop.crit.navg stopping criterion: number of iteration to 
+#' average the change in loss over
+#' @param ... 
 #'
 #' @return a list that contains the trained model and its History
 descent_generalized_fista_cxx <- function(model,
                                           lambda = 0.01,
                                           maxit = 500,
-                                          stop.crit.threshold = 1e-13,
-                                          stop.crit.navg = 30,
+                                          stop.crit.threshold = 1e-5,
+                                          stop.crit.navg = 50,
                                           save.all.tweaks = FALSE,
                                           learning.rate = NA,
                                           line.search.speed = 2.0,
