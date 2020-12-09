@@ -78,8 +78,8 @@ gradient_cor_trace <- function(X, Y, C, tweak, estimate.c.type) {
       A[j, k] <- faktor * (cov.part * (estimates.cs[j, k] - mean.hat.cs[j]) - ((C[j, k] - mean.cs[j]) / N))
     }
   }
-
-  alpha <- solve(t(X) %*% Gamma %*% X) %*% t(X)
+  
+  alpha <- chol2inv(x = chol(x = as.matrix(t(X) %*% Gamma %*% X))) %*% t(X)
   beta <- (diag(1, nrow = nrow(Y), ncol = nrow(Y)) - X %*% alpha %*% Gamma) %*% Y
 
   B <- as.matrix(beta %*% t(A) %*% alpha)
