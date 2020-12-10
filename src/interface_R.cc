@@ -102,7 +102,7 @@ dtd::models::GoertlerModel make_model(SEXP model_) {
 
 SEXP dtd_solve_fista_goertler(SEXP model_, SEXP _lambda, SEXP _maxiter, SEXP _epsilon, SEXP _navg, SEXP _saveHistory, SEXP _learningrate, SEXP _linesearchspeed, SEXP _cycles, SEXP _restarts, SEXP _haveLearningrate, SEXP _verbose ){
   double lambda = REAL(_lambda)[0];
-  std::size_t maxiter = static_cast<std::size_t>(INTEGER(_maxiter)[0]);
+  int maxiter = INTEGER(_maxiter)[0];
   double epsilon = REAL(_epsilon)[0];
   std::size_t navg = static_cast<std::size_t>(INTEGER(_navg)[0]);
   bool saveHistory = LOGICAL(_saveHistory)[0];
