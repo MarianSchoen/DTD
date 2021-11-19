@@ -325,7 +325,7 @@ descent_generalized_fista <- function(tweak.vec,
     eval.vec <- apply(u_mat, 1, EVAL.FUN)
 
     # and find the winner, which is the minimum:
-    winner.pos <- which.min(x = eval.vec, na.rm = TRUE)
+    winner.pos <- which.min(x = eval.vec)
 
     # Now we found the best step size between 0 and learning.rate.
     # If the u_vec with step.size = learning.rate (so the last entry) is the winner,
