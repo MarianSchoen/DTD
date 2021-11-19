@@ -108,7 +108,6 @@ descent_generalized_fista <- function(tweak.vec,
                                       stop.crit.navg = 50
                                       ){
 
-
   # safety check: tweak.vec
   test <- test_tweak_vec(tweak.vec = tweak.vec,
                          output.info = c("descent_generalized_fista", "tweak.vec"))
@@ -245,6 +244,8 @@ descent_generalized_fista <- function(tweak.vec,
 
   # norm the input tweak.vec
   tweak.vec <- NORM.FUN(tweak.vec)
+  
+  
 
   # If no learning.rate is set, the initial learning rate will be initialized according to:
   # Barzilai & Borwein 1988
@@ -298,7 +299,7 @@ descent_generalized_fista <- function(tweak.vec,
   # and remove the first entry. Then we check whether the mean over the last
   # 'stop.crit.navg' is below 'stop.crit.threshold'
   stop.crit.vec <- rep(Inf, stop.crit.navg)
-
+  
   # Notice that the for loop starts at 2, due to the extrapolation/correction step of the FISTA algorithm
   for(iter in 2:maxit){
     y_vec <- NORM.FUN(y_vec)
@@ -324,7 +325,7 @@ descent_generalized_fista <- function(tweak.vec,
     eval.vec <- apply(u_mat, 1, EVAL.FUN)
 
     # and find the winner, which is the minimum:
-    winner.pos <- which.min(eval.vec)
+    winner.pos <- which.min(x = eval.vec, na.rm = TRUE)
 
     # Now we found the best step size between 0 and learning.rate.
     # If the u_vec with step.size = learning.rate (so the last entry) is the winner,

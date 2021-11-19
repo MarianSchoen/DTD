@@ -18,8 +18,21 @@ estimate_direct_c <- function(
   X.matrix, Gamma, new.data
 ){
   if(!is.matrix(Gamma)){
-    stop('in estimate_c_direct: Gamma must be a matrix')
+    stop("in 'estimate_direct_c': Gamma must be a matrix")
   }
+  
+  if(all(Gamma == 0)){
+    warning(
+      paste0(
+        "in 'estimate_direct_c': all entries for g/tweak/Gamma are 0.", 
+        " Returning C = 0."
+        )
+    )
+    sol <- matrix(0, nrow = ncol(X.matrix), ncol = ncol(new.data))
+    rownames(sol) <- colnames(X.matrix)
+    return(sol)
+  }
+  
   sol <- chol2inv(chol(t(X.matrix) %*% Gamma %*% X.matrix)) %*% t(X.matrix) %*% Gamma %*% new.data
   rownames(sol) <- colnames(X.matrix)
   return(sol)
