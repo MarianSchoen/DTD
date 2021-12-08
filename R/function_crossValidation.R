@@ -72,7 +72,8 @@ DTD_cv_lambda_R <- function(
     , warm.start = warm.start
     )
 
-  if( lambda.seq[1] == "none" ){
+  # test whether a lambda sequence should be used 
+  if( lambda.seq[1] == "none" && !is.null(lambda.seq)){
     the.args <- list(...)
     if(!'save.all.tweaks' %in% names(the.args)){ # save.all.tweaks is not set
       bestModel <- descent_generalized_fista(
