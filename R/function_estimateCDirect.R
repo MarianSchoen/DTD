@@ -17,15 +17,19 @@
 estimate_direct_c <- function(
   X.matrix, Gamma, new.data
 ){
+  library(Matrix)
+  
   if(!is.matrix(Gamma)){
     stop("in 'estimate_direct_c': Gamma must be a matrix")
   }
   
-  if(all(Gamma == 0)){
+  xt.g.x <- t(X.matrix) %*% Gamma %*% X.matrix
+  
+  if(rankMatrix(x = xt.g.x) == 0){
     warning(
       paste0(
-        "in 'estimate_direct_c': all entries for g/tweak/Gamma are 0.", 
-        " Returning C = 0."
+        "in 'estimate_direct_c': g/tweak/Gamma is to small, leading to a ", 
+        "matrix of rank 0, for X^T G X. Returning C = 0."
         )
     )
     sol <- matrix(0, nrow = ncol(X.matrix), ncol = ncol(new.data))
@@ -33,7 +37,7 @@ estimate_direct_c <- function(
     return(sol)
   }
   
-  sol <- chol2inv(chol(t(X.matrix) %*% Gamma %*% X.matrix)) %*% t(X.matrix) %*% Gamma %*% new.data
+  sol <- chol2inv(chol(xt.g.x)) %*% t(X.matrix) %*% Gamma %*% new.data
   rownames(sol) <- colnames(X.matrix)
   return(sol)
 }
