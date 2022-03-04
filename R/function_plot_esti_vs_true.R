@@ -82,20 +82,20 @@ ggplot_true_vs_esti <- function(DTD.model,
   }
 
 
-  if(is.list(test.data) && length(test.data) == 2){
-    if(!all(c("quantities", "mixtures") %in%  names(test.data))){
-      stop("In ggplot_true_vs_esti: entries of 'test.data' must be named 'quantities' and 'mixtures'.")
-    }else{
+  if(
+    is.list(test.data) && 
+    all(c("quantities", "mixtures") %in%  names(test.data))
+    ){
       if(!is.matrix(test.data$mixtures)){
         stop("In ggplot_true_vs_esti: 'test.data$mixtures' is not a matrix.")
       }
       if(!is.matrix(test.data$quantities)){
         stop("In ggplot_true_vs_esti: 'test.data$quantities' is not a matrix. Therefore, 'test.data' can not be used.")
       }
-    }
   }else{
-    stop("In ggplot_true_vs_esti: 'test.data' must be provided as a list with two entries: 'quantities' and 'mixtures'.")
+    stop("In ggplot_true_vs_esti: 'test.data' must be provided as a list with the entries: 'quantities' and 'mixtures'.")
   }
+  
   if(!is.matrix(X.matrix) || any(is.na(X.matrix)) || !is.numeric(X.matrix)){
     if (is.list(DTD.model) && "reference.X" %in% names(DTD.model)) {
       message("In ggplot_true_vs_esti: provided 'X.matrix' could not be used, therefore used: 'DTD.model$reference.X'")
