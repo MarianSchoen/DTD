@@ -85,8 +85,10 @@ train_deconvolution_model <- function(
       stop("In train_deconvolution_model: There are features within 'X.matrix' where no entry in 'tweak' can be found")
     }
   }
-  test <- test_tweak_vec(tweak.vec = tweak,
-                        output.info = c("train_deconvolution_model", "tweak"))
+  test <- test_tweak_vec(
+    tweak.vec = tweak
+    , output.info = c("train_deconvolution_model", "tweak")
+    )
   # end -> tweak
 
   # safety check for X.matrix:
@@ -150,25 +152,33 @@ train_deconvolution_model <- function(
   # safety checks if X.matrix, test and train are sorted in the same way:
   feature.names <- rownames(X.matrix)
   if(all(feature.names %in% rownames(train.data.list$mixtures))){
-    train.data.list$mixtures <- train.data.list$mixtures[feature.names, ]
+    train.data.list$mixtures <- train.data.list$mixtures[
+      feature.names, , drop = FALSE
+      ]
   }else{
     stop("In train_deconvolution_model: there are features in 'X.matrix' that are not in 'train.data.list$mixtures'")
   }
   type.names <- colnames(X.matrix)
   if(all(type.names %in% rownames(train.data.list$quantities))){
-    train.data.list$quantities <- train.data.list$quantities[type.names, ]
+    train.data.list$quantities <- train.data.list$quantities[
+      type.names, , drop = FALSE
+      ]
   }else{
     stop("In train_deconvolution_model: there are cell types (=> columns) in 'X.matrix' that are not in 'train.data.list$quantities")
   }
 
   if(!is.null(test.data.list)){
     if(all(feature.names %in% rownames(test.data.list$mixtures))){
-      test.data.list$mixtures <- test.data.list$mixtures[feature.names, ]
+      test.data.list$mixtures <- test.data.list$mixtures[
+        feature.names, , drop = FALSE
+        ]
     }else{
       stop("In train_deconvolution_model: there are features (=> rows) in 'X.matrix' that are not in 'test.data.list$mixtures'")
     }
     if(all(type.names %in% rownames(test.data.list$quantities))){
-      test.data.list$quantities <- test.data.list$quantities[type.names, ]
+      test.data.list$quantities <- test.data.list$quantities[
+        type.names, , drop = FALSE
+        ]
     }else{
       stop("In train_deconvolution_model: there are cell types (=> columns) in 'X.matrix' that are not in 'test.data.list$quantities")
     }
