@@ -81,7 +81,6 @@ ggplot_true_vs_esti <- function(DTD.model,
     }
   }
 
-
   if(
     is.list(test.data) && 
     all(c("quantities", "mixtures") %in%  names(test.data))

@@ -51,13 +51,15 @@
 #' @export
 #'
 #' @import ggplot2
-ggplot_heatmap <- function(DTD.model,
-                           X.matrix = NA,
-                           test.data=NULL,
-                           estimate.c.type = "decide.on.model",
-                           title = "",
-                           feature.subset = 100,
-                           log2.expression = TRUE){
+ggplot_heatmap <- function(
+  DTD.model,
+  X.matrix = NA,
+  test.data=NULL,
+  estimate.c.type = "decide.on.model",
+  title = "",
+  feature.subset = 100,
+  log2.expression = TRUE
+  ){
   # safety check: DTD.model
   if (is.list(DTD.model)) {
     if ("best.model" %in% names(DTD.model)) {
@@ -91,8 +93,10 @@ ggplot_heatmap <- function(DTD.model,
   }
   # end -> X.matrix
   # safety check: log2.expression
-  test <- test_logical(test.value = log2.expression,
-                       output.info = c("ggplot_heatmap", "log2.expression"))
+  test <- test_logical(
+    test.value = log2.expression,
+    output.info = c("ggplot_heatmap", "log2.expression")
+    )
   # end -> log2.expression
 
   # safety check: test.data is moved into "expl.cor" part,
@@ -195,6 +199,7 @@ ggplot_heatmap <- function(DTD.model,
     features <- names(sorted.manipulated.cor)[1:feature.subset]
  #   upper.axis <- sorted.manipulated.cor[1:feature.subset]
   }
+  
   tmp.rownames <- rownames(X.matrix)
   tmp.colnames <- colnames(X.matrix)
 
@@ -202,29 +207,42 @@ ggplot_heatmap <- function(DTD.model,
   colnames(X.times.g) <- tmp.colnames
   rownames(X.times.g) <- tmp.rownames
   if(log2.expression){
-    tmp.X.matrix <- as.matrix(log2(X.times.g[features, ] + 1))
+    tmp.X.matrix <- as.matrix(log2(X.times.g[features, , drop = FALSE] + 1))
   }else{
-    tmp.X.matrix <- X.times.g[features, ]
+    tmp.X.matrix <- X.times.g[features, , drop = FALSE]
   }
 
-  cell.type.cluster <- stats::hclust(stats::dist(x = t(tmp.X.matrix),
-                                   method = "euclidean"),
-                              method = "average")
-  feature.cluster <- stats::hclust(stats::dist(x = tmp.X.matrix,
-                                   method = "euclidean"),
-                              method = "average")
+  if(ncol(tmp.X.matrix) > 1){
+    cell.type.cluster.order <- stats::hclust(
+      stats::dist(
+        x = t(tmp.X.matrix)
+        , method = "euclidean")
+      , method = "average"
+      )$order
+  } else {
+    cell.type.cluster.order <- 1
+  }
+  
+  feature.cluster.order <- stats::hclust(
+    stats::dist(
+      x = tmp.X.matrix
+      , method = "euclidean")
+    , method = "average"
+    )$order
 
-  melted.X <- reshape2::melt(tmp.X.matrix,
-                             value.name = "expression")
+  melted.X <- reshape2::melt(
+    data = tmp.X.matrix,
+    value.name = "expression"
+    )
   melted.X$Var1 <- factor(
     x = melted.X$Var1,
-    levels = rownames(tmp.X.matrix)[feature.cluster$order],
+    levels = rownames(tmp.X.matrix)[feature.cluster.order],
     ordered = TRUE
   )
 
   melted.X$Var2 <- factor(
     x = melted.X$Var2,
-    levels = colnames(tmp.X.matrix)[cell.type.cluster$order],
+    levels = colnames(tmp.X.matrix)[cell.type.cluster.order],
     ordered = TRUE
   )
 
@@ -249,7 +267,6 @@ ggplot_heatmap <- function(DTD.model,
         angle = 90
         , hjust = 1)
     )
-
 
   return(pic0)
 }

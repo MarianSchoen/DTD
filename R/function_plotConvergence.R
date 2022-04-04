@@ -48,6 +48,7 @@ ggplot_convergence <- function(
   test.data = NULL,
   estimate.c.type = "decide.on.model",
   title = "") {
+  
   # convergence can be plotted for training AND test set, if:
   #   - the complete model of 'DTD.model' has the "History" entry
   #   - if test.data and reference matrix are provided
@@ -147,8 +148,9 @@ ggplot_convergence <- function(
 
   # check if dimensions fit (I)
   if(!is.null(test.data)){
-    if( (! is.null(rownames(fista.output$History))) && all(rownames(fista.output$History) %in% rownames(X.matrix))  ){
-      X.matrix <- X.matrix[rownames(fista.output$History), ]
+    if( (! is.null(rownames(fista.output$History))) && 
+        all(rownames(fista.output$History) %in% rownames(X.matrix))  ){
+      X.matrix <- X.matrix[rownames(fista.output$History), , drop = FALSE]
     }else{
       # print(rownames(fista.output$History))
       # print(rownames(X.matrix))
@@ -158,8 +160,9 @@ ggplot_convergence <- function(
   }
 
   # If there is a History, then test can be evaluated:
-  if (!is.null(fista.output$History) &&
-      !(is.null(test.data) || is.na(test.data))) {
+  if( !is.null(fista.output$History) &&
+      !(is.null(test.data) || is.na(test.data))
+      ) {
     # calculate convergence for every saved tweak_vec:
     cor.in.test <- c()
 

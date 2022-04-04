@@ -87,11 +87,13 @@
 #'
 #'  rel.cor <- sum.cor/ncol(X.matrix)
 #' cat("Relative correlation: ", -rel.cor, "\n")
-evaluate_cor <- function(X.matrix = NA,
-                         new.data,
-                         true.compositions,
-                         DTD.model,
-                         estimate.c.type){
+evaluate_cor <- function(
+  X.matrix = NA,
+  new.data,
+  true.compositions,
+  DTD.model,
+  estimate.c.type
+  ){
 
   # the reference matrix can either be included in the DTD.model, or has to be passed
   # via the X.matrix argument:
@@ -157,19 +159,19 @@ evaluate_cor <- function(X.matrix = NA,
   }
 
   if(all(colnames(true.compositions) %in% colnames(new.data))){
-    true.compositions <- true.compositions[, colnames(new.data)]
+    true.compositions <- true.compositions[, colnames(new.data), drop = FALSE]
   }else{
     stop("In evaluate_cor: 'colnames(true.compositions)' do not match 'colnames(new.data)'")
   }
 
   if(all(rownames(true.compositions) %in% colnames(X))){
-    true.compositions <- true.compositions[colnames(X), ]
+    true.compositions <- true.compositions[colnames(X), , drop = FALSE]
   }else{
     stop("In evaluate_cor: 'rownames(true.compositions)' do not match 'colnames(X.matrix)'")
   }
 
   if(all(rownames(new.data) %in% rownames(X))){
-    new.data <- new.data[rownames(X), ]
+    new.data <- new.data[rownames(X), , drop = FALSE]
   }else{
     stop("in evaluate_cor: not all'rownames(new.data)' are in 'rownames(X.matrix)'")
   }
@@ -201,4 +203,3 @@ evaluate_cor <- function(X.matrix = NA,
   loss <- -loss
   return(loss)
 }
-
